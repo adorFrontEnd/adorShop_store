@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { message, Form, Input, Button, Spin, Row, Col, Popconfirm } from 'antd';
+import { message, Form, Input, Button, Spin, Row, Col, Popconfirm, Avatar } from 'antd';
 import { baseRoute, routerConfig } from '../../config/router.config';
 import { sendSms, forgetPassword } from '../../api/oper/login';
 import { userLogin } from '../../api/oper/login';
@@ -83,23 +83,35 @@ class Page extends Component {
     return (
       <div style={{ width: "80%", margin: "0 auto", maxWidth: "900px", minWidth: "700px" }}>
         <div style={{ padding: '15px', borderBottom: '1px solid #BCBCBC' }}>
-          <div style={{ display: "flex", position: 'relative' }}>
-            <div><img src='/favicon.ico' style={{ height: 50, width: 50, marginRight: 10 }} /></div>
-            <div className='login-form-title'>爱朵电商</div>
-            <div style={{ position: 'absolute', bottom: '0px', left: '167px', fontSize: '16px' }}>
-              门店后台系统
-              <span style={{ fontSize: '18px', marginLeft: "10px" }}>门店选择</span></div>
+          <div style={{ display: "flex", justifyContent: "space-between", position: 'relative' }}>
+            <div style={{ display: "flex"}}>
+              <div><img src='/favicon.ico' style={{ height: 50, width: 50, marginRight: 10 }} /></div>
+              <div className='login-form-title'>爱朵电商</div>
+              <div style={{ position: 'absolute', bottom: '0px', left: '167px', fontSize: '16px' }}>
+                门店后台系统
+              <span style={{ fontSize: '18px', marginLeft: "10px" }}>门店选择</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <div style={{marginRight:"10px"}}>
+                <Avatar size="large" icon="user" className="avatar margin-right" />
+              </div>
+              <div style={{ textAlign: "right", paddingRight: "10px" }}>
+                <div>{this.state.username}</div>
+                <div>
+                  <Popconfirm
+                    placement="topRight" title='确认要注销吗？'
+                    onConfirm={() => { this.logout() }} >
+                    <a style={{ marginLeft: "10px" }}>注销登录</a>
+                  </Popconfirm>
+                </div>
+              </div>
+            </div>
           </div>
+
         </div>
         <div style={{ padding: '20px 4px' }}>
-          <div style={{ textAlign: "right", paddingRight: "10px" }}>
-            {this.state.username}
-            <Popconfirm
-              placement="topRight" title='确认要注销吗？'
-              onConfirm={() => { this.logout() }} >
-              <a style={{ marginLeft: "10px" }}>注销</a>
-            </Popconfirm>
-          </div>
+          <div style={{lineHeight:"40px",paddingLeft:"40px",fontSize:"16px"}}>请选择即将操作的门店</div>
           <Spin spinning={this.state.showLoading}>
             {
               this.state.loginAccounts && this.state.loginAccounts.length ?

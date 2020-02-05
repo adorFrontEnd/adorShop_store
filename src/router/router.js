@@ -7,6 +7,7 @@ import { getCacheFirstEnterPage } from '../middleware/localStorage/cacheAuth';
 import Login from "../pages/login";
 import Changepwd from "../pages/login/ChangePwd";
 import ForgotPwd from "../pages/login/ForgotPwd";
+import RegisterAccount from '../pages/login/RegisterAccount';
 import AccountSelect from "../pages/login/AccountSelect";
 
 const Admin = asyncComponent(() => import("../pages/admin"));
@@ -49,7 +50,8 @@ export default class GlobalRouter extends React.Component {
           <Route exact={true} path={routerConfig["changepwd"].path} component={Changepwd} />
           <Route exact={true} path={routerConfig["forgotPwd"].path} component={ForgotPwd} />
           <Route exact={true} path={routerConfig["accountSelect"].path} component={AccountSelect} />
-
+          <Route exact={true} path={routerConfig["registerAccount"].path} component={RegisterAccount} />
+          
           <Route path={baseRoute} render={() => (
             isUserLogin() ?
               <Admin>

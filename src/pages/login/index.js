@@ -79,7 +79,8 @@ export default class Login extends Component {
         <div style={{ display: 'flex', justifyContent: "space-between", padding: '20px 4px' }}>
           <div style={{ width: 366, flex: "0 0 auto", display: "flex", alignItems: "center" }} >
             <LoginForm loading={this.state.showBtnLoading} login={this.login} isShow={this.state.isShow} >
-              <div style={{ lineHeight: "20px", padding: "0 6px 20px 0", textAlign: "right" }}>
+              <div style={{ lineHeight: "20px", padding: "0 6px 20px 6px",display:"flex",justifyContent:"space-between" }}>
+                <NavLink to='/registerAccount' >注册账号</NavLink >
                 <NavLink to='/forgotPwd' >忘记密码</NavLink >
               </div>
             </LoginForm>

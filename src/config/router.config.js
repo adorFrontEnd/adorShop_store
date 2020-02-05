@@ -7,6 +7,10 @@ const routerConfigArr = [
     path: baseRoute + "/login",
   },
   {
+    route_name: "registerAccount",
+    path: baseRoute + "/registerAccount"
+  },
+  {
     route_name: "changepwd",
     path: baseRoute + "/changepwd"
   },

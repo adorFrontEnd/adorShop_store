@@ -23,7 +23,6 @@ class Page extends Component {
   }
 
   componentWillUnmount() {
-
     this.resetCdTimer();
   }
 
@@ -106,7 +105,7 @@ class Page extends Component {
             <div className='login-form-title'>爱朵电商</div>
             <div style={{ position: 'absolute', bottom: '0px', left: '167px', fontSize: '16px' }}>
               门店后台系统
-              <span style={{ fontSize: '18px', marginLeft: "10px" }}>忘记密码</span></div>
+              <span style={{ fontSize: '18px', marginLeft: "10px" }}>注册账号</span></div>
           </div>
         </div>
         <div style={{ padding: '20px 4px' }}>

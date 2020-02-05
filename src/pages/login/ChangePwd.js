@@ -97,7 +97,7 @@ class Page extends Component {
             <div><img src='/favicon.ico' style={{ height: 50, width: 50, marginRight: 10 }} /></div>
             <div className='login-form-title'>爱朵电商</div>
             <div style={{ position: 'absolute', bottom: '0px', left: '167px', fontSize: '16px' }}>
-              总平台
+              门店后台系统
               <span style={{ fontSize: '18px', marginLeft: "10px" }}>修改密码</span></div>
           </div>
         </div>
@@ -105,9 +105,9 @@ class Page extends Component {
           <Form theme='dark' className='login-form' style={{ width: 450, margin: "0 auto" }}>
             <Form.Item
               field="oldPassword"
-              labelCol={{ span: 8 }}
-              wrapperCol={{ span: 16 }}
-              label='请输入原始密码'
+              // labelCol={{ span: 8 }}
+              wrapperCol={{ span: 24 }}
+            // label='请输入原始密码'
             >
               {
                 getFieldDecorator('oldPassword', {
@@ -117,6 +117,7 @@ class Page extends Component {
                   ],
                 })(
                   <Input.Password
+                    className='border-bottom'
                     type="password" placeholder="请输入原始密码"
                   />
                 )
@@ -124,9 +125,9 @@ class Page extends Component {
             </Form.Item>
             <Form.Item
               field="newPassword"
-              labelCol={{ span: 8 }}
-              wrapperCol={{ span: 16 }}
-              label='请输入新密码'
+              // labelCol={{ span: 8 }}
+              wrapperCol={{ span: 24 }}
+            // label='请输入新密码'
             >
               {
                 getFieldDecorator('newPassword', {
@@ -136,7 +137,7 @@ class Page extends Component {
                   ],
                 })(
                   <Input.Password
-
+                    className='border-bottom'
                     type="password" placeholder="请输入新密码"
                   />
                 )
@@ -144,9 +145,9 @@ class Page extends Component {
             </Form.Item>
             <Form.Item
               field="repeatPassword"
-              labelCol={{ span: 8 }}
-              wrapperCol={{ span: 16 }}
-              label='重复新密码'
+              // labelCol={{ span: 8 }}
+              wrapperCol={{ span: 24 }}
+            // label='重复新密码'
             >
               {
                 getFieldDecorator('repeatPassword', {
@@ -156,17 +157,19 @@ class Page extends Component {
                   ],
                 })(
                   <Input.Password
-
+                    className='border-bottom'
                     type="password" placeholder="重复新密码"
                   />
                 )
               }
             </Form.Item>
             <Row>
-              <Col offset={6} span={18} style={{ paddingBottom: 30 }}>
+              <Col
+                // offset={8} 
+                span={24} style={{ paddingBottom: 30 }}>
                 <div>
-                  <Button loading={this.state.showBtnLoading} onClick={this.submitClicked} type='primary' style={{ width: 100, marginRight: "20px" }}>确认修改</Button>
-                  <Button style={{ width: 100, marginRight: "20px" }} onClick={this.goback}>返回</Button>
+                  <Button loading={this.state.showBtnLoading} onClick={this.submitClicked} type='primary' style={{ width: "100%",lineHeight:"40px",height:40,marginRight: "20px" }}>保存</Button>
+                  {/* <Button style={{ width: 100, marginRight: "20px" }} onClick={this.goback}>返回</Button> */}
                 </div>
               </Col>
             </Row>
