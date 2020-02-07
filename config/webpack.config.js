@@ -147,7 +147,7 @@ module.exports = function (webpackEnv) {
         }
         
         loader.options.modifyVars = {
-          'primary-color': '#faad14',
+          'primary-color': '#ff8716',
         }
         loader.options.javascriptEnabled = true;
         loaders.push(loader);

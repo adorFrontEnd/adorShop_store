@@ -5,6 +5,7 @@ import { sendSms, forgetPassword } from '../../api/oper/login';
 import './index.less';
 import './pwd.less';
 import Toast from "../../utils/toast";
+import { NavLink, Link } from 'react-router-dom';
 
 class Page extends Component {
 
@@ -113,6 +114,22 @@ class Page extends Component {
           <Form theme='dark' className='login-form' style={{ width: 450, margin: "0 auto" }}>
 
             <Form.Item
+              field="name"
+            >
+              {
+                getFieldDecorator('name', {
+                  rules: [
+                    { required: true, message: '请填写名称!' }
+                  ],
+                })(
+                  <Input
+                    className='bottom-line-input prefix'
+                    placeholder="请填写名称"
+                  />
+                )
+              }
+            </Form.Item>
+            <Form.Item
               field="phone"
             >
               {
@@ -127,7 +144,7 @@ class Page extends Component {
                     type='number'
                     min={0}
                     className='bottom-line-input prefix'
-                    placeholder="请填写门店账号"
+                    placeholder="请填写手机号"
                     onChange={this.onPhoneChange}
                   />
                 )
@@ -140,12 +157,29 @@ class Page extends Component {
                 getFieldDecorator('password', {
                   rules: [
                     { required: true, message: '请输入密码!' },
-                    { pattern: /^[A-Za-z0-9]{8,15}$/, message: '8-15位字符，包含数字和字母!' }
+                    { pattern: /^[A-Za-z0-9]{8,15}$/, message: '8-15位字符，包含数字或字母!' }
                   ],
                 })(
                   <Input.Password
                     className='bottom-line-input'
-                    type="password" placeholder="填写重置密码，8-15位字符，包含数字和字母"
+                    type="password" placeholder="请填写密码，8-15位字符，包含数字或字母"
+                  />
+                )
+              }
+            </Form.Item>
+            <Form.Item
+              field="repeatPassword"
+            >
+              {
+                getFieldDecorator('repeatPassword', {
+                  rules: [
+                    { required: true, message: '请输入密码!' },
+                    { pattern: /^[A-Za-z0-9]{8,15}$/, message: '请输入8-15位字符，包含数字或字母!' }
+                  ],
+                })(
+                  <Input.Password
+                    className='bottom-line-input'
+                    type="password" placeholder="确认密码"
                   />
                 )
               }
@@ -205,7 +239,10 @@ class Page extends Component {
             <Row>
               <Col span={24} style={{ paddingBottom: 30 }}>
                 <div>
-                  <Button onClick={this.submitPassword} size='large' type='primary' style={{ width: "100%", marginRight: "20px" }}>确认重置</Button>
+                  <Button onClick={this.submitPassword} size='large' type='primary' style={{ width: "100%", marginRight: "20px" }}>注册</Button>
+                </div>
+                <div style={{ paddingTop: 10 }}>
+                  <NavLink to='/login' >已有账号，马上登录</NavLink>
                 </div>
               </Col>
             </Row>

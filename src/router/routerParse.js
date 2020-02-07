@@ -2,10 +2,14 @@ import { baseRoute, routerConfig } from '../config/router.config';
 
 //测试路由数据
 const _routeData = [
+  "oper.operManage",
+  "oper.operManage.operManage",
   "oper.roleAuth",
   "oper.roleAuth.roleAuth",
-  "oper.operManage",
-  "oper.operManage.operManage" 
+  "productManage.productInfo",
+  "productManage.productInfo.productList",
+  "productManage.other",
+  "productManage.other.freightTemplate" 
 ];
 const getRouter = (data) => {
   if (!data) {

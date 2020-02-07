@@ -7,7 +7,7 @@ import { searchRoleList, deleteRole, saveOrUpdate } from '../../api/oper/role';
 import { pagination } from '../../utils/pagination';
 import { SearchForm, SubmitForm } from '../../components/common-form';
 import AuthSelection from './AuthSelection';
-const _title = "员工角色";
+const _title = "角色管理";
 const _description = "";
 
 class Page extends Component {
@@ -83,11 +83,17 @@ class Page extends Component {
               <span>
                 <a onClick={() => { this.showAuthModalClick(record) }}>编辑</a>
                 <Divider type="vertical" />
-                <Popconfirm
-                  placement="topLeft" title='确认要删除吗？'
-                  onConfirm={() => { this.deleteRole(record) }} >
-                  <a size="small" className='color-red'>删除</a>
-                </Popconfirm>
+                {
+                  record.accountNum == 0 ?
+                    <Popconfirm
+                      placement="topLeft" title='确认要删除吗？'
+                      onConfirm={() => { this.deleteRole(record) }} >
+                      <a size="small" className='color-red'>删除</a>
+                    </Popconfirm>
+                    :
+                    null
+                }
+
               </span>
               :
               '--'

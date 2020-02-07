@@ -8,7 +8,7 @@ import { searchOperList, deleteOper, saveOrUpdate } from '../../api/oper/oper';
 import { searchRoleList } from '../../api/oper/role';
 import { pagination } from '../../utils/pagination';
 
-const _title = "员工账号";
+const _title = "账号管理";
 const _description = "";
 
 class Page extends Component {

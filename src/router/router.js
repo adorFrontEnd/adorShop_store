@@ -28,6 +28,10 @@ const RefundRequest = asyncComponent(() => import("../pages/transaction/RefundRe
 const RoleAuth = asyncComponent(() => import("../pages/oper/RoleAuth"));
 const OperManage = asyncComponent(() => import("../pages/oper/OperManage"));
 
+const ProductList = asyncComponent(() => import("../pages/productManage/ProductList"));
+const FreightTemplate = asyncComponent(() => import("../pages/productManage/FreightTemplate"));
+
+
 const SettlementSearch = asyncComponent(() => import("../pages/settlement/Search"));
 
 const ThirdPartPayConfig = asyncComponent(() => import("../pages/thirdPartPay/Config"));
@@ -68,8 +72,11 @@ export default class GlobalRouter extends React.Component {
                   <PrivateRoute path={routerConfig["transaction.orderDetail"].path} component={OrderDetail} />
                   <PrivateRoute path={routerConfig["transaction.refundRequest"].path} component={RefundRequest} />
 
-                  <PrivateRoute path={routerConfig["oper.roleAuth"].path} component={RoleAuth} />
-                  <PrivateRoute path={routerConfig["oper.operManage"].path} component={OperManage} />
+                  <PrivateRoute path={routerConfig["oper.roleAuth.roleAuth"].path} component={RoleAuth} />
+                  <PrivateRoute path={routerConfig["oper.operManage.operManage"].path} component={OperManage} />
+
+                  <PrivateRoute path={routerConfig["productManage.productInfo.productList"].path} component={ProductList} />
+                  <PrivateRoute path={routerConfig["productManage.other.freightTemplate"].path} component={FreightTemplate} />
 
                   <PrivateRoute path={routerConfig["settlement.search"].path} component={SettlementSearch} />
 

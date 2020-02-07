@@ -64,7 +64,7 @@ const routerConfigArr = [
     loginRequired: true,
     title: "应用二维码",
     icon: "qrcodeList"
-  },  
+  },
   {
     route_name: "appManage.userSearch",
     path: baseRoute + "/appManage/userSearch",
@@ -144,7 +144,7 @@ const routerConfigArr = [
     loginRequired: true,
     moduleAuth: false,
     title: "申请退款"
-  },  
+  },
   {
     route_name: "thirdPartPay",
     title: "第三方支付",
@@ -166,6 +166,22 @@ const routerConfigArr = [
     moduleAuth: true
   },
   {
+    route_name: "oper.operManage",
+    path: baseRoute + "/oper/operManage",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "账号管理",
+    icon: "team"
+  },
+  {
+    route_name: "oper.operManage.operManage",
+    path: baseRoute + "/oper/operManage",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "账号管理",
+    icon: "team"
+  },
+  {
     route_name: "oper.roleAuth",
     path: baseRoute + "/oper/roleAuth",
     loginRequired: true,
@@ -182,22 +198,42 @@ const routerConfigArr = [
     icon: "solution"
   },
   {
-    route_name: "oper.operManage",
-    path: baseRoute + "/oper/operManage",
+    route_name: "productManage",
+    title: "商品管理",
+    icon: "profile",
+    moduleAuth: true
+  },
+  {
+    route_name: "productManage.productInfo",    
     loginRequired: true,
     moduleAuth: true,
-    title: "账号管理",
+    title: "商品信息",
     icon: "team"
   },
   {
-    route_name: "oper.operManage.operManage",
-    path: baseRoute + "/oper/operManage",
+    route_name: "productManage.productInfo.productList",
+    path: baseRoute + "/productManage/productList",
     loginRequired: true,
     moduleAuth: true,
-    title: "账号管理",
+    title: "商品列表",
     icon: "team"
+  },
+  {
+    route_name: "productManage.other",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "其他",
+    icon: "solution"
+  },
+  {
+    route_name: "productManage.other.freightTemplate",
+    path: baseRoute + "/productManage/freight",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "运费模板",
+    icon: "solution"
   }
- 
+
 ]
 
 const getRouterConfig = (routerConfigArr) => {
