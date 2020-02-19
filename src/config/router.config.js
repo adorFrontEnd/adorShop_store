@@ -161,7 +161,7 @@ const routerConfigArr = [
   },
   {
     route_name: "oper",
-    title: "操作员管理",
+    title: "员工管理",
     icon: "user",
     moduleAuth: true
   },
