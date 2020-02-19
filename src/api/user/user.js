@@ -1,54 +1,68 @@
 import baseHttpProvider from '../base/baseHttpProvider';
-import { md5 } from '../../utils/signMD5';
 
-
-
-/* api/user/updatePassword 修改个人密码*******************************************************************
+/* api/user/findUserData 用户列表*******************************************************************
 @params
-balance	Double	true	余额
-remark	String	true	备注
-id	Int	true	id
+page	Int	true	第几页
+size	Int	true	每页数据条数
 */
-const updatePassword = (params) => {
-  // if (!params || !params.oldPassword || !params.newpassword) {
-  //   return;
-  // }
-  let { oldPassword, newPassword } = params;
-  oldPassword = md5(oldPassword);
-  newPassword = md5(newPassword);
-  return baseHttpProvider.postFormApi('api/adminOper/changePassword',
+const searchAttentionList = (params) => {
+  return baseHttpProvider.postFormApi('api/attention/searchAttentionList',
     {
-      ...params,
-      oldPassword,
-      newPassword
-    })
-}
-/* api/config/getVerificationCode 获取验证码*******************************************************************
-@params
-verificationCode 验证码
-*/
-const getVerificationCode = (params) => {
-
-  return baseHttpProvider.getApi('api/config/getVerificationCode',
-    {
+      size: 10,
       ...params
-    })
-}
-
-/* api/config/saveOrUpdate 保存验证码*******************************************************************
-@params
-verificationCode 验证码
-*/
-const saveOrUpdateVerificationCode = (params) => {
-
-  return baseHttpProvider.postFormApi('api/config/saveOrUpdate',
+    },
     {
-      ...params
+      total: true
     })
 }
+
+const getSurplusExportQuantity = (params) => {
+  return baseHttpProvider.getApi('api/user/getSurplusExportQuantity', params)
+}
+
+const exportUserList = (params) => {
+  params = baseHttpProvider.filterAllNullKeyInParams(params)
+  let result = baseHttpProvider.getReqObj('api/attention/export', params)
+  if (result.url) {
+    return result.url
+  }
+}
+
+const searchUserAuthList = (params) => {
+  return baseHttpProvider.postFormApi('api/userAuth/searchUserAuthList',
+    {
+      size: 10,
+      ...params
+    },
+    {
+      total: true
+    })
+}
+
+const getUserAuthDetail = (params) => {
+  return baseHttpProvider.getApi('api/userAuth/getDetail', params)
+}
+
+const resetSecretKey = (params) => {
+  return baseHttpProvider.getApi('api/userAuth/resetSecretKey', params)
+}
+
+const deleteAuth = (params) => {
+  return baseHttpProvider.getApi('api/userAuth/delete', params)
+}
+
+const saveOrUpdateAuth = (params) => {
+  return baseHttpProvider.postFormApi('api/userAuth/saveOrUpdate', params)
+}
+
 
 export {
-  updatePassword,
-  getVerificationCode,
-  saveOrUpdateVerificationCode
+  getSurplusExportQuantity,
+  searchAttentionList,
+  exportUserList,
+  searchUserAuthList,
+  getUserAuthDetail,
+  resetSecretKey,
+  saveOrUpdateAuth,
+  deleteAuth
 }

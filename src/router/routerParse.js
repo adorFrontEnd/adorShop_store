@@ -9,7 +9,10 @@ const _routeData = [
   "productManage.productInfo",
   "productManage.productInfo.productList",
   "productManage.other",
-  "productManage.other.freightTemplate" 
+  "productManage.other.freightTemplate",
+  "user.userManage",
+  "user.userManage.userList",
+  "user.userManage.userGrade"
 ];
 const getRouter = (data) => {
   if (!data) {

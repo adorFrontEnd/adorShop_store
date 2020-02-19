@@ -183,14 +183,14 @@ class SearchForm extends Component {
             const startTime = <FormItem >
               {
                 getFieldDecorator('startTime')(
-                  <DatePicker onChang={this.getvalue} style={{ width: 170 }}  showTime={{ defaultValue: moment('00:00:00', 'HH:mm:ss') }} placeholder={placeholder || "请选择开始时间"}  />
+                  <DatePicker onChang={this.getvalue} style={{ width: 170 }} showTime={{ defaultValue: moment('00:00:00', 'HH:mm:ss') }} placeholder={placeholder || "请选择开始时间"} />
                 )
               }
             </FormItem>;
             const endTime = <FormItem label="~" colon={false} key={"endTime"}>
               {
                 getFieldDecorator('endTime')(
-                  <DatePicker onOk={this.getvalue} style={{ width: 170 }} showTime={{ defaultValue: moment('23:59:59', 'HH:mm:ss') }} placeholder={placeholderStop || "请选择结束时间"}  />
+                  <DatePicker onOk={this.getvalue} style={{ width: 170 }} showTime={{ defaultValue: moment('23:59:59', 'HH:mm:ss') }} placeholder={placeholderStop || "请选择结束时间"} />
                 )
               }
             </FormItem>;
@@ -206,6 +206,7 @@ class SearchForm extends Component {
       return formItems;
     }
   }
+
   render() {
     const _forms =
       <Form layout="inline" style={{ flex: "1 1 auto" }}>
@@ -216,12 +217,12 @@ class SearchForm extends Component {
         <div className='flex-middle' style={{ height: 40 }}>
           {
             this.props.searchClicked ?
-              <Button type="primary" style={{ marginRight: 20, width: 100 }} onClick={this.searchClicked}>查询</Button>
+              <Button type="primary" style={{ marginRight: 20, width: 100 }} onClick={this.searchClicked}>{this.props.searchText || "查询"}</Button>
               : null
           }
           {
             this.props.searchClicked ?
-              <Button style={{ width: 100 }} onClick={this.resetClicked}>重置</Button>
+              <Button style={{ width: 100 }} onClick={this.resetClicked}>{this.props.resetText || "重置"}</Button>
               : null
           }
           {
@@ -235,7 +236,7 @@ class SearchForm extends Component {
         </div>
       </div>
     );
-    return (<div style={this.props.towRow ? { width: "100%" } : { display: "flex", width: "100%" }}>{_forms}{_buttons}</div>)
+    return (<div style={this.props.towRow ? { width: this.props.width || "100%" }  : { display: "flex",  width: this.props.width || "100%" }}>{_forms}{_buttons}</div>)
   }
   autoCompleteFilter = (inputValue, option) => {
     return option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
@@ -255,21 +256,21 @@ class SearchForm extends Component {
     }
     this.props.searchClicked(params);
   }
-getvalue=()=>{
-  let params = this.getValue();
-  if (!params) {
-    return;
+  getvalue = () => {
+    let params = this.getValue();
+    if (!params) {
+      return;
+    }
+    this.props.getvalue(params);
   }
-  this.props.getvalue(params);
-}
   getValue = () => {
     let params = this.props.form.getFieldsValue();
     // params = this.getAutoCompleteIds(params);
     if (params && params.startTime) {
-      params.startTime = moment().format('YYYY-MM-DD')+' '+'00:00:00'
+      params.startTime = moment().format('YYYY-MM-DD') + ' ' + '00:00:00'
     }
     if (params && params.endTime) {
-      params.endTime = moment().format('YYYY-MM-DD')+' '+'23:59:59'
+      params.endTime = moment().format('YYYY-MM-DD') + ' ' + '23:59:59'
     }
     if (params && params.endTime && params.startTime) {
       if (parseInt(params.startTime) > parseInt(params.endTime)) {
