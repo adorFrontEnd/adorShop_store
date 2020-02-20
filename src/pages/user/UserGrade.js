@@ -13,9 +13,6 @@ import { changeRoute } from '../../store/actions/route-actions';
 
 const _title = "客户级别";
 const _description = "";
-const integralRecordPath = routerConfig["user.userManage.userList"].path;
-const giftRecordPath = routerConfig["user.userManage.userList"].path;
-const settingDrainagePath = routerConfig["user.userManage.userList"].path;
 
 class Page extends Component {
 

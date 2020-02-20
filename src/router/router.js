@@ -22,6 +22,7 @@ const FreightTemplate = asyncComponent(() => import("../pages/productManage/Frei
 
 const UserList = asyncComponent(() => import("../pages/user/UserList"));
 const UserGrade = asyncComponent(() => import("../pages/user/UserGrade"));
+const UserEdit = asyncComponent(() => import("../pages/user/UserEdit"));
 
 
 export default class GlobalRouter extends React.Component {
@@ -58,6 +59,8 @@ export default class GlobalRouter extends React.Component {
 
                   <PrivateRoute path={routerConfig["user.userManage.userList"].path} component={UserList} />
                   <PrivateRoute path={routerConfig["user.userManage.userGrade"].path} component={UserGrade} />
+                  <PrivateRoute path={routerConfig["user.userManage.userEdit"].path} component={UserEdit} />
+                  
                 </Switch>
               </Admin>
               : <Redirect to={{ pathname: routerConfig["login"].path }} />

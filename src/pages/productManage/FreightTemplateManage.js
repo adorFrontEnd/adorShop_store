@@ -14,7 +14,7 @@ import dateUtil from '../../utils/dateUtil';
 import moment from 'moment';
 import AreaAndDisctrictSelectModal from '../../components/areaSelect/AreaAndDisctrictSelectModal';
 
-const userSearchPath = routerConfig["appManage.userSearch"].path;
+const userSearchPath = routerConfig["user.userManage.userList"].path;
 
 const _title = "运费模板";
 class Page extends Component {

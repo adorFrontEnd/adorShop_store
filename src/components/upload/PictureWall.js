@@ -1,6 +1,6 @@
 import { Upload, Icon, Modal, Spin } from 'antd';
 import React, { Component } from 'react';
-import { getUpdatePictureUrl } from '../../api/SYS/SYS';
+import { getUpdatePictureUrl } from '../../api/product/product';
 import Toast from '../../utils/toast';
 let updateUrl = '';
 let initUid = 1;
@@ -222,7 +222,20 @@ export default class PicturesWall extends Component {
     return true
   }
 
+  isFileTypeValid = (file) => {
+    if (!file || !file.type) {
+      return
+    }
+    let fileType = file.type;
+    if (!/image/.test(fileType)) {
+      return
+    }
 
+    if (!this.isAllowFileType(fileType)) {
+      return;
+    }
+    return true
+  }
 
   isAllowFileType = (fileType) => {
     if (!this.props.allowType || !this.props.allowType.length) {
@@ -256,21 +269,6 @@ export default class PicturesWall extends Component {
     return true
   }
 
-  isFileTypeValid = (file) => {
-    if (!file || !file.type) {
-      return
-    }
-    let fileType = file.type;
-    if (!/image/.test(fileType)) {
-      return
-    }
-
-    if (!this.isAllowFileType(fileType)) {
-      return;
-    }
-    return true
-  }
-
   render() {
     const { previewVisible, previewImage, fileList } = this.state;
     const limitFileLength = this.props.limitFileLength || 1;
@@ -300,7 +298,7 @@ export default class PicturesWall extends Component {
           {
             <div className='clearfix'>
               <span>
-                <div className='ant-upload-list ant-upload-list-picture-card'>
+                <div className='ant-upload-list ant-upload-list-picture-card flex'>
                   {
                     fileList && fileList.length ?
                       fileList.map((item, index) =>
@@ -357,9 +355,10 @@ export default class PicturesWall extends Component {
             </div>
           }
         </div>
-        <Modal
-          maskClosable={false} maskClosable={false} zIndex={3000} visible={previewVisible} footer={null} onCancel={this.handleCancel}>
-          <img alt="example" style={{ width: '100%' }} src={previewImage} />
+        <Modal maskClosable={false} zIndex={3000} visible={previewVisible} footer={null} onCancel={this.handleCancel}>
+          <div className='padding20'>
+            <img alt="example" style={{ width: '100%' }} src={previewImage} />
+          </div>
         </Modal>
       </div>
     );

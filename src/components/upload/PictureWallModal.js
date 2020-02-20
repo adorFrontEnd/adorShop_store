@@ -26,8 +26,7 @@ export default class PicturesWallModal extends Component {
   }
   render() {
     return (
-         <Modal 
-        maskClosable={false}
+      <Modal maskClosable={false}
         title="上传图片"
         visible={this.props.visible}
         onCancel={this.props.onCancel}

@@ -124,6 +124,14 @@ const routerConfigArr = [
     icon: "apartment",
     title: "客户级别",   
   },
+  {
+    route_name: "user.userManage.userEdit",    
+    path: baseRoute + "/user/userEdit",
+    loginRequired: true,
+    moduleAuth: true,
+    icon: "apartment",
+    title: "创建/编辑客户",   
+  }
 
 
 ]

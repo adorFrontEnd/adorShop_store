@@ -15,7 +15,7 @@ const _title = "客户列表";
 const _description = "";
 const integralRecordPath = routerConfig["user.userManage.userList"].path;
 const giftRecordPath = routerConfig["user.userManage.userList"].path;
-const settingDrainagePath = routerConfig["user.userManage.userList"].path;
+const userEditPath = routerConfig["user.userManage.userEdit"].path;
 const _statusEnum = {
   "0": "正常",
   "2": "待审核",
@@ -165,22 +165,10 @@ class Page extends Component {
     })
   }
 
-  exportUserListData = () => {
-    let exportUserListUrl = exportUserList(this.params);
-    if (!exportUserListUrl) {
-      Toast("导出失败！")
-      return;
-    }
-    this.setState({
-      exportUserListUrl
-    })
-
-    setTimeout(() => {
-      this.refs.exportUserListUrl.click()
-    }, 1000)
+  goEdit = (id) => {
+    let title = id == '0' ? '添加客户' : "编辑客户"
+    this.props.changeRoute({ path: 'user.userManage.userEdit', title, parentTitle: '会员管理' });
   }
-
-
 
   /**渲染**********************************************************************************************************************************/
 
@@ -192,7 +180,9 @@ class Page extends Component {
 
         <div>
           <div className="flex-between align-center margin-bottom20">
-            <Button type='primary'>创建客户</Button>
+            <NavLink to={userEditPath + "/0"}>
+              <Button type='primary' onClick={() => this.goEdit('0')}>创建客户</Button>
+            </NavLink>
             <SearchForm
               width={850}
               searchText='筛选'

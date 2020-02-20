@@ -13,7 +13,7 @@ import { changeRoute } from '../../store/actions/route-actions';
 import dateUtil from '../../utils/dateUtil';
 import moment from 'moment';
 
-const userSearchPath = routerConfig["appManage.userSearch"].path;
+const userSearchPath = routerConfig["user.userManage.userList"].path;
 
 const _title = "商品列表";
 class Page extends Component {
