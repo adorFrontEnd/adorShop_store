@@ -71,6 +71,51 @@ export default class AreaSelectModal extends Component {
     return areaMap
   }
 
+  /**保存数据 ********************************************************************************************************
+   proviceId: selectedProviceId,
+   proviceName: selectedProviceName,
+   cityId: selectedCityId,
+   cityName: selectedCityName,
+   districtId: selectedDistrictId,
+   districtName: selectedDistrictName
+  */
+  onOk = () => {
+    let result = this.getSelectDistrict();
+    this.props.onOk(result);
+  }
+
+  /**回滚数据 ****************************************************************************************************
+  districtId
+  *****/
+  checkedDataRevert = (checkedAreaData) => {
+    if (!checkedAreaData || !checkedAreaData.districtId || checkedAreaData.districtId.toString().length != 6) {
+      this.setState({
+        selectedProviceId: null,
+        selectedCityId: null,
+        selectedDistrictId: null,
+        cityMap: {},
+        districtMap: {}
+      })
+      return;
+    }
+    let { districtId, proviceId, cityId } = checkedAreaData;
+    let areaMap = this.state.areaMap;
+    proviceId = proviceId || districtId.toString().substr(0, 2) + "0000";
+    cityId = cityId || districtId.toString().substr(0, 4) + "00";
+    let cityMap = areaMap[proviceId]['children'];
+    let districtMap = areaMap[proviceId]['children'][cityId]['children'];
+    this.setState({
+      selectedProviceId: proviceId,
+      selectedCityId: cityId,
+      selectedDistrictId: districtId,
+      cityMap,
+      districtMap
+    })
+  }
+
+
+
+  /**select更改 *********************************************************************************************************/
   onLevel1Change = (e) => {
     let selectedCityId = null;
     let selectedDistrictId = null;
@@ -107,6 +152,9 @@ export default class AreaSelectModal extends Component {
     })
   }
 
+
+  /**获取最终选中的数据 ****************************/
+
   getSelectDistrict = () => {
 
     let { areaMap, cityMap, districtMap, selectedProviceId, selectedCityId, selectedDistrictId } = this.state;
@@ -138,12 +186,8 @@ export default class AreaSelectModal extends Component {
 
   }
 
-  onOk = () => {
-    let result = this.getSelectDistrict();   
-    this.props.onOk(result);
-  }
-  /**数据回滚 **************************************************************************************************************/
 
+  /**渲染页面 **************************************************************************************************************/
 
   render() {
 
@@ -202,7 +246,7 @@ export default class AreaSelectModal extends Component {
               </Select>
             </Col>
           </Row>
-          <div style={{textAlign:"right",marginTop:"200px",marginRight:"50px"}}>
+          <div style={{ textAlign: "right", marginTop: "200px", marginRight: "50px" }}>
             <Button type='primary' className='normal' onClick={this.onOk}>保存</Button>
           </div>
         </div>

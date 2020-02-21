@@ -21,7 +21,7 @@ class Page extends Component {
     id: 0,
     showLoading: false,
     areaModalIsVisible: false,
-    selectAreaData:null
+    selectAreaData: null
   }
 
   componentWillMount() {
@@ -142,9 +142,10 @@ class Page extends Component {
   }
 
   selectAreaSaveClicked = (selectAreaData) => {
-    if (!selectAreaData) {
+    if (!selectAreaData || !selectAreaData.districtId) {
       return;
     }
+
     this.setState({
       selectAreaData
     })
@@ -155,7 +156,7 @@ class Page extends Component {
 
   render() {
     const { getFieldDecorator } = this.props.form;
-    let { labelList,selectAreaData } = this.state;
+    let { labelList, selectAreaData } = this.state;
 
     return (
       <CommonPage title={this.state._title} description={_description} >
@@ -229,13 +230,13 @@ class Page extends Component {
                 <span><Button type='primary' onClick={this.selectArea}>选择地区</Button></span>
                 <span className='margin-left'>
                   {
-                    selectAreaData?
-                    <span>
-                      {`${selectAreaData.proviceName}-${selectAreaData.cityName}-${selectAreaData.districtName}`}
-                    </span>
-                    :
-                    "暂未选择地区"
-                  }                
+                    selectAreaData ?
+                      <span>
+                        {`${selectAreaData.proviceName}-${selectAreaData.cityName}-${selectAreaData.districtName}`}
+                      </span>
+                      :
+                      "暂未选择地区"
+                  }
                 </span>
               </Col>
             </Row>
@@ -342,6 +343,7 @@ class Page extends Component {
           </Form>
         </div>
         <SingleDistrictSelect
+          checkedAreaData={this.state.selectAreaData}
           visible={this.state.areaModalIsVisible}
           hide={this._hideAreaSelectModal}
           onOk={this.selectAreaSaveClicked}
