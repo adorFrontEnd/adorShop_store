@@ -15,18 +15,19 @@ const _description = "";
 class Page extends Component {
 
   state = {
-
     tableDataList: null,
     showTableLoading: false,
     roleList: [],
     normalRoleList: [],
     editFormValue: null,
-    newItemModalVisible: false,
-    selectOperId: null,
+    editModalVisible: false,
+    selectRoleId: null,
     username: null,
     checkInfo: null,
     checkedOper: null,
-    countNum: 60
+    countNum: 60,
+    editLoading: false,
+    selectOper: null
   }
 
   componentWillMount() {
@@ -122,7 +123,7 @@ class Page extends Component {
       title: "加入时间", render: (text, record, index) => (
         record && record.roleName != '超级管理员' && record.gmtCreate ? dateUtil.getDateTime(record.gmtCreate) : '--'
       )
-    },    
+    },
     {
       title: '操作',
       render: (text, record, index) => (
@@ -148,21 +149,72 @@ class Page extends Component {
 
   /* 账号编辑操作*******************************************************************************************************************************************/
   // 打开modal
-  showAcountModal = (data) => {
+  showAcountModal = (selectOper) => {
+
+    let selectRoleId = null;
+    let username = null;
+    if (selectOper) {
+      if (selectOper.roleId) {
+        selectRoleId = selectOper.roleId;
+      }
+
+      if (selectOper.username) {
+        username = selectOper.username;
+      }
+    }else{
+      this.resetUsername();
+    }
     this.setState({
-      newItemModalVisible: true
+      editModalVisible: true,
+      selectOper,
+      selectRoleId,
+      username
     })
   }
 
   // 关闭modal
   _hideNewItemModal = () => {
     this.setState({
-      newItemModalVisible: false
+      editModalVisible: false
     })
   }
 
   //保存
   operSaveClicked = () => {
+    let { selectRoleId, checkedOper, smsCode, selectOper } = this.state;
+    if (!selectRoleId) {
+      Toast('请选择角色！');
+      return;
+    }
+
+    if (!checkedOper || !checkedOper.username) {
+      Toast('请检查手机号是否存在！');
+      return;
+    }
+
+    if (!smsCode || smsCode.toString().length != 6) {
+      Toast('请输入短信验证码！');
+      return;
+    }
+    let id = selectOper && selectOper.id ? selectOper.id : null;
+    let params = { id, roleId: selectRoleId, username: checkedOper.username, smsCode };
+    this.setState({
+      editLoading: true
+    })
+    saveOrUpdate(params)
+      .then(() => {
+        Toast('保存成功！');
+        this.getPageData();
+        this.setState({
+          editLoading: false,
+          editModalVisible: false
+        })
+      })
+      .catch(() => {
+        this.setState({
+          editLoading: false
+        })
+      })
 
   }
 
@@ -179,6 +231,13 @@ class Page extends Component {
     this.setState({
       username
     })
+  }
+
+  operIdChange = (selectRoleId) => {
+    this.setState({
+      selectRoleId
+    })
+
   }
 
   checkClicked = () => {
@@ -198,7 +257,9 @@ class Page extends Component {
 
   resetUsername = () => {
     this.setState({
-      username: null
+      username: null,
+      checkedOper: null,
+      smsCode: null
     })
   }
 
@@ -333,90 +394,89 @@ class Page extends Component {
 
         <Modal maskClosable={false}
           title='创建/编辑账号'
-          visible={this.state.newItemModalVisible}
+          visible={this.state.editModalVisible}
           onCancel={this._hideNewItemModal}
           onOk={this.operSaveClicked}
-          width={600}
+          width={640}
         >
+          <Spin spinning={this.state.editLoading}>
+            <Row className='line-height40'>
+              <Col span={6} className='text-right'>
+                <span className='label-color label-required'>角色：</span>
+              </Col>
+              <Col span={18}>
+                <Select style={{ width: 200 }} defaultValue={null} value={this.state.selectRoleId} onChange={this.operIdChange}>
+                  <Select.Option value={null}>请选择角色</Select.Option>
+                  {
+                    this.state.normalRoleList && this.state.normalRoleList.length ?
+                      this.state.normalRoleList.map(item =>
+                        <Select.Option key={item.id} value={item.id}>{item.name}</Select.Option>
+                      )
+                      : null
 
-          <Row className='line-height40'>
-            <Col span={6} className='text-right'>
-              <span className='label-color label-required'>角色：</span>
-            </Col>
-            <Col span={18}>
-              <Select style={{ width: 200 }} defaultValue={null} value={this.selectOperId}>
-                <Select.Option value={null}>请选择角色</Select.Option>
+                  }
+                </Select>
+              </Col>
+            </Row>
+            <Row className='line-height40'>
+              <Col span={6} className='text-right'>
+                <span className='label-color label-required'>手机号：</span>
+              </Col>
+              <Col span={18}>
+                <InputNumber
+                  style={{ width: 200 }}
+                  precision={0}
+                  min={0}
+                  value={this.state.username}
+                  onChange={this.usernameChange}
+                  placeholder='请输入手机号'
+                />
+                <Button onClick={this.checkClicked} type='primary' className='normal' style={{ margin: "0 10px" }}>检测</Button>
+                <Button onClick={this.resetUsername} type='primary' className='normal'>重置</Button>
+              </Col>
+            </Row>
+            <Row className='line-height20'>
+              <Col offset={3}>
                 {
-                  this.state.normalRoleList && this.state.normalRoleList.length ?
-                    this.state.normalRoleList.map(item =>
-                      <Select.Option key={item.id} value={item.id}>{item.name}</Select.Option>
-                    )
-                    : null
-
-                }
-              </Select>
-            </Col>
-          </Row>
-          <Row className='line-height40'>
-            <Col span={6} className='text-right'>
-              <span className='label-color label-required'>手机号：</span>
-            </Col>
-            <Col span={18}>
-              <InputNumber
-                style={{ width: 200 }}
-                precision={0}
-                min={0}
-                value={this.state.username}
-                onChange={this.usernameChange}
-                placeholder='请输入手机号'
-              />
-              <Button onClick={this.checkClicked} type='primary' style={{ margin: "0 10px" }}>检测</Button>
-              <Button onClick={this.resetUsername} type='primary'>重置</Button>
-            </Col>
-          </Row>
-          <Row className='line-height20'>
-            <Col offset={3}>
-              {
-                checkInfo == '0' ?
-                  <span className='color-red'>
-                    该手机号尚未注册，请先使用该手机号在门店登录页面完成注册
+                  checkInfo == '0' ?
+                    <span className='color-red'>
+                      该手机号尚未注册，请先使用该手机号在门店登录页面完成注册
                   </span> : null
-              }
-              {
-                checkInfo == '1' && checkedOper ?
-                  <div className='padding-top'>
-                    <div>存在账号，保存即确认使用此账号作为该门店的超级管理员</div>
-                    <div style={{ border: "1px solid #ccc", padding: 10 }} className='flex-middle'>
-                      <div>
-                        <img src={checkedOper.imageUrl} style={{ height: 40, width: 40 }} />
-                      </div>
-                      <div className='margin0-10'>
-                        <div>{checkedOper.nickname}</div>
-                        <div className='theme-color'>{checkedOper.username}</div>
-                      </div>
-                      <div className='margin0-10'>
-                        <InputNumber style={{ width: 100 }} onChange={this.smsCodeChange} value={this.state.smsCode} />
-                      </div>
-                      <Button
-                        disabled={this.state.countNum != 60}
-                        onClick={this.sendSmsClicked} type='primary' style={{ width: "100%", marginRight: "20px" }}>
-                        {
-                          this.state.countNum == 60 ?
-                            <span>发送</span>
-                            :
-                            <span>已发送（{this.state.countNum}秒后可重发）</span>
-                        }
+                }
+                {
+                  checkInfo == '1' && checkedOper ?
+                    <div className='padding-top'>
+                      <div>存在账号，保存即确认使用此账号作为该门店的超级管理员</div>
+                      <div style={{ border: "1px solid #ccc", padding: 10 }} className='flex-middle'>
+                        <div>
+                          <img src={checkedOper.imageUrl} style={{ height: 40, width: 40 }} />
+                        </div>
+                        <div className='margin0-10'>
+                          <div>{checkedOper.nickname}</div>
+                          <div className='theme-color'>{checkedOper.username}</div>
+                        </div>
+                        <div className='margin0-10'>
+                          <InputNumber style={{ width: 110 }} onChange={this.smsCodeChange} value={this.state.smsCode} />
+                        </div>
+                        <Button
+                          disabled={this.state.countNum != 60}
+                          onClick={this.sendSmsClicked} type='primary' style={{ width: "100%", marginRight: "20px" }}>
+                          {
+                            this.state.countNum == 60 ?
+                              <span>发送</span>
+                              :
+                              <span>已发送（{this.state.countNum}秒后可重发）</span>
+                          }
 
-                      </Button>                    
+                        </Button>
+                      </div>
+
                     </div>
-
-                  </div>
-                  : null
-              }
-            </Col>
-
-          </Row>
-
+                    : null
+                }
+              </Col>
+            </Row>
+          </Spin>
         </Modal>
 
       </CommonPage >)

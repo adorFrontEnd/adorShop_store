@@ -172,6 +172,10 @@ class Page extends Component {
       freightType
     })
   }
+
+  addFreightTemplate = ()=>{
+
+  }
   /**渲染**********************************************************************************************************************************/
 
   render() {
@@ -194,67 +198,10 @@ class Page extends Component {
             <div className='margin-right20'>
               <Switch />
             </div>
-          </div>
-          <Form layout='inline' style={{ maxWidth: 1200, minWidth: 956 }}>
-            <Row>
-              <Col span={8}>
-                <Form.Item
-                  field="company"
-                  labelCol={{ span: 6 }}
-                  wrapperCol={{ span: 18 }}
-                  label='企业名'
-                >
-                  {
-                    getFieldDecorator('company', {
-                    })(
-                      <Input allowClear placeholder="输入企业名" style={{ width: "240px" }} />
-                    )
-                  }
-                </Form.Item>
-              </Col>
-
-              <Col span={8}>
-                <Form.Item
-                  labelCol={{ span: 6 }}
-                  wrapperCol={{ span: 18 }}
-                  label='创建时间'
-                  field='time'>
-                  {
-                    getFieldDecorator('time')(
-                      <DatePicker.RangePicker style={{ width: 240 }} />
-                    )
-                  }
-                </Form.Item>
-              </Col>
-
-              <Col span={8}>
-                <Form.Item
-                  style={{ width: 200 }}
-                  labelCol={{ span: 8 }}
-                  wrapperCol={{ span: 16 }}
-                  label='审核状态'
-                  field='status'
-                >
-                  {
-                    getFieldDecorator('status', {
-                      initialValue: null
-                    })(
-                      <Select>
-                        <Select.Option value={null}>选择审核状态</Select.Option>
-                        <Select.Option value='0'>待审核</Select.Option>
-                        <Select.Option value='1'>审核完成</Select.Option>
-                      </Select>
-                    )
-                  }
-                </Form.Item>
-              </Col>
-
-            </Row>
-          </Form>
+          </div>         
         </div>
         <div className='padding10-0'>
-          <Button type='primary' className='normal' onClick={this.searchClicked}>筛选</Button>
-          <Button className='margin-left' onClick={this.resetClicked}>清除所有筛选</Button>
+          <Button type='primary' onClick={this.addFreightTemplate}>新建运费模板</Button>       
         </div>
         <Table
           indentSize={20}

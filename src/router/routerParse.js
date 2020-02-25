@@ -1,24 +1,9 @@
 import { baseRoute, routerConfig } from '../config/router.config';
 
-//测试路由数据
-const _routeData = [
-  "oper.operManage",
-  "oper.operManage.operManage",
-  "oper.roleAuth",
-  "oper.roleAuth.roleAuth",
-  "productManage.productInfo",
-  "productManage.productInfo.productList",
-  "productManage.other",
-  "productManage.other.freightTemplate",
-  "user.userManage",
-  "user.userManage.userList",
-  "user.userManage.userGrade"
-];
 const getRouter = (data, shouldValidateAuth) => {
   if (!data) {
     return;
   }
-  // data = _routeData;
   let routeIndexMap = {};
   let router = [];
   for (let i = 0; i < data.length; i++) {

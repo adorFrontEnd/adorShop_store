@@ -18,9 +18,7 @@ const searchOperList = (params) => {
 }
 
 const saveOrUpdate = (params) => {
-  if (params && params.password) {
-    params.password = md5(params.password);
-  }
+
   return baseHttpProvider.postFormApi('api/oper/saveOrUpdate', params, { total: true });
 }
 const disableStatus = (params) => {

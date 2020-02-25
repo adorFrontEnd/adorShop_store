@@ -22,44 +22,7 @@ const routerConfigArr = [
     route_name: "accountSelect",
     path: baseRoute + "/accountSelect"
   },  
-  {
-    route_name: "oper",
-    title: "员工管理",
-    icon: "user",
-    moduleAuth: true
-  },
-  {
-    route_name: "oper.operManage",
-    path: baseRoute + "/oper/operManage",
-    loginRequired: true,
-    moduleAuth: true,
-    title: "账号管理",
-    icon: "team"
-  },
-  {
-    route_name: "oper.operManage.operManage",
-    path: baseRoute + "/oper/operManage",
-    loginRequired: true,
-    moduleAuth: true,
-    title: "账号管理",
-    icon: "team"
-  },
-  {
-    route_name: "oper.roleAuth",
-    path: baseRoute + "/oper/roleAuth",
-    loginRequired: true,
-    moduleAuth: true,
-    title: "角色管理",
-    icon: "solution"
-  },
-  {
-    route_name: "oper.roleAuth.roleAuth",
-    path: baseRoute + "/oper/roleAuth",
-    loginRequired: true,
-    moduleAuth: true,
-    title: "角色管理",
-    icon: "solution"
-  },
+  
   {
     route_name: "productManage",
     title: "商品管理",
@@ -131,8 +94,45 @@ const routerConfigArr = [
     moduleAuth: true,
     icon: "apartment",
     title: "创建/编辑客户",   
+  },
+  {
+    route_name: "oper",
+    title: "员工管理",
+    icon: "user",
+    moduleAuth: true
+  },
+  {
+    route_name: "oper.operManage",
+    path: baseRoute + "/oper/operManage",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "账号管理",
+    icon: "team"
+  },
+  {
+    route_name: "oper.operManage.operManage",
+    path: baseRoute + "/oper/operManage",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "账号管理",
+    icon: "team"
+  },
+  {
+    route_name: "oper.roleAuth",
+    path: baseRoute + "/oper/roleAuth",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "角色管理",
+    icon: "solution"
+  },
+  {
+    route_name: "oper.roleAuth.roleAuth",
+    path: baseRoute + "/oper/roleAuth",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "角色管理",
+    icon: "solution"
   }
-
 
 ]
 
