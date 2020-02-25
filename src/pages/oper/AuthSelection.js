@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { Table, Form, Tabs, Tree, Input, Icon, List, Spin, Button, Row, Col, Popconfirm } from "antd";
 import CommonPage from '../../components/common-page';
-import { getAllRouter } from '../../router/routerParse';
+import { getRouter } from '../../router/routerParse';
 import { getAllList } from '../../api/oper/role';
 import Toast from "../../utils/toast";
 
@@ -19,8 +19,6 @@ class AuthSelection extends Component {
     selectRoleSpecAuth: null,
     authLoading: false,
     canRenderTree: false
-
-
   }
 
   componentDidMount() {
@@ -40,16 +38,12 @@ class AuthSelection extends Component {
     })
 
     getAllList()
-      .then(data => {
-        let allAuth = data.filter(item => item.level != 2);
+      .then(allAuth => {
         let normalAuthSortMap = this.getSourceSortNumMap(allAuth);
-        let allSpecAuth = data.filter(item => item.level == 2);
         let allAuthList = allAuth.map(item => item.source);
-        let allSpecAuthList = allSpecAuth.map(item => { return { key: item.source, title: item.name } });
-        let authTree = getAllRouter(allAuthList);
+        let authTree = getRouter(allAuthList, true);
         this.setState({
           authTree,
-          allSpecAuthList,
           canRenderTree: true,
           authLoading: false,
           normalAuthSortMap
@@ -83,7 +77,7 @@ class AuthSelection extends Component {
       function (a, b) {
         return parseInt(map[a]) - parseInt(map[b])
       }
-    )   
+    )
     return checkedKeys;
   }
 
@@ -116,12 +110,6 @@ class AuthSelection extends Component {
     this.props.onCheckedChange(selectRoleAuth);
   }
 
-  onSpecAuthCheck = (checkedKeys, info) => {
-    this.setState({
-      selectRoleSpecAuth: checkedKeys
-    })
-    this.props.onSpecCheckedChange(checkedKeys);
-  }
 
   // 左侧的菜单渲染
   renderTreeNode = (data) => {
@@ -154,25 +142,6 @@ class AuthSelection extends Component {
             <TreeNode icon={<Icon type="deployment-unit" />} title="所有权限" key="all">
               {
                 this.renderTreeNode(this.state.authTree)
-              }
-            </TreeNode>
-          </Tree>
-          <Tree
-            showIcon
-            checkedKeys={this.props.selectRoleSpecAuth || []}
-            defaultExpandAll={false}
-            checkable
-            onSelect={this.onSelect}
-            onCheck={this.onSpecAuthCheck}
-          >
-            <TreeNode icon={<Icon type="deployment-unit" />} title="所有高级权限" key="all">
-              {
-                this.state.allSpecAuthList.length ?
-                  this.state.allSpecAuthList.map(item =>
-                    <TreeNode title={item.title} key={item.key} />
-                  )
-                  :
-                  null
               }
             </TreeNode>
           </Tree>

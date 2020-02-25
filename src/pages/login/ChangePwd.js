@@ -3,7 +3,6 @@ import { message, Form, Input, Button, Row, Col } from 'antd';
 import { sendSms, changePassword } from '../../api/oper/login';
 import { md5 } from '../../utils/signMD5.js';
 import { baseRoute, routerConfig } from '../../config/router.config';
-import { getCacheAccountList, setCacheAccountList, getCacheUserInfo } from '../../middleware/localStorage/login';
 
 import './index.less';
 import Toast from "../../utils/toast";
@@ -11,35 +10,16 @@ import Toast from "../../utils/toast";
 class Page extends Component {
 
   state = {
-    showBtnLoading: false,
-    phone: null,
-    redirectLogin: false
+    showBtnLoading: false
   }
 
   componentDidMount() {
-    document.title = '爱朵电商 | 门店后台系统'
-    this.getPageData();
+    document.title = '爱朵电商 | 门店后台系统' 
   }
 
   goback = () => {
     window.history.back();
-  }
-
-  getPageData = () => {
-    let accounts = getCacheAccountList();
-    if (accounts && accounts.username) {
-      this.setState({
-        phone: accounts.username,
-        redirectLogin: false
-      })
-    } else {
-      let cacheUserInfo = getCacheUserInfo();
-      this.setState({
-        phone: cacheUserInfo.phoneNumber,
-        redirectLogin: true
-      })
-    }
-  }
+  }  
 
   submitClicked = () => {
     this.props.form.validateFields((err, data) => {
@@ -47,15 +27,14 @@ class Page extends Component {
         return;
       }
       let { oldPassword, newPassword, repeatPassword } = data;
-      let phone = this.state.phone;
+     
       if (newPassword != repeatPassword) {
         Toast("重复密码不一致！");
         return;
       }
       let params = {
         oldPassword: md5(oldPassword),
-        newPassword: md5(newPassword),
-        phone
+        newPassword: md5(newPassword)      
       }
       this.setState({
         showBtnLoading: true
@@ -64,21 +43,8 @@ class Page extends Component {
       changePassword(params)
         .then(() => {
           Toast("修改成功！");
-          if (this.state.redirectLogin) {
-            this.props.history.push(routerConfig['login'].path);
-            return;
-          }
-          let accounts = getCacheAccountList();
-          let { password, ...cacheData } = accounts;
-          password = params.newPassword;
-          setCacheAccountList({ password, ...cacheData });
-          setTimeout(() => {
-            this.setState({
-              showBtnLoading: false
-            })
-            this.props.history.push(routerConfig['accountSelect'].path);
-          }, 1000)
-
+          this.props.history.push(routerConfig['login'].path);
+          return;
         })
         .catch(() => {
           this.setState({
@@ -168,7 +134,7 @@ class Page extends Component {
                 // offset={8} 
                 span={24} style={{ paddingBottom: 30 }}>
                 <div>
-                  <Button loading={this.state.showBtnLoading} onClick={this.submitClicked} type='primary' style={{ width: "100%",lineHeight:"40px",height:40,marginRight: "20px" }}>保存</Button>
+                  <Button loading={this.state.showBtnLoading} onClick={this.submitClicked} type='primary' style={{ width: "100%", lineHeight: "40px", height: 40, marginRight: "20px" }}>保存</Button>
                   {/* <Button style={{ width: 100, marginRight: "20px" }} onClick={this.goback}>返回</Button> */}
                 </div>
               </Col>

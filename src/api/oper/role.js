@@ -2,7 +2,7 @@ import baseHttpProvider from '../base/baseHttpProvider';
 import { md5 } from '../../utils/signMD5.js';
 
 const searchRoleList = (params) => {
-  return baseHttpProvider.postFormApi('api/role/searchRoleList', { page: 1, size: 10, ...params },
+  return baseHttpProvider.postFormApi('api/role/searchList', { page: 1, size: 10, ...params },
     {
       total: true
     })
@@ -21,7 +21,7 @@ const saveOrUpdate = (params) => {
 }
 
 const getAllList = (params) => {
-  return baseHttpProvider.getApi('api/source/getAllList', params)
+  return baseHttpProvider.getApi('api/source/getAll', params)
 }
 
 const getAllListRoot = (params) => {

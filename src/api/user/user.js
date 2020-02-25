@@ -5,8 +5,8 @@ import baseHttpProvider from '../base/baseHttpProvider';
 page	Int	true	第几页
 size	Int	true	每页数据条数
 */
-const searchAttentionList = (params) => {
-  return baseHttpProvider.postFormApi('api/attention/searchAttentionList',
+const searchUserList = (params) => {
+  return baseHttpProvider.postFormApi('api/user/list',
     {
       size: 10,
       ...params
@@ -58,7 +58,7 @@ const saveOrUpdateAuth = (params) => {
 
 export {
   getSurplusExportQuantity,
-  searchAttentionList,
+  searchUserList,
   exportUserList,
   searchUserAuthList,
   getUserAuthDetail,

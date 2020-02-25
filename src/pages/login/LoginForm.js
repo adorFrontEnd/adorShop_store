@@ -2,7 +2,9 @@ import React, { Component } from "react";
 import { Form, Icon, Input, Button, Checkbox } from 'antd';
 import { apiUrlPrefix } from '../../config/http.config';
 import Toast from '../../utils/toast';
-import './login.less'
+import './login.less';
+import { getImageCaptcha } from '../../api/SYS/SYS';
+
 const FormItem = Form.Item;
 
 class NormalLoginForm extends Component {
@@ -33,6 +35,26 @@ class NormalLoginForm extends Component {
     Toast('请联系管理员找回密码！')
   }
 
+  getImageCaptcha = (username) => {
+    username = username || this.state.username;
+    if (username && username.length == 11) {
+      let imageCaptchaUrl = getImageCaptcha({ username, stamp: Date.now() });
+      this.setState({
+        imageCaptchaUrl
+      })
+    }
+  }
+  onPhoneChange = (e) => {
+    let username = e.currentTarget.value;
+    let status = username && username.length == 11;
+    this.setState({
+      username
+    })
+
+    if (status) {
+      this.getImageCaptcha(username);
+    }
+  }
 
   render() {
     const { getFieldDecorator } = this.props.form;
@@ -49,6 +71,7 @@ class NormalLoginForm extends Component {
             ],
           })(
             <Input
+              onChange={this.onPhoneChange}
               className='border-bottom'
               onBlur={this.usernameOnBlur}
               placeholder="请输入门店账号"
@@ -76,7 +99,7 @@ class NormalLoginForm extends Component {
           {getFieldDecorator('imageCode', {
             rules: [
               { required: true, message: '请输入验证码!' },
-              { pattern: /^\d{4}$/, message: '请输入验证码!' }
+              { pattern: /^\w{4}$/, message: '请输入验证码!' }
             ],
           })(
             <Input
@@ -84,7 +107,13 @@ class NormalLoginForm extends Component {
               placeholder="请输入验证码"
             />
           )}
-          <img style={{ width: 100, height: 30, position: "absolute", right: 0, bottom: -6 }} />
+          <a onClick={() => this.getImageCaptcha()}>
+            {
+              this.state.imageCaptchaUrl ?
+                <img src={this.state.imageCaptchaUrl} style={{ width: 100, height: 40, position: "absolute", right: 0, bottom: -6 }} />
+                : null
+            }
+          </a>
         </FormItem>
         <FormItem>
           <Button

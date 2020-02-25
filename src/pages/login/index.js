@@ -39,12 +39,12 @@ export default class Login extends Component {
       if (res && res.loginAccounts) {
         message.success("登录成功！");
         setCacheAccountList({ username: params.username, password: params.password, loginAccounts: res.loginAccounts });
-        if (res.updatePassword == 0) {
-          setTimeout(() => {
-            this.props.history.push(routerConfig['changepwd'].path);
-          }, 1000);
-          return;
-        }
+        // if (res.updatePassword == 0) {
+        //   setTimeout(() => {
+        //     this.props.history.push(routerConfig['changepwd'].path);
+        //   }, 1000);
+        //   return;
+        // }
         setTimeout(() => {
           this.props.history.push(routerConfig['accountSelect'].path);
           this.setState({

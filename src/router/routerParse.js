@@ -14,29 +14,29 @@ const _routeData = [
   "user.userManage.userList",
   "user.userManage.userGrade"
 ];
-const getRouter = (data) => {
+const getRouter = (data, shouldValidateAuth) => {
   if (!data) {
     return;
   }
-  data = _routeData;
+  // data = _routeData;
   let routeIndexMap = {};
   let router = [];
   for (let i = 0; i < data.length; i++) {
     let item = data[i];
-    if (!item || !routerConfig[item] || !routerConfig[item]["moduleAuth"]) {
+    if (!item || !routerConfig[item] || (!routerConfig[item]["moduleAuth"] && shouldValidateAuth)) {
       continue;
     }
     let routeInfo = routerConfig[item];
     if (item.indexOf(".") == -1) {
       routeIndexMap[item] = router.length;
-      router.push({ "key": item, ...routeInfo })
+      router.push({ "key": item, children: [], ...routeInfo })
     } else {
       let arr = item.split(".");
 
       //二级菜单
       if (arr.length == 2) {
         let parent = arr[0];
-        if (!routerConfig[parent]["moduleAuth"]) {
+        if (!routerConfig[parent]["moduleAuth"] && shouldValidateAuth) {
           continue;
         }
         let parentInfo = routerConfig[parent];
@@ -55,7 +55,7 @@ const getRouter = (data) => {
       if (arr.length == 3) {
         let parent = arr[0] + '.' + arr[1];
         let grandfather = arr[0];
-        if (!routerConfig[grandfather]["moduleAuth"] || !routerConfig[parent]["moduleAuth"]) {
+        if ((!routerConfig[grandfather]["moduleAuth"] || !routerConfig[parent]["moduleAuth"]) && shouldValidateAuth) {
           continue;
         }
         let parentInfo = routerConfig[parent];
@@ -79,44 +79,10 @@ const getRouter = (data) => {
       }
     }
   }
-
+  
   return sortRouter(router)
 }
 
-
-
-const getAllRouter = (data) => {
-  if (!data) {
-    return;
-  }
-  let routeIndexMap = {};
-  let router = [];
-  console.log(data)
-  for (let i = 0; i < data.length; i++) {
-    let item = data[i];
-    if (!item || !routerConfig[item]) {
-      continue;
-    }
-    let routeInfo = routerConfig[item];
-    if (item.indexOf(".") == -1) {
-      routeIndexMap[item] = router.length;
-      router.push({ "key": item, "children": [], ...routeInfo, level: 1 })
-    } else {
-      let arr = item.split(".");
-      let parent = arr[0];
-      let parentInfo = routerConfig[parent];
-      if (!routeIndexMap.hasOwnProperty(parent)) {
-        routeIndexMap[parent] = router.length;
-        router.push({ "key": parent, "children": [], ...parentInfo, level: 1 })
-      }
-      let index = routeIndexMap[parent];
-      if (router[index]["children"]) {
-        router[index]["children"].push({ "key": item, ...routeInfo })
-      }
-    }
-  }
-  return sortRouter(router)
-}
 
 const sortRouter = (data) => {
   let arr = data.map(item => {
@@ -132,5 +98,5 @@ const sortRouter = (data) => {
   return arr.sort((a, b) => parseInt(a.sort) - parseInt(b.sort))
 }
 
-export { getRouter, getAllRouter };
+export { getRouter };
 

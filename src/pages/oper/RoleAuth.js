@@ -73,7 +73,11 @@ class Page extends Component {
   columns = [
     { title: "角色名", dataIndex: "name" },
     { title: "员工账号数", dataIndex: "accountNum", render: data => data || 0 },
-    { title: "创建时间", dataIndex: "createTime", render: data => data ? dateUtil.getDateTime(data) : "--" },
+    {
+      title: "创建时间", render: (text, record, index) => (
+        record && record.name != '超级管理员' && record.gmtCreate ? dateUtil.getDateTime(record.gmtCreate) : '--'
+      )
+    },
     {
       title: '操作',
       render: (text, record, index) => (
@@ -196,8 +200,7 @@ class Page extends Component {
     let { selectRoleAuth, selectRoleSpecAuth, selectRoleData } = this.state;
 
     let models = this.getRoleModels(selectRoleAuth);
-    let specialModels = this.getRoleModels(selectRoleSpecAuth);
-    let params = { ...data, models, specialModels };
+    let params = { ...data, models };
     let title = "添加角色成功！";
     if (selectRoleData) {
       params.id = selectRoleData.id;
@@ -228,19 +231,11 @@ class Page extends Component {
   }
 
   onCheckedChange = (selectRoleAuth) => {
-    selectRoleAuth = selectRoleAuth.filter(item => item.indexOf('.') !== -1 || item == 'home')
+   
     this.setState({
       selectRoleAuth
     })
   }
-
-  onSpecCheckedChange = (selectRoleSpecAuth) => {
-    selectRoleSpecAuth = selectRoleSpecAuth.filter(item => item != 'all')
-    this.setState({
-      selectRoleSpecAuth
-    })
-  }
-
 
   render() {
     const { getFieldDecorator } = this.props.form;
@@ -280,8 +275,7 @@ class Page extends Component {
                 <AuthSelection
                   selectRoleAuth={this.state.selectRoleAuth}
                   selectRoleSpecAuth={this.state.selectRoleSpecAuth}
-                  onCheckedChange={this.onCheckedChange}
-                  onSpecCheckedChange={this.onSpecCheckedChange}
+                  onCheckedChange={this.onCheckedChange}                
                 />
               </Col>
             </Row>

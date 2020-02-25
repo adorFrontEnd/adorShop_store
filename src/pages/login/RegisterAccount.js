@@ -1,40 +1,80 @@
 import React, { Component } from "react";
 import { message, Form, Input, Button, Row, Col } from 'antd';
 import { baseRoute, routerConfig } from '../../config/router.config';
-import { sendSms, forgetPassword } from '../../api/oper/login';
+import { registered } from '../../api/oper/oper';
 import './index.less';
 import './pwd.less';
 import Toast from "../../utils/toast";
 import { NavLink, Link } from 'react-router-dom';
+import { getImageCaptcha, sendSms } from '../../api/SYS/SYS';
+
 
 class Page extends Component {
 
   state = {
     showBtnLoading: false,
     showVefifyClickLinkStatus: "0",
-    countNum: 60
+    countNum: 60,
+    imageCaptchaUrl: null,
+    username:null
   }
 
   componentDidMount() {
     document.title = '爱朵电商 | 门店后台系统'
   }
 
-  goback = () => {
-    window.history.back();
-  }
-
   componentWillUnmount() {
     this.resetCdTimer();
   }
 
+  goback = () => {
+    window.history.back();
+  }
+
+  /**点击注册 *****************************************************************/
+
+  registerClicked = () => {
+
+    this.props.form.validateFields((err, data) => {
+      if (err) {
+        return;
+      }
+      let { nickname, username, password, repeatPassword, verifyCode, smsCode } = data;
+      if (password != repeatPassword) {
+        Toast('密码与重复密码不一致！');
+        return;
+      }
+      let params = {
+        nickname, username, password, verifyCode, smsCode
+      }
+      
+      this.setState({
+        showBtnLoading:true
+      })
+      registered(params)
+      .then(()=>{
+        this.setState({
+          showBtnLoading:false
+        })
+        Toast('注册成功！');
+        this.props.history.push(routerConfig['login'].path);
+      })
+      .catch(()=>{
+        this.setState({
+          showBtnLoading:false
+        })
+      })
+    })
+  }
+  /**发送短信 *****************************************************************/
   verfyCodeClicked = () => {
     let params = this.props.form.getFieldsValue();
-    let { phone } = params;
-    if (!phone || phone.length != 11) {
+    let { username } = params;
+    if (!username || username.length != 11) {
       Toast("请输入11位的门店账号（手机号）！")
       return;
     }
-    sendSms({ phone })
+    sendSms({ phone:username })
       .then(() => {
         Toast("发送短信成功！");
         this.startCdTimer();
@@ -42,11 +82,18 @@ class Page extends Component {
   }
 
   onPhoneChange = (e) => {
-    let phone = e.currentTarget.value;
-    let showVefifyClickLinkStatus = (phone && phone.length == 11) ? "1" : "0";
+    let username = e.currentTarget.value;
+    let status = username && username.length == 11;
+    let showVefifyClickLinkStatus = status ? "1" : "0";
+
     this.setState({
-      showVefifyClickLinkStatus
+      showVefifyClickLinkStatus,
+      username
     })
+
+    if (status) {
+      this.getImageCaptcha(username);
+    }
   }
 
   startCdTimer = () => {
@@ -79,21 +126,14 @@ class Page extends Component {
     })
   }
 
-  submitPassword = () => {
-
-    this.props.form.validateFields((err, data) => {
-      if (err) {
-        return;
-      }
-      let { phone, code, password } = data;
-      forgetPassword({ phone, code, password })
-        .then(() => {
-
-          Toast('重置密码成功！');
-          window.location.href = '/login';
-        })
-    })
-
+  getImageCaptcha = (username) => {
+    username = username || this.state.username;
+    if (username && username.length == 11) {
+      let imageCaptchaUrl = getImageCaptcha({ username, stamp: Date.now() });
+      this.setState({
+        imageCaptchaUrl
+      })
+    }
   }
 
   render() {
@@ -114,10 +154,10 @@ class Page extends Component {
           <Form theme='dark' className='login-form' style={{ width: 450, margin: "0 auto" }}>
 
             <Form.Item
-              field="name"
+              field="nickname"
             >
               {
-                getFieldDecorator('name', {
+                getFieldDecorator('nickname', {
                   rules: [
                     { required: true, message: '请填写名称!' }
                   ],
@@ -130,10 +170,10 @@ class Page extends Component {
               }
             </Form.Item>
             <Form.Item
-              field="phone"
+              field="username"
             >
               {
-                getFieldDecorator('phone', {
+                getFieldDecorator('username', {
                   rules: [
                     { required: true, message: '请输入11位手机号码!' },
                     { min: 11, max: 11, message: '请输入11位手机号码!' },
@@ -141,6 +181,7 @@ class Page extends Component {
                   ],
                 })(
                   <Input
+
                     type='number'
                     min={0}
                     className='bottom-line-input prefix'
@@ -185,13 +226,13 @@ class Page extends Component {
               }
             </Form.Item>
             <Form.Item
-              field="imageCode"
+              field="verifyCode"
               style={{ position: "relative" }}
             >
-              {getFieldDecorator('imageCode', {
+              {getFieldDecorator('verifyCode', {
                 rules: [
                   { required: true, message: '请输入验证码!' },
-                  { pattern: /^\d{4}$/, message: '请输入验证码!' }
+                  { pattern: /^\w{4}$/, message: '请输入验证码!' }
                 ],
               })(
                 <Input
@@ -199,7 +240,13 @@ class Page extends Component {
                   placeholder="请输入验证码"
                 />
               )}
-              <img style={{ width: 100, height: 30, position: "absolute", right: 0, bottom: -6 }} />
+              <a onClick={() => this.getImageCaptcha()}>
+                {
+                  this.state.imageCaptchaUrl ?
+                    <img src={this.state.imageCaptchaUrl} style={{ width: 100, height: 40, position: "absolute", right: 0, bottom: -6 }} />
+                    : null
+                }
+              </a>
             </Form.Item>
 
             <Form.Item>
@@ -217,11 +264,11 @@ class Page extends Component {
             </Form.Item>
 
             <Form.Item
-              field="code"
+              field="smsCode"
               style={{ position: "relative" }}
             >
               {
-                getFieldDecorator('code', {
+                getFieldDecorator('smsCode', {
                   rules: [
                     { required: true, message: '请输入6位验证码!' },
                     { pattern: /^\d{6}$/, message: '请输入6位数字验证码!' }
@@ -239,7 +286,7 @@ class Page extends Component {
             <Row>
               <Col span={24} style={{ paddingBottom: 30 }}>
                 <div>
-                  <Button onClick={this.submitPassword} size='large' type='primary' style={{ width: "100%", marginRight: "20px" }}>注册</Button>
+                  <Button loading={this.state.showBtnLoading} onClick={this.registerClicked} size='large' type='primary' style={{ width: "100%", marginRight: "20px" }}>注册</Button>
                 </div>
                 <div style={{ paddingTop: 10 }}>
                   <NavLink to='/login' >已有账号，马上登录</NavLink>

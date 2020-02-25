@@ -15,9 +15,24 @@ const getUpdatePictureUrl = (params) => {
   }
 }
 
+const getImageCaptcha = (params) => {
+
+  let result = baseHttpProvider.getReqObj('imageCaptcha', params, false, true);
+  if (result.url) {
+    return result.url
+  }
+}
+
+const sendSms = (params) => {
+  return baseHttpProvider.getApi('sendSms', params, {
+    tokenless: true
+  })
+}
 
 
 export {
   getServerCurrentTime,
-  getUpdatePictureUrl
+  getUpdatePictureUrl,
+  getImageCaptcha,
+  sendSms
 }

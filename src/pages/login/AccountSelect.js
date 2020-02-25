@@ -45,13 +45,13 @@ class Page extends Component {
   }
 
   login = (record) => {
-    let { companyId } = record;
+    let { shopId } = record;
     let { password, username } = this.state.accounts;
     this.setState({
       showLoading: true
     })
 
-    userLogin({ password, username, companyId })
+    userLogin({ password, username, shopId })
       .then((res) => {
         if (res && res.token) {
           message.success("登录成功！");
@@ -118,12 +118,12 @@ class Page extends Component {
                 this.state.loginAccounts.map(item =>
                   <div
                     onClick={() => { this.login(item) }}
-                    key={item.companyId} style={{ padding: "20px", backgroundColor: "#F8F8F8", cursor: "pointer", marginTop: 10 }}>
+                    key={item.shopId} style={{ padding: "20px", backgroundColor: "#F8F8F8", cursor: "pointer", marginTop: 10 }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                       <div style={{ display: "flex", alignItems: "center" }}>
                         <img src={item.logo} style={{ height: "80px", width: "80px", marginRight: 20 }} />
                         <div>
-                          <div style={{ fontSize: 18, fontWeight: "bold" }}>{item.companyName}</div>
+                          <div style={{ fontSize: 18, fontWeight: "bold" }}>{item.shopName}</div>
                           <div style={{ lineHeight: "40px", fontWeight: "bold" }}>加入时间：{dateUtil.getDateTime(item.createTime)}</div>
                         </div>
                       </div>

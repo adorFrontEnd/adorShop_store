@@ -5,7 +5,7 @@ import { pagination } from '../../utils/pagination';
 import Toast from '../../utils/toast';
 import { SearchForm, SubmitForm } from '../../components/common-form';
 import dateUtil from '../../utils/dateUtil';
-import { searchAttentionList, exportUserList } from '../../api/user/user';
+import { searchUserList, exportUserList } from '../../api/user/user';
 import { NavLink, Link } from 'react-router-dom';
 import { baseRoute, routerConfig } from '../../config/router.config';
 import { connect } from 'react-redux';
@@ -99,7 +99,7 @@ class Page extends Component {
   getPageData = () => {
     let _this = this;
     this._showTableLoading();
-    searchAttentionList(this.params).then(res => {
+    searchUserList(this.params).then(res => {
       this._hideTableLoading();
 
       let _pagination = pagination(res, (current) => {

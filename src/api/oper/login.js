@@ -17,10 +17,6 @@ const userLogin = (params) => {
   return baseHttpProvider.postFormApi('auth/verifyCodeLogin', params, { tokenless: true })
 }
 
-const sendSms = (params) => {
-  return baseHttpProvider.getApi('sendSms', params, { tokenless: true })
-}
-
 const forgetPassword = (params) => {
   if (params && params.password) {
     params.password = md5(params.password);
@@ -30,12 +26,11 @@ const forgetPassword = (params) => {
 
 const changePassword = (params) => {
 
-  return baseHttpProvider.postFormApi('api/oper/changePassword', params, { tokenless: true })
+  return baseHttpProvider.postFormApi('api/oper/updatePassword', params)
 }
 
 export {
-  userLogin,
-  sendSms,
+  userLogin,  
   forgetPassword,
   changePassword
 }

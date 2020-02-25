@@ -1,17 +1,20 @@
 import React, { Component } from "react";
 import { message, Form, Input, Button, Row, Col } from 'antd';
 import { baseRoute, routerConfig } from '../../config/router.config';
-import { sendSms, forgetPassword } from '../../api/oper/login';
+import { forgetPassword } from '../../api/oper/login';
+import { sendSms } from '../../api/SYS/SYS';
+import Toast from "../../utils/toast";
+import { getImageCaptcha } from '../../api/SYS/SYS';
 import './index.less';
 import './pwd.less';
-import Toast from "../../utils/toast";
 
 class Page extends Component {
 
   state = {
     showBtnLoading: false,
     showVefifyClickLinkStatus: "0",
-    countNum: 60
+    countNum: 60,
+    username:null
   }
 
   componentDidMount() {
@@ -29,12 +32,12 @@ class Page extends Component {
 
   verfyCodeClicked = () => {
     let params = this.props.form.getFieldsValue();
-    let { phone } = params;
-    if (!phone || phone.length != 11) {
+    let { username } = params;
+    if (!username || username.length != 11) {
       Toast("请输入11位的门店账号（手机号）！")
       return;
     }
-    sendSms({ phone })
+    sendSms({ phone:username })
       .then(() => {
         Toast("发送短信成功！");
         this.startCdTimer();
@@ -42,13 +45,19 @@ class Page extends Component {
   }
 
   onPhoneChange = (e) => {
-    let phone = e.currentTarget.value;
-    let showVefifyClickLinkStatus = (phone && phone.length == 11) ? "1" : "0";
+    let username = e.currentTarget.value;
+    let status = username && username.length == 11;
+    let showVefifyClickLinkStatus = status ? "1" : "0";
     this.setState({
+      username,
       showVefifyClickLinkStatus
     })
-  }
 
+    if (status) {
+      this.getImageCaptcha(username);
+    }
+  }
+  
   startCdTimer = () => {
     this.resetCdTimer();
     let cdTimer = setInterval(() => {
@@ -85,15 +94,26 @@ class Page extends Component {
       if (err) {
         return;
       }
-      let { phone, code, password } = data;
-      forgetPassword({ phone, code, password })
+      let { username, verifyCode, password,smsCode } = data;
+      forgetPassword({ username, verifyCode, password,smsCode })
         .then(() => {
 
           Toast('重置密码成功！');
           window.location.href = '/login';
         })
     })
+  }
 
+
+
+  getImageCaptcha = (username) => {
+    username = username || this.state.username;
+    if (username && username.length == 11) {
+      let imageCaptchaUrl = getImageCaptcha({ username, stamp: Date.now() });
+      this.setState({
+        imageCaptchaUrl
+      })
+    }
   }
 
   render() {
@@ -114,10 +134,10 @@ class Page extends Component {
           <Form theme='dark' className='login-form' style={{ width: 450, margin: "0 auto" }}>
 
             <Form.Item
-              field="phone"
+              field="username"
             >
               {
-                getFieldDecorator('phone', {
+                getFieldDecorator('username', {
                   rules: [
                     { required: true, message: '请输入11位手机号码!' },
                     { min: 11, max: 11, message: '请输入11位手机号码!' },
@@ -152,13 +172,13 @@ class Page extends Component {
               }
             </Form.Item>
             <Form.Item
-              field="imageCode"
+              field="verifyCode"
               style={{ position: "relative" }}
             >
-              {getFieldDecorator('imageCode', {
+              {getFieldDecorator('verifyCode', {
                 rules: [
                   { required: true, message: '请输入验证码!' },
-                  { pattern: /^\d{4}$/, message: '请输入验证码!' }
+                  { pattern: /^\w{4}$/, message: '请输入验证码!' }
                 ],
               })(
                 <Input
@@ -166,7 +186,13 @@ class Page extends Component {
                   placeholder="请输入验证码"
                 />
               )}
-              <img style={{ width: 100, height: 30, position: "absolute", right: 0, bottom: -6 }} />
+              <a onClick={() => this.getImageCaptcha()}>
+                {
+                  this.state.imageCaptchaUrl ?
+                    <img src={this.state.imageCaptchaUrl} style={{ width: 100, height: 40, position: "absolute", right: 0, bottom: -6 }} />
+                    : null
+                }
+              </a>
             </Form.Item>
 
             <Form.Item>
@@ -184,11 +210,11 @@ class Page extends Component {
             </Form.Item>
 
             <Form.Item
-              field="code"
+              field="smsCode"
               style={{ position: "relative" }}
             >
               {
-                getFieldDecorator('code', {
+                getFieldDecorator('smsCode', {
                   rules: [
                     { required: true, message: '请输入6位验证码!' },
                     { pattern: /^\d{6}$/, message: '请输入6位数字验证码!' }

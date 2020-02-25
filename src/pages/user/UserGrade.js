@@ -5,7 +5,7 @@ import { pagination } from '../../utils/pagination';
 import Toast from '../../utils/toast';
 import { SearchForm, SubmitForm } from '../../components/common-form';
 import dateUtil from '../../utils/dateUtil';
-import { searchAttentionList, exportUserList } from '../../api/user/user';
+import { getGradeDetail } from '../../api/user/grade';
 import { NavLink, Link } from 'react-router-dom';
 import { baseRoute, routerConfig } from '../../config/router.config';
 import { connect } from 'react-redux';
@@ -24,7 +24,7 @@ class Page extends Component {
 
   componentDidMount() {
     this.props.changeRoute({ path: 'user.userManage.userGrade', title: '客户级别', parentTitle: '会员管理' });
-
+    this.getPageData();
   }
 
   goIntegralRecord = () => {
@@ -46,14 +46,13 @@ class Page extends Component {
 
   // 获取页面列表
   getPageData = () => {
-    let _this = this;
-    this._showTableLoading();
-    searchAttentionList().then(res => {
+  
+    getGradeDetail().then(res => {
 
     })
-      .catch(() => {
+    .catch(() => {
 
-      })
+    })
   }
 
   //保存页面诗句
