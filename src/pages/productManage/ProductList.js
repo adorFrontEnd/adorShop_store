@@ -15,7 +15,7 @@ const _title = "商品列表";
 const _description = "";
 const integralRecordPath = routerConfig["user.userManage.userList"].path;
 const giftRecordPath = routerConfig["user.userManage.userList"].path;
-const userEditPath = routerConfig["user.userManage.userEdit"].path;
+const productEditPath = routerConfig["productManage.productInfo.productEdit"].path;
 const _channelEnum = {
   "0": "直购",
   "1": "订货",
@@ -32,7 +32,7 @@ class Page extends Component {
   }
 
   componentDidMount() {
-    this.props.changeRoute({ path: 'product.productInfo.productList', title: '商品列表', parentTitle: '商品管理' });
+    this.props.changeRoute({ path: 'product.productInfo.productEdit', title: '商品编辑', parentTitle: '商品管理' });
 
   }
 
@@ -165,7 +165,7 @@ class Page extends Component {
         <div>
           <div className="flex-between align-center margin-bottom20">
             <div>
-              <NavLink to={userEditPath + "/0"}><Button type='primary' onClick={() => this.goEdit('0')}>创建商品</Button></NavLink>
+              <NavLink to={productEditPath + "/0"}><Button type='primary' onClick={() => this.goEdit('0')}>创建商品</Button></NavLink>
               <Button type='primary' className='margin0-10'>批量倒入商品</Button>
               <Button type='primary' >批量删除</Button>
             </div>

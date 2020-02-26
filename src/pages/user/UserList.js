@@ -18,9 +18,9 @@ const giftRecordPath = routerConfig["user.userManage.userList"].path;
 const userEditPath = routerConfig["user.userManage.userEdit"].path;
 const _statusEnum = {
   "0": "正常",
-  "2": "待审核",
-  "3": "未通过",
-  "4": "已停用"
+  "1": "待审核",
+  "2": "未通过",
+  "3": "已停用"
 }
 const _statusEnumArr = Object.keys(_statusEnum).map(item => { return { id: item, name: _statusEnum[item] } });
 
@@ -34,7 +34,7 @@ class Page extends Component {
 
   componentDidMount() {
     this.props.changeRoute({ path: 'user.userManage.userList', title: '客户列表', parentTitle: '会员管理' });
-
+    this.getPageData();
   }
 
   goIntegralRecord = () => {
@@ -125,9 +125,9 @@ class Page extends Component {
   columns = [
 
     { title: "客户名称", dataIndex: "customerName", render: data => data || "--" },
-    { title: "客户编码", dataIndex: "userId", render: data => data || "--" },
-    { title: "登录账号", dataIndex: "avatar", render: data => data ? (<img src={data} style={{ height: 40, width: 40 }} />) : "--" },
-    { title: "地区", dataIndex: "area", render: data => data || "--" },
+    { title: "客户编码", dataIndex: "customerNumber", render: data => data || "--" },
+    { title: "登录账号", dataIndex: "accountNumber", render: data => data || "--"  },
+    { title: "地区", dataIndex: "area", render: data => this.getAreaData(data) },
     { title: "级别", dataIndex: "gradeName", render: data => data || "--" },
     { title: "联系人", dataIndex: "province", render: data => data || "--" },
     { title: "状态", dataIndex: "status", render: data => data || "--" },
@@ -151,6 +151,14 @@ class Page extends Component {
       )
     }
   ]
+
+  getAreaData = (areaData)=>{
+    if(!areaData){
+      return '--'
+    }
+    let arr = areaData.split(',');
+    return arr[1]
+  }
 
   _showTableLoading = () => {
 

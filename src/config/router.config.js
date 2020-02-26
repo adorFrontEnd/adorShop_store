@@ -26,7 +26,7 @@ const routerConfigArr = [
   {
     route_name: "productManage",
     title: "商品管理",
-    icon: "profile",
+    icon: "gift",
     moduleAuth: true
   },
   {
@@ -42,7 +42,15 @@ const routerConfigArr = [
     loginRequired: true,
     moduleAuth: true,
     title: "商品列表",
-    icon: "team"
+    icon: "profile"
+  },
+  {
+    route_name: "productManage.productInfo.productEdit",
+    path: baseRoute + "/productManage/productEdit",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "商品编辑",
+    icon: "profile"
   },
   {
     route_name: "productManage.other",
@@ -57,7 +65,7 @@ const routerConfigArr = [
     loginRequired: true,
     moduleAuth: true,
     title: "运费模板",
-    icon: "solution"
+    icon: "block"
   },
   {
     route_name: "user",

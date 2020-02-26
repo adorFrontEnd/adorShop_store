@@ -6,11 +6,26 @@ page	Int	true	第几页
 size	Int	true	每页数据条数
 */
 const getGradeDetail = (params) => {
-  return baseHttpProvider.getApi('api/grade/gradeDetail',params)
+  return baseHttpProvider.getApi('api/grade/gradeDetail', params)
+}
+
+const createAndUpdateGrade = (params) => {
+  return baseHttpProvider.postFormApi('api/grade/createAndUpdateGrade', params)
+}
+
+const deleteGrade = (params) => {
+  return baseHttpProvider.getApi('api/grade/deleteGrade', params)
+}
+
+const getGradeList = (params) => {
+  return baseHttpProvider.getApi('api/grade/gradeList', params)
 }
 
 
 
-export {  
-  getGradeDetail
+export {
+  getGradeDetail,
+  createAndUpdateGrade,
+  deleteGrade,
+  getGradeList
 }

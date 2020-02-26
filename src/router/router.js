@@ -19,11 +19,11 @@ const OperManage = asyncComponent(() => import("../pages/oper/OperManage"));
 
 const ProductList = asyncComponent(() => import("../pages/productManage/ProductList"));
 const FreightTemplate = asyncComponent(() => import("../pages/productManage/FreightTemplateManage"));
+const ProductEdit =  asyncComponent(() => import("../pages/productManage/ProductEdit"));
 
 const UserList = asyncComponent(() => import("../pages/user/UserList"));
 const UserGrade = asyncComponent(() => import("../pages/user/UserGrade"));
 const UserEdit = asyncComponent(() => import("../pages/user/UserEdit"));
-
 
 export default class GlobalRouter extends React.Component {
 
@@ -56,7 +56,8 @@ export default class GlobalRouter extends React.Component {
 
                   <PrivateRoute path={routerConfig["productManage.productInfo.productList"].path} component={ProductList} />
                   <PrivateRoute path={routerConfig["productManage.other.freightTemplate"].path} component={FreightTemplate} />
-
+                  <PrivateRoute path={routerConfig["productManage.productInfo.productEdit"].path} component={ProductEdit} />
+                  
                   <PrivateRoute path={routerConfig["user.userManage.userList"].path} component={UserList} />
                   <PrivateRoute path={routerConfig["user.userManage.userGrade"].path} component={UserGrade} />
                   <PrivateRoute path={routerConfig["user.userManage.userEdit"].path} component={UserEdit} />

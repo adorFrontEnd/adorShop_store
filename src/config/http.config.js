@@ -10,6 +10,8 @@ let domain = '';
 // domain='http://sys.trace.adorsmart.com:7100'
 // 博文
 domain = "http://47.103.71.160:9092";
+domain = "http://192.168.20.54:9092";
+
 // domain = "http://192.168.20.56:5054";
 let apiUrlPrefix = domain + "/";
 let picUrlPrefix = "";

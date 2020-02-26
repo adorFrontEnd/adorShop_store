@@ -1,12 +1,14 @@
 import React, { Component } from "react";
-import { Col, Row, Checkbox, Card, Modal, Select, Spin, Form, Button, Input, Table, Radio } from 'antd';
+import { Col, Row, Checkbox, Card, Modal, Select, Spin, Form, Button, Input, InputNumber, Table, Radio } from 'antd';
 import Toast from '../../utils/toast';
 import CommonPage from '../../components/common-page';
 import { SearchForm } from '../../components/common-form';
 import dateUtil from '../../utils/dateUtil';
 // import PictureWall from '../../components/upload/PictureWall';
 import SingleDistrictSelect from '../../components/areaSelect/SingleDistrictSelect';
-
+import { getGradeList } from "../../api/user/grade";
+import { searchUser, createUser } from '../../api/user/user';
+import { md5 } from "../../utils/signMD5.js";
 
 const _description = "";
 const _statusEnum = {
@@ -21,7 +23,10 @@ class Page extends Component {
     id: 0,
     showLoading: false,
     areaModalIsVisible: false,
-    selectAreaData: null
+    selectAreaData: null,
+    gradeList: [],
+    hasSuperiorId: false,
+    headUrl: "xxxx"
   }
 
   componentWillMount() {
@@ -36,6 +41,18 @@ class Page extends Component {
     // this._getOrganization(id);
   }
 
+  componentDidMount() {
+    this.getGradeList();
+  }
+
+  getGradeList = () => {
+    getGradeList()
+      .then(gradeList => {
+        this.setState({
+          gradeList
+        })
+      })
+  }
 
   getDealerDetail = (id) => {
     id = id || this.state.id;
@@ -91,36 +108,29 @@ class Page extends Component {
       if (err) {
         return;
       }
-      params.id = this.state.id;
-      if (params.id == 0) {
-        if (!params.password) {
-          Toast("密码必填!", "");
-          return;
-        }
+      let { customerName, accountNumber, gradeId, status, remark } = params;
+      let { hasSuperiorId, selectAreaData, headUrl } = this.state;
+      let password = md5(accountNumber.toString());
+      let superiorId = null;
+      let area = this.getAreaData(selectAreaData);
+      let data = {
+        customerName, accountNumber, gradeId, status, remark, superiorId, area, headUrl, password
       }
-      let auth = this.state.auth;
-      if (!auth || !auth.length) {
-        Toast("请至少选择一种权限！");
-        return;
-      }
-
-      let authObj = this.getAuthStatus(this.state.auth);
-      let { storeStatus } = authObj;
-      let station = this.state.location;
-      if (storeStatus == '1') {
-        station = null;
-      }
-      let id = !this.state.id || this.state.id == '0' ? null : this.state.id;
-      let { labelId } = this.state.dealerDetail || {};
-
-      // addDealerAndUpdate({ ...params, ...authObj, ...station, id, labelId })
-      //   .then(res => {
-      //     if (res.status == "SUCCEED") {
-      //       Toast(`${id ? "保存" : "添加"}成功!`, "success");
-      //       this.dealerEditBack();
-      //     }
-      //   })
+      createUser(data)
+        .then(() => {
+          Toast("保存成功！");
+        })
     })
+  }
+
+  getAreaData = (selectAreaData) => {
+    if (!selectAreaData || !selectAreaData.districtId) {
+      return;
+    }
+    let { districtId, proviceId, cityId, proviceName, cityName, districtName } = selectAreaData;
+    proviceId = proviceId || districtId.toString().substr(0, 2) + "0000";
+    cityId = cityId || districtId.toString().substr(0, 4) + "00";
+    return `${proviceId}-${cityId}-${districtId},${proviceName}-${cityName}-${districtName}`
   }
 
 
@@ -152,6 +162,35 @@ class Page extends Component {
     this._hideAreaSelectModal()
   }
 
+  checkCliked = () => {
+    let { accountNumber } = this.props.form.getFieldsValue();
+    if (!accountNumber || accountNumber.toString().length != 11) {
+      Toast("请输入正确的手机号！");
+    }
+  }
+
+  hasSuperiorIdRadioChange = (e) => {
+    let hasSuperiorId = e.target.value;
+    this.setState({
+      hasSuperiorId
+    })
+  }
+
+  searchSuperiorIdClicked = (e) => {
+    let { customerName } = this.state;
+    searchUser({ customerName })
+      .then(() => {
+
+      })
+  }
+
+  customerNameChange = (e) => {
+    let customerName = e.target.value;
+    this.setState({
+      customerName
+    })
+  }
+
   /***渲染*************************************************************************************************** */
 
   render() {
@@ -160,7 +199,7 @@ class Page extends Component {
 
     return (
       <CommonPage title={this.state._title} description={_description} >
-        <div style={{ width: 600 }}>
+        <div style={{ width: 650 }}>
 
           <Row className='line-height40 padding10-0'>
             <Col offset={8}>
@@ -174,9 +213,9 @@ class Page extends Component {
               labelCol={{ span: 8 }}
               wrapperCol={{ span: 16 }}
               label='客户名称：'
-              field='name'>
+              field='customerName'>
               {
-                getFieldDecorator('name', {
+                getFieldDecorator('customerName', {
                   rules: [
                     { required: true, message: '请输入客户名称!' }
                   ]
@@ -191,39 +230,25 @@ class Page extends Component {
                   labelCol={{ span: 12 }}
                   wrapperCol={{ span: 12 }}
                   label='登录账号：'
-                  field='phone'>
+                  field='accountNumber'>
                   {
-                    getFieldDecorator('phone', {
+                    getFieldDecorator('accountNumber', {
                       rules: [
                         { required: true, message: '请输入登录账号!' }
                       ]
                     })(
-                      <Input minLength={0} maxLength={11} />
+                      <InputNumber style={{ width: 200 }} precision={0} min={0} minLength={0} maxLength={11} />
                     )
                   }
                 </Form.Item>
               </Col>
               <Col span={8} className='line-height40'>
-                <Button type='primary' className='margin-left'>检测</Button>
-                <span>请确保是手机号格式</span>
+                <Button type='primary' className='margin0-10' onClick={this.checkCliked}>检测</Button>
+                <span className='color-red'>请确保是手机号格式</span>
               </Col>
             </Row>
 
-            <Form.Item
-              labelCol={{ span: 8 }}
-              wrapperCol={{ span: 16 }}
-              label='登录密码'
-              field='password'>
-              {
-                getFieldDecorator('password', {
-                  rules: [
-                    { required: true, message: '请输入登录密码!' }
-                  ]
-                })(
-                  <Input />
-                )
-              }
-            </Form.Item>
+
             <Row className='line-height40'>
               <Col span={8} className='label-required text-right'>地区：</Col>
               <Col span={16}>
@@ -240,7 +265,7 @@ class Page extends Component {
                 </span>
               </Col>
             </Row>
-            <Form.Item
+            {/* <Form.Item
               labelCol={{ span: 8 }}
               wrapperCol={{ span: 16 }}
               label='身份证号：'
@@ -254,44 +279,58 @@ class Page extends Component {
                   <Input minLength={0} maxLength={18} />
                 )
               }
-            </Form.Item>
+            </Form.Item> */}
             <Form.Item
               labelCol={{ span: 8 }}
               wrapperCol={{ span: 16 }}
               label='客户级别：'
-              field='grade'>
+              field='gradeId'>
               {
-                getFieldDecorator('grade', {
+                getFieldDecorator('gradeId', {
                   initialValue: null,
                   rules: [
                     { required: true, message: '请选择!' }
                   ]
                 })(
-                  <Select>
-                    <Select.Option value={null}>请选择</Select.Option>
-                    <Select.Option value={1}>一级</Select.Option>
-                    <Select.Option value={2}>二级</Select.Option>
-                    <Select.Option value={3}>三级</Select.Option>
+                  <Select style={{ width: 200 }}>
+                    <Select.Option value={null} style={{ width: 200 }}>请选择</Select.Option>
+                    {
+                      this.state.gradeList && this.state.gradeList.length ?
+                        this.state.gradeList.map(item =>
+                          <Select.Option key={item.id} value={item.id}>{item.name}</Select.Option>
+                        )
+                        : null
+                    }
                   </Select>
                 )
               }
             </Form.Item>
             <Row className='line-height40'>
-              <Col span={8} className='label-required text-right'>上级：</Col>
+              <Col span={8} className={`${this.state.hasSuperiorId ? "label-required" : ""} text-right`} >上级：</Col>
               <Col span={16} className='flex-middle'>
-                <Input style={{ width: 200, marginRight: '10px' }} />
-                <Radio.Group defaultValue={false}>
-                  <Radio value={false}>有上级</Radio>
-                  <Radio value={true}>无上级</Radio>
+                <Input
+                  value={this.state.customerName}
+                  onChange={this.customerNameChange}
+                  onPressEnter={this.searchSuperiorIdClicked}
+                  disabled={!this.state.hasSuperiorId} style={{ width: 200, marginRight: '10px' }}
+                  placeholder='输入上级账户'
+                />
+                <Radio.Group defaultValue={false} value={this.state.hasSuperiorId} onChange={this.hasSuperiorIdRadioChange}>
+                  <Radio value={true}>有上级</Radio>
+                  <Radio value={false}>无上级</Radio>
                 </Radio.Group>
               </Col>
             </Row>
-            <Row className='line-height20 margin-bottom'>
+            {
+              this.state.hasSuperiorId ?
+                <Row className='line-height20 margin-bottom'>
+                  <Col offset={8} span={16} className='flex-middle'>
+                    <span className='color-red'>回车搜索上级用户</span>
+                  </Col>
+                </Row>
+                : null
+            }
 
-              <Col offset={8} span={16} className='flex-middle'>
-                <span className='color-red'>回车搜索上级用户</span>
-              </Col>
-            </Row>
             <Form.Item
               labelCol={{ span: 8 }}
               wrapperCol={{ span: 16 }}
@@ -304,7 +343,7 @@ class Page extends Component {
                     { required: true, message: '请选择!' }
                   ]
                 })(
-                  <Select>
+                  <Select style={{ width: 200 }}>
                     <Select.Option value={null}>请选择</Select.Option>
                     {
                       Object.keys(_statusEnum).map(item => (

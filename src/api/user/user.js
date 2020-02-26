@@ -56,6 +56,16 @@ const saveOrUpdateAuth = (params) => {
 }
 
 
+const searchUser = (params) => {
+  return baseHttpProvider.postFormApi('api/user/searchUser', params)
+}
+
+const createUser = (params) => {
+  return baseHttpProvider.postFormApi('api/user/createAndUpdateUser', params)
+}
+
+
+
 export {
   getSurplusExportQuantity,
   searchUserList,
@@ -64,5 +74,7 @@ export {
   getUserAuthDetail,
   resetSecretKey,
   saveOrUpdateAuth,
-  deleteAuth
+  deleteAuth,
+  searchUser,
+  createUser
 }
