@@ -80,9 +80,9 @@ const _request = (url, params, method, options) => {
 
       if (toastData.required) {
         if (res.data.errorCode == "SYS.0003" || res.data.errorCode == "SYS.0002") {
-          // Toast(toastData.overTokenErrorTitle, 'error');
-          // goLogin();
-          // userLogout();
+          Toast(toastData.overTokenErrorTitle, 'error');
+          goLogin();
+          userLogout();
         } else if (res.data.errorCode == "SYS.0000") {
           Toast(toastData.serverErrorTitle, 'error')
         } else if (res.data.errorMessage) {

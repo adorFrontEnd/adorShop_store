@@ -7,15 +7,15 @@ import dateUtil from '../../utils/dateUtil';
 // import PictureWall from '../../components/upload/PictureWall';
 import SingleDistrictSelect from '../../components/areaSelect/SingleDistrictSelect';
 import { getGradeList } from "../../api/user/grade";
-import { searchUser, createUser } from '../../api/user/user';
+import { searchUser, createUser, getUserDetail, detectPhone } from '../../api/user/user';
 import { md5 } from "../../utils/signMD5.js";
 
 const _description = "";
 const _statusEnum = {
   "0": "正常",
-  "2": "待审核",
-  "3": "未通过",
-  "4": "已停用"
+  "1": "待审核",
+  "2": "未通过",
+  "3": "已停用"
 }
 
 class Page extends Component {
@@ -26,7 +26,10 @@ class Page extends Component {
     selectAreaData: null,
     gradeList: [],
     hasSuperiorId: false,
-    headUrl: "xxxx"
+    headUrl: "xxxx",
+    isPhoneValid: false,
+    superiorCustomerName: null,
+    userDetail: null
   }
 
   componentWillMount() {
@@ -37,12 +40,12 @@ class Page extends Component {
       _title: isEdit ? "编辑客户" : "添加客户",
       showLoading: false
     })
-    // this.getDealerDetail(id);
-    // this._getOrganization(id);
+
   }
 
   componentDidMount() {
     this.getGradeList();
+    this.getUserDetail();
   }
 
   getGradeList = () => {
@@ -54,34 +57,45 @@ class Page extends Component {
       })
   }
 
-  getDealerDetail = (id) => {
+  getUserDetail = (id) => {
     id = id || this.state.id;
     if (!id || id == 0) {
+      this.setState({
+        userDetail: null
+      })
       return;
     }
 
     this._showLoading();
-    // getDealerDetails({ id })
-    //   .then(dealerDetail => {
 
-    //     let { dealerName, name, phone, tencentLng, tencentLat, address, shipStatus, storeStatus } = dealerDetail;
-    //     let location = { address, tencentLng, tencentLat };
-    //     this.setState({
-    //       dealerDetail,
-    //       location
-    //     })
-    //     this.revertAuth(shipStatus, storeStatus);
-    //     this.props.form.setFieldsValue({
-    //       dealerName,
-    //       name,
-    //       phone
-    //     });
-    //     this._hideDealerDetailLoading();
+    getUserDetail({ shopUserId: id })
+      .then(userDetail => {
+        let { customerName, accountNumber, gradeId, status, remark, superiorId, area, headUrl, superiorCustomerName } = userDetail;
 
-    //   })
-    //   .catch(() => {
-    //     this._hideDealerDetailLoading();
-    //   })
+        let hasSuperiorId = !!superiorId;
+        let selectAreaData = this.formatSelectAreaData(area)
+        this.setState({
+          userDetail,
+          hasSuperiorId,
+          selectAreaData,
+          selectSuperiorId: superiorId,
+          superiorCustomerName,
+          isPhoneValid: true
+        })
+
+        this.props.form.setFieldsValue({
+          customerName,
+          remark,
+          gradeId,
+          status: status || status == 0 ? status.toString() : null,
+          accountNumber
+        });
+
+        this._hideLoading();
+      })
+      .catch(() => {
+        this._hideLoading();
+      })
   }
 
   _showLoading = () => {
@@ -90,35 +104,56 @@ class Page extends Component {
     })
   }
 
-  _hideDealerDetailLoading = () => {
+  _hideLoading = () => {
     this.setState({
       showLoading: false
     })
   }
 
-
-
   // 返回
-  dealerEditBack = () => {
+  goEditBack = () => {
     window.history.back();
   }
 
+  /**保存数据 ***************************************************************************************************************/
   saveDataClicked = () => {
     this.props.form.validateFields((err, params) => {
+
       if (err) {
         return;
       }
       let { customerName, accountNumber, gradeId, status, remark } = params;
-      let { hasSuperiorId, selectAreaData, headUrl } = this.state;
-      let password = md5(accountNumber.toString());
-      let superiorId = null;
-      let area = this.getAreaData(selectAreaData);
-      let data = {
-        customerName, accountNumber, gradeId, status, remark, superiorId, area, headUrl, password
+      let { hasSuperiorId, selectAreaData, headUrl, selectSuperiorId, userDetail,isPhoneValid } = this.state;
+
+      if (!isPhoneValid) {
+        Toast('请检测登录账号是否可用！');
+        return;
       }
+
+      if (hasSuperiorId && !selectSuperiorId) {
+        Toast('请选择上级客户！');
+        return;
+      }
+      let password = md5(accountNumber.toString());
+      let superiorId = hasSuperiorId ? selectSuperiorId : null;
+      let area = this.getAreaData(selectAreaData);
+      
+      if (!area) {
+        Toast('请选择客户地区！');
+        return;
+      }
+    
+
+      let shopUserId = userDetail && userDetail.shopUserId;
+      let id = userDetail && userDetail.id
+      let data = {
+        id, shopUserId, customerName, accountNumber, gradeId, status, remark, superiorId, area, headUrl, password
+      }
+      this._showLoading();
       createUser(data)
         .then(() => {
           Toast("保存成功！");
+          this.goEditBack();
         })
     })
   }
@@ -131,6 +166,22 @@ class Page extends Component {
     proviceId = proviceId || districtId.toString().substr(0, 2) + "0000";
     cityId = cityId || districtId.toString().substr(0, 4) + "00";
     return `${proviceId}-${cityId}-${districtId},${proviceName}-${cityName}-${districtName}`
+  }
+
+  formatSelectAreaData = (areaData) => {
+    if (!areaData) {
+      return;
+    }
+    let arr = areaData.split(',');
+    if (!arr[0] || !arr[1]) {
+      return;
+    }
+    let [proviceId, cityId, districtId] = arr[0].split('-');
+    let [proviceName, cityName, districtName] = arr[1].split('-');
+    return {
+      districtId, proviceId, cityId, proviceName, cityName, districtName
+    }
+
   }
 
 
@@ -167,6 +218,12 @@ class Page extends Component {
     if (!accountNumber || accountNumber.toString().length != 11) {
       Toast("请输入正确的手机号！");
     }
+    detectPhone({ phone: accountNumber })
+      .then(data => {
+
+        let isPhoneValid = data && data.status == '0';
+        this.setState({ isPhoneValid });
+      })
   }
 
   hasSuperiorIdRadioChange = (e) => {
@@ -177,17 +234,43 @@ class Page extends Component {
   }
 
   searchSuperiorIdClicked = (e) => {
-    let { customerName } = this.state;
-    searchUser({ customerName })
-      .then(() => {
+    let { superiorCustomerName } = this.state;
+    this.setState({
+      selectSuperiorId: null
+    })
+
+    searchUser({ superiorCustomerName })
+      .then(superiors => {
+
+        this.setState({
+          superiors
+        })
+        if (!superiors || !superiors.length) {
+          Toast("暂未搜索出该客户！");
+          return;
+        }
 
       })
   }
 
-  customerNameChange = (e) => {
-    let customerName = e.target.value;
+  superiorCustomerNameChange = (e) => {
+    let superiorCustomerName = e.target.value;
     this.setState({
-      customerName
+      superiorCustomerName
+    })
+  }
+
+  superiorChange = (e) => {
+
+    let selectSuperiorId = e.target.value;
+    this.setState({
+      selectSuperiorId
+    })
+  }
+
+  onAccountNumberChange = () => {
+    this.setState({
+      isPhoneValid: false
     })
   }
 
@@ -200,72 +283,81 @@ class Page extends Component {
     return (
       <CommonPage title={this.state._title} description={_description} >
         <div style={{ width: 650 }}>
-
-          <Row className='line-height40 padding10-0'>
-            <Col offset={8}>
-              <Button type='primary' style={{ width: 100 }} onClick={this.saveDataClicked}>保存</Button>
-              <Button type='primary' className='yellow-btn margin-left' style={{ width: 100 }} onClick={this.dealerEditBack}>返回</Button>
-            </Col>
-          </Row>
-
-          <Form className='common-form'>
-            <Form.Item
-              labelCol={{ span: 8 }}
-              wrapperCol={{ span: 16 }}
-              label='客户名称：'
-              field='customerName'>
-              {
-                getFieldDecorator('customerName', {
-                  rules: [
-                    { required: true, message: '请输入客户名称!' }
-                  ]
-                })(
-                  <Input minLength={0} maxLength={20} />
-                )
-              }
-            </Form.Item>
-            <Row>
-              <Col span={16}>
-                <Form.Item
-                  labelCol={{ span: 12 }}
-                  wrapperCol={{ span: 12 }}
-                  label='登录账号：'
-                  field='accountNumber'>
-                  {
-                    getFieldDecorator('accountNumber', {
-                      rules: [
-                        { required: true, message: '请输入登录账号!' }
-                      ]
-                    })(
-                      <InputNumber style={{ width: 200 }} precision={0} min={0} minLength={0} maxLength={11} />
-                    )
-                  }
-                </Form.Item>
-              </Col>
-              <Col span={8} className='line-height40'>
-                <Button type='primary' className='margin0-10' onClick={this.checkCliked}>检测</Button>
-                <span className='color-red'>请确保是手机号格式</span>
+          <Spin spinning={this.state.showLoading}>
+            <Row className='line-height40 padding10-0'>
+              <Col offset={8}>
+                <Button type='primary' style={{ width: 100 }} onClick={this.saveDataClicked}>保存</Button>
+                <Button type='primary' className='yellow-btn margin-left' style={{ width: 100 }} onClick={this.goEditBack}>返回</Button>
               </Col>
             </Row>
 
-
-            <Row className='line-height40'>
-              <Col span={8} className='label-required text-right'>地区：</Col>
-              <Col span={16}>
-                <span><Button type='primary' onClick={this.selectArea}>选择地区</Button></span>
-                <span className='margin-left'>
-                  {
-                    selectAreaData ?
+            <Form className='common-form'>
+              <Form.Item
+                labelCol={{ span: 8 }}
+                wrapperCol={{ span: 16 }}
+                label='客户名称：'
+                field='customerName'>
+                {
+                  getFieldDecorator('customerName', {
+                    rules: [
+                      { required: true, message: '请输入客户名称!' }
+                    ]
+                  })(
+                    <Input minLength={0} maxLength={20} />
+                  )
+                }
+              </Form.Item>
+              <Row>
+                <Col span={16}>
+                  <Form.Item
+                    labelCol={{ span: 12 }}
+                    wrapperCol={{ span: 12 }}
+                    label='登录账号：'
+                    field='accountNumber'>
+                    {
+                      getFieldDecorator('accountNumber', {
+                        rules: [
+                          { required: true, message: '请输入登录账号!' }
+                        ]
+                      })(
+                        <InputNumber disabled={!!this.state.userDetail} onChange={this.onAccountNumberChange} style={{ width: 200 }} precision={0} min={0} minLength={0} maxLength={11} />
+                      )
+                    }
+                  </Form.Item>
+                </Col>
+                {
+                  !this.state.userDetail ?
+                    <Col span={8} className='line-height40'>
+                      <Button type='primary' className='margin0-10' onClick={this.checkCliked}>检测</Button>
                       <span>
-                        {`${selectAreaData.proviceName}-${selectAreaData.cityName}-${selectAreaData.districtName}`}
+                        {
+                          this.state.isPhoneValid ?
+                            <span className='color-green'>此账号可用</span> :
+                            <span className='color-red'>请确保是手机号格式</span>
+                        }
                       </span>
-                      :
-                      "暂未选择地区"
-                  }
-                </span>
-              </Col>
-            </Row>
-            {/* <Form.Item
+                    </Col>
+                    : null
+                }
+              </Row>
+
+              <Row className='line-height40'>
+                <Col span={8} className='label-required text-right'>地区：</Col>
+                <Col span={16}>
+                  <span><Button type='primary' onClick={this.selectArea}>选择地区</Button></span>
+                  <span className='margin-left'>
+                    {
+                      selectAreaData ?
+                        <span>
+                          {`${selectAreaData.proviceName}-${selectAreaData.cityName}-${selectAreaData.districtName}`}
+                        </span>
+                        :
+                        "暂未选择地区"
+                    }
+                  </span>
+                </Col>
+              </Row>
+              {/* <Form.Item
               labelCol={{ span: 8 }}
               wrapperCol={{ span: 16 }}
               label='身份证号：'
@@ -280,92 +372,108 @@ class Page extends Component {
                 )
               }
             </Form.Item> */}
-            <Form.Item
-              labelCol={{ span: 8 }}
-              wrapperCol={{ span: 16 }}
-              label='客户级别：'
-              field='gradeId'>
+              <Form.Item
+                labelCol={{ span: 8 }}
+                wrapperCol={{ span: 16 }}
+                label='客户级别：'
+                field='gradeId'>
+                {
+                  getFieldDecorator('gradeId', {
+                    initialValue: null,
+                    rules: [
+                      { required: true, message: '请选择!' }
+                    ]
+                  })(
+                    <Select style={{ width: 200 }}>
+                      <Select.Option value={null} style={{ width: 200 }}>请选择</Select.Option>
+                      {
+                        this.state.gradeList && this.state.gradeList.length ?
+                          this.state.gradeList.map(item =>
+                            <Select.Option key={item.id.toString()} value={item.id}>{item.name}</Select.Option>
+                          )
+                          : null
+                      }
+                    </Select>
+                  )
+                }
+              </Form.Item>
+              <Row className='line-height40'>
+                <Col span={8} className={`${this.state.hasSuperiorId ? "label-required" : ""} text-right`} >上级：</Col>
+                <Col span={16} className='flex-middle'>
+                  <Input
+                    value={this.state.superiorCustomerName}
+                    onChange={this.superiorCustomerNameChange}
+                    onPressEnter={this.searchSuperiorIdClicked}
+                    disabled={!this.state.hasSuperiorId} style={{ width: 200, marginRight: '10px' }}
+                    placeholder='输入上级账户'
+                  />
+                  <Radio.Group defaultValue={false} value={this.state.hasSuperiorId} onChange={this.hasSuperiorIdRadioChange}>
+                    <Radio value={true}>有上级</Radio>
+                    <Radio value={false}>无上级</Radio>
+                  </Radio.Group>
+                </Col>
+              </Row>
               {
-                getFieldDecorator('gradeId', {
-                  initialValue: null,
-                  rules: [
-                    { required: true, message: '请选择!' }
-                  ]
-                })(
-                  <Select style={{ width: 200 }}>
-                    <Select.Option value={null} style={{ width: 200 }}>请选择</Select.Option>
-                    {
-                      this.state.gradeList && this.state.gradeList.length ?
-                        this.state.gradeList.map(item =>
-                          <Select.Option key={item.id} value={item.id}>{item.name}</Select.Option>
-                        )
-                        : null
-                    }
-                  </Select>
-                )
+                this.state.hasSuperiorId ?
+                  <Row className='line-height20 margin-bottom'>
+                    <Col offset={8} span={16} className='flex-middle'>
+                      <span className='color-red'>回车搜索上级用户</span>
+                    </Col>
+                  </Row>
+                  : null
               }
-            </Form.Item>
-            <Row className='line-height40'>
-              <Col span={8} className={`${this.state.hasSuperiorId ? "label-required" : ""} text-right`} >上级：</Col>
-              <Col span={16} className='flex-middle'>
-                <Input
-                  value={this.state.customerName}
-                  onChange={this.customerNameChange}
-                  onPressEnter={this.searchSuperiorIdClicked}
-                  disabled={!this.state.hasSuperiorId} style={{ width: 200, marginRight: '10px' }}
-                  placeholder='输入上级账户'
-                />
-                <Radio.Group defaultValue={false} value={this.state.hasSuperiorId} onChange={this.hasSuperiorIdRadioChange}>
-                  <Radio value={true}>有上级</Radio>
-                  <Radio value={false}>无上级</Radio>
-                </Radio.Group>
-              </Col>
-            </Row>
-            {
-              this.state.hasSuperiorId ?
-                <Row className='line-height20 margin-bottom'>
-                  <Col offset={8} span={16} className='flex-middle'>
-                    <span className='color-red'>回车搜索上级用户</span>
-                  </Col>
-                </Row>
-                : null
-            }
-
-            <Form.Item
-              labelCol={{ span: 8 }}
-              wrapperCol={{ span: 16 }}
-              label='状态'
-              field='status'>
               {
-                getFieldDecorator('status', {
-                  initialValue: null,
-                  rules: [
-                    { required: true, message: '请选择!' }
-                  ]
-                })(
-                  <Select style={{ width: 200 }}>
-                    <Select.Option value={null}>请选择</Select.Option>
-                    {
-                      Object.keys(_statusEnum).map(item => (
-                        <Select.Option key={item} value={item}>{_statusEnum[item]}</Select.Option>
-                      ))
-                    }
-                  </Select>
-                )
+                this.state.superiors && this.state.superiors.length ?
+                  <Row className='margin-bottom'>
+                    <Col span={8} className={`${this.state.hasSuperiorId ? "label-required" : ""} text-right`} >选择上级：</Col>
+                    <Col span={16} className='flex-middle'>
+                      <Radio.Group value={this.state.selectSuperiorId} onChange={this.superiorChange}>
+                        {
+                          this.state.superiors.map(item =>
+                            <Radio key={item.id.toString()} value={item.id}>{item.name}</Radio>
+                          )
+                        }
+                      </Radio.Group>
+                    </Col>
+                  </Row>
+                  :
+                  null
               }
-            </Form.Item>
-            <Form.Item
-              labelCol={{ span: 8 }}
-              wrapperCol={{ span: 16 }}
-              label='备注：'
-              field='remark'>
-              {
-                getFieldDecorator('remark')(
-                  <Input minLength={0} />
-                )
-              }
-            </Form.Item>
-            {/* <Row className='line-height40 margin-top margin-bottom'>
+              <Form.Item
+                labelCol={{ span: 8 }}
+                wrapperCol={{ span: 16 }}
+                label='状态'
+                field='status'>
+                {
+                  getFieldDecorator('status', {
+                    initialValue: null,
+                    rules: [
+                      { required: true, message: '请选择!' }
+                    ]
+                  })(
+                    <Select style={{ width: 200 }}>
+                      <Select.Option value={null}>请选择</Select.Option>
+                      {
+                        Object.keys(_statusEnum).map(item => (
+                          <Select.Option key={item} value={item}>{_statusEnum[item]}</Select.Option>
+                        ))
+                      }
+                    </Select>
+                  )
+                }
+              </Form.Item>
+              <Form.Item
+                labelCol={{ span: 8 }}
+                wrapperCol={{ span: 16 }}
+                label='备注：'
+                field='remark'>
+                {
+                  getFieldDecorator('remark')(
+                    <Input minLength={0} />
+                  )
+                }
+              </Form.Item>
+              {/* <Row className='line-height40 margin-top margin-bottom'>
               <Col span={5} className='text-right'>
                 <span className='label-color label-required'>头像：</span>
               </Col>
@@ -379,7 +487,8 @@ class Page extends Component {
                 <div className='color-red' style={{ lineHeight: "16px" }}>建议尺寸420px*420px，图片格式png、jpg，大小不超过3MB</div>               
               </Col>
             </Row> */}
-          </Form>
+            </Form>
+          </Spin>
         </div>
         <SingleDistrictSelect
           checkedAreaData={this.state.selectAreaData}

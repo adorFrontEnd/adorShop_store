@@ -72,11 +72,11 @@ class Page extends Component {
         gradeDataArr, purchaseMethod, gradeSwitchStatus
       })
     })
-    .catch(() => {
-      this.setState({
-        showLoading: false
+      .catch(() => {
+        this.setState({
+          showLoading: false
+        })
       })
-    })
   }
 
   deleteGrade = (id) => {
@@ -85,6 +85,7 @@ class Page extends Component {
     }
     deleteGrade({ id })
       .then(() => {
+        Toast('删除成功！');
         this.getPageData();
       })
   }
@@ -104,7 +105,7 @@ class Page extends Component {
     this.setState({
       showLoading: true
     })
-    
+
     createAndUpdateGrade(params)
       .then(() => {
         this.setState({
@@ -112,7 +113,7 @@ class Page extends Component {
         })
         Toast("保存成功！");
       })
-      .catch(()=>{
+      .catch(() => {
         this.setState({
           showLoading: false
         })
@@ -216,13 +217,15 @@ class Page extends Component {
               开启后等级提升时，如果自身等级大于原上级，则依次查找原上级的各个上级，直到这个上级的等级不小于提升后的等级；<br />
               同理开启后等级下降，如果自身等级小于了某个下级的等级，则将此下级的上级设为下降等级客户的上级。<br />
             </div>
-            <div className="flex-middle margin20-0">
-              <span>进货方式：</span>
-              <Radio.Group value={this.state.purchaseMethod} onChange={this.onpurchaseMethodChange}>
-                <Radio value={0}>平台进货</Radio>
-                <Radio value={1}> 上级进货</Radio>
-              </Radio.Group>
-              <span className='margin-left color-red'>存在用户上级级别大于下级级别的情况将无法开启</span>
+            <div className="flex margin20-0">
+              <div style={{minWidth:270}}>
+                <span>进货方式：</span>
+                <Radio.Group value={this.state.purchaseMethod} onChange={this.onpurchaseMethodChange}>
+                  <Radio value={0}>平台进货</Radio>
+                  <Radio value={1}> 上级进货</Radio>
+                </Radio.Group>
+              </div>
+              <span className='margin-left color-red'>选择上级进货时如果上级等级比自身低，则找最近的比自身等级高的上级（即上级的某个上级）进行进货</span>
             </div>
             <div className='color-gray'>级别从上到下依次降低，该级别存在用户时无法删除</div>
             <div className='line-height40' style={{ width: 700 }}>

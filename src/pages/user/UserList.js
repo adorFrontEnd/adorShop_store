@@ -5,22 +5,29 @@ import { pagination } from '../../utils/pagination';
 import Toast from '../../utils/toast';
 import { SearchForm, SubmitForm } from '../../components/common-form';
 import dateUtil from '../../utils/dateUtil';
-import { searchUserList, exportUserList } from '../../api/user/user';
+import { searchUserList, exportUserList, updateUserStatus } from '../../api/user/user';
 import { NavLink, Link } from 'react-router-dom';
 import { baseRoute, routerConfig } from '../../config/router.config';
 import { connect } from 'react-redux';
 import { changeRoute } from '../../store/actions/route-actions';
+import { getGradeList } from "../../api/user/grade";
 
 const _title = "客户列表";
 const _description = "";
-const integralRecordPath = routerConfig["user.userManage.userList"].path;
-const giftRecordPath = routerConfig["user.userManage.userList"].path;
 const userEditPath = routerConfig["user.userManage.userEdit"].path;
+
 const _statusEnum = {
   "0": "正常",
   "1": "待审核",
   "2": "未通过",
   "3": "已停用"
+}
+
+const _statusColorEnum = {
+  "0": "color-green",
+  "1": "theme-color",
+  "2": "color-gray",
+  "3": "color-red"
 }
 const _statusEnumArr = Object.keys(_statusEnum).map(item => { return { id: item, name: _statusEnum[item] } });
 
@@ -29,22 +36,19 @@ class Page extends Component {
   state = {
     tableDataList: null,
     showTableLoading: false,
-    exportUserListUrl: null
+    exportUserListUrl: null,
+    gradeList: []
   }
 
   componentDidMount() {
     this.props.changeRoute({ path: 'user.userManage.userList', title: '客户列表', parentTitle: '会员管理' });
+    this.getGradeList();
     this.getPageData();
   }
 
-  goIntegralRecord = () => {
+  goUserEdit = () => {
     let title = '积分记录';
     this.props.changeRoute({ path: 'marketManage.integralRecord', title, parentTitle: '市场营销' });
-  }
-
-  goGiftRecord = () => {
-    let title = '兑奖记录';
-    this.props.changeRoute({ path: 'marketManage.giftRecord', title, parentTitle: '市场营销' });
   }
 
   params = {
@@ -60,7 +64,7 @@ class Page extends Component {
     defaultOption: { id: null, name: "所有级别" },
     placeholder: '选择级别',
     initialValue: null,
-    optionList: [{ id: "1", name: "是" }, { id: "0", name: "否" }]
+    optionList: []
   },
   {
     type: "SELECT",
@@ -73,19 +77,20 @@ class Page extends Component {
   },
   {
     type: "INPUT",
-    field: "inputData",
-    style: { width: 300 },
-    placeholder: "客户名称/客户编码/登陆地区/联系人/上级"
+    field: "likeName",
+    style: { width: 320 },
+    placeholder: "客户名称/客户编码/登录账号/地区/联系人/上级"
   }]
+
   //查询按钮点击事件
   searchClicked = (params) => {
 
-    let { inputData } = params;
-    inputData = inputData || null;
+    let { likeName } = params;
+    likeName = likeName || null;
     this.params = {
       page: 1,
       ...params,
-      inputData
+      likeName
     }
     this.getPageData();
   }
@@ -94,6 +99,13 @@ class Page extends Component {
     this.props.form.resetFields();
   }
 
+  getGradeList = () => {
+    getGradeList()
+      .then(gradeList => {
+        gradeList.push({ id: "-1", name: "可降级状态" })
+        this.formItemList[0].optionList = gradeList;
+      })
+  }
 
   // 获取页面列表
   getPageData = () => {
@@ -126,34 +138,112 @@ class Page extends Component {
 
     { title: "客户名称", dataIndex: "customerName", render: data => data || "--" },
     { title: "客户编码", dataIndex: "customerNumber", render: data => data || "--" },
-    { title: "登录账号", dataIndex: "accountNumber", render: data => data || "--"  },
+    { title: "登录账号", dataIndex: "accountNumber", render: data => data || "--" },
     { title: "地区", dataIndex: "area", render: data => this.getAreaData(data) },
     { title: "级别", dataIndex: "gradeName", render: data => data || "--" },
-    { title: "联系人", dataIndex: "province", render: data => data || "--" },
-    { title: "状态", dataIndex: "status", render: data => data || "--" },
-    { title: "上级", dataIndex: "superiorId", render: data => data || "--" },
+    // { title: "联系人", dataIndex: "province", render: data => data || "--" },
+    { title: "状态", dataIndex: "status", render: data => data || data == 0 ? <span className={_statusColorEnum[data]}>{_statusEnum[data]}</span> : "--" },
+    {
+      title: "上级", dataIndex: "superiorId", render: (text, record, index) => (
+        <>
+          {
+            record.superiorCustomerNumber ?
+              <div className='text-center'>
+                <div className='theme-color'>{record.superiorCustomerName}</div>
+                <div>{record.superiorCustomerNumber}</div>
+              </div>
+              :
+              <div className='text-center'>--</div>
+          }
+        </>
+      )
+    },
     { title: "创建时间", dataIndex: "gmtCreate", render: data => data ? dateUtil.getDateTime(data) : "--" },
-
     {
       title: '操作',
       render: (text, record, index) => (
         <span>
-          <span onClick={() => { this.goIntegralRecord(record.id) }}><NavLink to={integralRecordPath + "/" + record.id}>积分记录</NavLink></span>
-          <Divider type="vertical" />
-          <span onClick={() => { this.goGiftRecord(record.id) }}><NavLink to={giftRecordPath + "/" + record.id}>兑奖记录</NavLink></span>
-          {/* <Divider type="vertical" />
+          {
+            record.status == "0" ?
+              <span>
+                <Popconfirm
+                  placement="topLeft" title='确认要停用吗？'
+                  onConfirm={() => { this.updateStatus(record, '3') }} >
+                  <a size="small">停用</a>
+                </Popconfirm>
+                <Divider type="vertical" />
+              </span>
+              :
+              null
+          }
+          {
+            record.status == "3" ?
+              <span>
+                <Popconfirm
+                  placement="topLeft" title='确认要启用吗？'
+                  onConfirm={() => { this.updateStatus(record, '0') }} >
+                  <a size="small">启用</a>
+                </Popconfirm>
+                <Divider type="vertical" />
+              </span>
+              :
+              null
+          }
+          {
+            record.status == 1 ?
+              <span>
+                <Popconfirm
+                  placement="topLeft" title='要审核通过吗？'
+                  okText='通过'
+                  cancelText='不通过'
+                  onConfirm={() => { this.updateStatus(record, '0', true) }}
+                  onCancel={() => { this.updateStatus(record, '2', true) }}
+                >
+                  <a size="small">审核</a>
+                </Popconfirm>
+                <Divider type="vertical" />
+              </span>
+              :
+              null
+          }
+          {
+            record.status == "0" || record.status == "1" || record.status == "3" ?
+              <span>
+                <span onClick={() => { this.goUserEdit(record.shopUserId) }}><NavLink to={userEditPath + "/" + record.shopUserId}>编辑</NavLink></span>
+                <Divider type="vertical" />
+              </span>
+              : null
+          }
+
           <Popconfirm
             placement="topLeft" title='确认要删除吗？'
-            onConfirm={() => { this.deleteTableItem(record) }} >
+            onConfirm={() => { this.updateStatus(record, '-1') }} >
             <a size="small" className="color-red">删除</a>
-          </Popconfirm> */}
+          </Popconfirm>
+
         </span>
       )
     }
   ]
 
-  getAreaData = (areaData)=>{
-    if(!areaData){
+  //更新状态，启用，停用，审核，编辑，删除
+  updateStatus = (record, status, isReview) => {
+    let sEnum = {
+      '-1': "删除",
+      "0": "启用",
+      "3": "停用"
+    }
+    let title = isReview ? "审核完毕!" : `${sEnum[status]}成功！`;
+    let { shopUserId } = record;
+    updateUserStatus({ shopUserId, status })
+      .then(() => {
+        Toast(title);
+        this.getPageData();
+      })
+  }
+
+  getAreaData = (areaData) => {
+    if (!areaData) {
       return '--'
     }
     let arr = areaData.split(',');
@@ -191,15 +281,15 @@ class Page extends Component {
             <NavLink to={userEditPath + "/0"}>
               <Button type='primary' onClick={() => this.goEdit('0')}>创建客户</Button>
             </NavLink>
-            <SearchForm
-              width={850}
-              searchText='筛选'
-              towRow={false}
-              searchClicked={this.searchClicked}
-              formItemList={this.formItemList}
-            />
+            <div style={{ minWidth: 850 }}>
+              <SearchForm
+                searchText='筛选'
+                towRow={false}
+                searchClicked={this.searchClicked}
+                formItemList={this.formItemList}
+              />
+            </div>
           </div>
-
           <Table
             indentSize={10}
             rowKey="id"

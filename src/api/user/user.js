@@ -64,6 +64,17 @@ const createUser = (params) => {
   return baseHttpProvider.postFormApi('api/user/createAndUpdateUser', params)
 }
 
+const getUserDetail = (params) =>{
+  return baseHttpProvider.getApi('api/user/getUserDetail', params);  
+}
+
+const updateUserStatus = (params) => {
+  return baseHttpProvider.postFormApi('api/user/updateUserStatus', params)
+}
+
+const detectPhone = (params) => {
+  return baseHttpProvider.postFormApi('api/user/detectPhone', params)
+}
 
 
 export {
@@ -76,5 +87,8 @@ export {
   saveOrUpdateAuth,
   deleteAuth,
   searchUser,
-  createUser
+  createUser,
+  getUserDetail,
+  updateUserStatus,
+  detectPhone
 }
