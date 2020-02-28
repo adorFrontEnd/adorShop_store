@@ -75,7 +75,81 @@ const findParentItemById = (id, treeMap) => {
   }
 }
 
+const getTreeMapAndData = (list) => {
+
+  let treeMap = {};
+  if (!list || !list.length) {
+    return treeMap
+  }
+  let level1List = list.filter(item => item.level == '1');
+  let level2List = list.filter(item => item.level == '2');
+  let level3List = list.filter(item => item.level == '3');
+
+  level1List.forEach(item => {
+    let { id, name, parentId } = item;
+    treeMap[id] = {
+      id, name, parentId, title: name, key: id, children: {}, totalId: id, level: "1"
+    }
+  })
+
+  level2List.forEach(item => {
+    let { id, name, parentId } = item;
+    treeMap[parentId]["children"][id] = {
+      id, name, parentId, title: name, key: id, children: {}, totalId: `${parentId}-${id}`, level: "2"
+    }
+  })
+
+  level3List.forEach(item => {
+    let { id, name, parentId } = item;
+    let grandParentId = _getParentIdById(parentId, list);
+    treeMap[grandParentId]["children"][parentId]["children"][id] = {
+      id, name, parentId, grandParentId, title: name, key: id, totalId: `${grandParentId}-${parentId}-${id}`, level: "3"
+    }
+  })
+
+  let treeData = _getTreeDataByTreeMap(treeMap);
+
+  return { treeMap, treeData }
+}
+
+const _getParentIdById = (id, list) => {
+  if (!id || !list || !list.length) {
+    return
+  }
+  let filterArr = list.filter(item => item.id == id);
+  let obj = filterArr && filterArr.length ? filterArr[0] : null;
+  let result = obj ? obj.parentId : null;
+  return result;
+}
+
+const _getTreeDataByTreeMap = (map) => {
+
+  let treeData = [];
+  if (!map) {
+    return treeData
+  }
+  treeData = Object.values(map);
+  let result = treeData = treeData.map(item => {
+    let { children, ...other } = item;
+    let values = Object.values(children);
+    children = values && values.length ? values.map(childItem => {     
+      let _children = Object.values(childItem.children);     
+      return {      
+        ...childItem,
+        children:_children,
+      }
+      
+    }) : []
+
+    return {
+      ...other,
+      children
+    }
+  })
+  return result;
+}
 
 export {
-  parseTree
+  parseTree,
+  getTreeMapAndData
 }

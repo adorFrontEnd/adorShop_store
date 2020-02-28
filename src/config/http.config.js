@@ -1,18 +1,11 @@
 let domain = '';
-//sorta
-// domain = "http://192.168.20.82:8095"; 
 
-//俊宝
-// domain = "http://192.168.20.94:9300";
-// domain = "http://192.168.20.95:7100";
-// domain = "https://api.trace.adorsmart.com";
-// domain='http://test.com:9300'
-// domain='http://sys.trace.adorsmart.com:7100'
+//测试服
+// domain = "http://47.103.71.160:9092";
+// 俊宝
+// domain = "http://192.168.20.54:9092";
 // 博文
-domain = "http://47.103.71.160:9092";
-domain = "http://192.168.20.54:9092";
-
-// domain = "http://192.168.20.56:5054";
+domain = "http://192.168.20.50:9092";
 let apiUrlPrefix = domain + "/";
 let picUrlPrefix = "";
 let signKey = "94a7cbbf8511a288d22d4cf8705d61d0";

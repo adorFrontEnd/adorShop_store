@@ -21,7 +21,7 @@ class LeftBar extends Component {
     let userInfo = getCacheUserInfo();
     let data = userInfo.data;
     let routerData = data.filter((val) => (val.indexOf(".") != -1 || (val == 'home')));
-    this.routeList = getRouter(routerData);
+    this.routeList = getRouter(routerData,true);
     this.rootSubmenuKeys = this.routeList.map(item => item.key);
     const menuTree = this.renderMenu(this.routeList);
     this.setState({

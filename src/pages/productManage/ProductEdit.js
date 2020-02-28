@@ -4,6 +4,8 @@ import Toast from '../../utils/toast';
 import CommonPage from '../../components/common-page';
 import { SearchForm } from '../../components/common-form';
 import dateUtil from '../../utils/dateUtil';
+import RelativeCategoryModal from "../../components/category/RelativeCategoryModal";
+
 // import PictureWall from '../../components/upload/PictureWall';
 
 
@@ -20,7 +22,10 @@ class Page extends Component {
     id: 0,
     showLoading: false,
     areaModalIsVisible: false,
-    selectAreaData: null
+    selectAreaData: null,
+    cModalIsVisible: false,
+    category: null,
+    categoryIds:[]
   }
 
   componentWillMount() {
@@ -151,7 +156,23 @@ class Page extends Component {
     this._hideAreaSelectModal()
   }
 
-  /***渲染*************************************************************************************************** */
+  /**选择分类 *******************************************************************************************************/
+
+  // 选择经营分类
+  showCModal = () => {
+    this.setState({ cModalIsVisible: true })
+  }
+
+  cModalSaveClick = (params) => {
+    let { categoryIds, category } = params;
+    this.setState({ cModalIsVisible: false, category, categoryIds });
+  }
+
+  hideCModal = () => {
+    this.setState({ cModalIsVisible: false })
+  }
+
+  /***渲染**********************************************************************************************************/
 
   render() {
     const { getFieldDecorator } = this.props.form;
@@ -217,12 +238,12 @@ class Page extends Component {
             <Row className='line-height40'>
               <Col span={8} className='label-required text-right'>商品分类：</Col>
               <Col span={16}>
-                <span><Button type='primary' onClick={this.selectArea}>选择分类</Button></span>
+                <span><Button type='primary' onClick={this.showCModal}>选择分类</Button></span>
                 <span className='margin-left'>
                   {
-                    selectAreaData ?
+                    this.state.category ?
                       <span>
-                        {`${selectAreaData.proviceName}-${selectAreaData.cityName}-${selectAreaData.districtName}`}
+                        {this.state.category}
                       </span>
                       :
                       "暂未选择商品分类"
@@ -232,6 +253,12 @@ class Page extends Component {
             </Row>
 
           </Form>
+          <RelativeCategoryModal
+            categoryIds={this.state.categoryIds}
+            onOk={this.cModalSaveClick}
+            onCancel={this.hideCModal}
+            visible={this.state.cModalIsVisible}
+          />
         </div>
 
       </CommonPage >)
