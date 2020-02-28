@@ -25,7 +25,7 @@ class Page extends Component {
     selectAreaData: null,
     cModalIsVisible: false,
     category: null,
-    categoryIds:[]
+    categoryIds: []
   }
 
   componentWillMount() {
@@ -254,6 +254,7 @@ class Page extends Component {
 
           </Form>
           <RelativeCategoryModal
+            maxLength={5}
             categoryIds={this.state.categoryIds}
             onOk={this.cModalSaveClick}
             onCancel={this.hideCModal}
