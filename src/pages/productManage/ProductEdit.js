@@ -5,6 +5,7 @@ import CommonPage from '../../components/common-page';
 import { SearchForm } from '../../components/common-form';
 import dateUtil from '../../utils/dateUtil';
 import RelativeCategoryModal from "../../components/category/RelativeCategoryModal";
+import SpecEdit from './SpecEdit';
 
 // import PictureWall from '../../components/upload/PictureWall';
 
@@ -91,6 +92,7 @@ class Page extends Component {
   }
 
   saveDataClicked = () => {
+  
     this.props.form.validateFields((err, params) => {
       if (err) {
         return;
@@ -180,87 +182,113 @@ class Page extends Component {
 
     return (
       <CommonPage title={this.state._title} description={_description} >
-        <div style={{ width: 600 }}>
-
-          <Row className='line-height40 padding10-0'>
-            <Col offset={8}>
-              <Button type='primary' style={{ width: 100 }} onClick={this.saveDataClicked}>保存</Button>
-              <Button type='primary' className='yellow-btn margin-left' style={{ width: 100 }} onClick={this.dealerEditBack}>返回</Button>
+        <Row style={{ width: 600 }} className='line-height40 padding10-0'>
+          <Col offset={3}>
+            <Button type='primary' style={{ width: 100 }} onClick={this.saveDataClicked}>保存</Button>
+            <Button type='primary' className='yellow-btn margin-left20' style={{ width: 100 }} onClick={this.dealerEditBack}>返回</Button>
+          </Col>
+        </Row>
+        <Form className='common-form'>
+          <div style={{ background: "#f2f2f2", borderLeft: "6px solid #ff8716" }} className='color333 padding border-radius font-16 margin-bottom'>基础信息</div>
+          <Form.Item
+            style={{ width: 600 }}
+            labelCol={{ span: 6 }}
+            wrapperCol={{ span: 10 }}
+            label='商品名称：'
+            field='name'>
+            {
+              getFieldDecorator('name', {
+                rules: [
+                  { required: true, message: '请输入商品名称!' }
+                ]
+              })(
+                <Input minLength={0} maxLength={20} />
+              )
+            }
+          </Form.Item>
+          <Form.Item
+            style={{ width: 600 }}
+            labelCol={{ span: 6 }}
+            wrapperCol={{ span: 10 }}
+            label='计量单位：'
+            field='unit'>
+            {
+              getFieldDecorator('unit', {
+                rules: [
+                  { required: true, message: '请输入计量单位!' }
+                ]
+              })(
+                <Input minLength={0} maxLength={11} />
+              )
+            }
+          </Form.Item>
+          <Form.Item
+            style={{ width: 600 }}
+            labelCol={{ span: 6 }}
+            wrapperCol={{ span: 10 }}
+            label='包装规格'
+            field='specifications'>
+            {
+              getFieldDecorator('specifications', {
+                rules: [
+                  { required: true, message: '请输入包装规格!' }
+                ]
+              })(
+                <Input minLength={0} maxLength={11} />
+              )
+            }
+          </Form.Item>
+          <Row className='line-height40' style={{ width: 600 }}>
+            <Col span={6} className='label-required text-right'>商品分类：</Col>
+            <Col span={16}>
+              <span><Button type='primary' onClick={this.showCModal}>选择分类</Button></span>
+              <span className='margin-left'>
+                {
+                  this.state.category ?
+                    <span>
+                      {this.state.category}
+                    </span>
+                    :
+                    "暂未选择商品分类"
+                }
+              </span>
             </Col>
           </Row>
 
-          <Form className='common-form'>
-            <Form.Item
-              labelCol={{ span: 8 }}
-              wrapperCol={{ span: 16 }}
-              label='商品名称：'
-              field='name'>
-              {
-                getFieldDecorator('name', {
-                  rules: [
-                    { required: true, message: '请输入客户名称!' }
-                  ]
-                })(
-                  <Input minLength={0} maxLength={20} />
-                )
-              }
-            </Form.Item>
-            <Form.Item
-              labelCol={{ span: 8 }}
-              wrapperCol={{ span: 16 }}
-              label='计量单位：'
-              field='unit'>
-              {
-                getFieldDecorator('unit', {
-                  rules: [
-                    { required: true, message: '请输入计量单位!' }
-                  ]
-                })(
-                  <Input minLength={0} maxLength={11} />
-                )
-              }
-            </Form.Item>
-            <Form.Item
-              labelCol={{ span: 8 }}
-              wrapperCol={{ span: 16 }}
-              label='包装规格'
-              field='specifications'>
-              {
-                getFieldDecorator('specifications', {
-                  rules: [
-                    { required: true, message: '请输入包装规格!' }
-                  ]
-                })(
-                  <Input minLength={0} maxLength={11} />
-                )
-              }
-            </Form.Item>
-            <Row className='line-height40'>
-              <Col span={8} className='label-required text-right'>商品分类：</Col>
-              <Col span={16}>
-                <span><Button type='primary' onClick={this.showCModal}>选择分类</Button></span>
-                <span className='margin-left'>
-                  {
-                    this.state.category ?
-                      <span>
-                        {this.state.category}
-                      </span>
-                      :
-                      "暂未选择商品分类"
-                  }
-                </span>
-              </Col>
-            </Row>
+          <Form.Item
+            style={{ width: 600 }}
+            labelCol={{ span: 6 }}
+            wrapperCol={{ span: 16 }}
+            label='可购渠道：'
+            field='channel'>
+            {
+              getFieldDecorator('channel', {
+                rules: [
+                  { required: true, message: '可购渠道至少选择一项!' }
+                ]
+              })(
+                <Checkbox.Group>
+                  <Checkbox value='0'>直购</Checkbox>
+                  <Checkbox value='1'>订货</Checkbox>
+                  <Checkbox value='2'>云市场</Checkbox>
+                </Checkbox.Group>
+              )
+            }
+            <span className='margin-left color-red'>可购渠道至少选择一项</span>
+          </Form.Item>
+          <div style={{ background: "#f2f2f2", borderLeft: "6px solid #ff8716" }} className='color333 padding border-radius font-16 margin-bottom'>规格信息</div>
+          <div>
+            <SpecEdit />
+          </div>
+        </Form>
+        <RelativeCategoryModal
+          maxLength={5}
+          categoryIds={this.state.categoryIds}
+          onOk={this.cModalSaveClick}
+          onCancel={this.hideCModal}
+          visible={this.state.cModalIsVisible}
+        />
 
-          </Form>
-          <RelativeCategoryModal
-            maxLength={5}
-            categoryIds={this.state.categoryIds}
-            onOk={this.cModalSaveClick}
-            onCancel={this.hideCModal}
-            visible={this.state.cModalIsVisible}
-          />
-        </div>
 
       </CommonPage >)
   }

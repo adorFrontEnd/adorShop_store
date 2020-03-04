@@ -11,6 +11,7 @@ import { baseRoute, routerConfig } from '../../config/router.config';
 import { connect } from 'react-redux';
 import { changeRoute } from '../../store/actions/route-actions';
 
+
 const _title = "商品列表";
 const _description = "";
 const integralRecordPath = routerConfig["user.userManage.userList"].path;
@@ -32,7 +33,7 @@ class Page extends Component {
   }
 
   componentDidMount() {
-    this.props.changeRoute({ path: 'product.productInfo.productEdit', title: '商品编辑', parentTitle: '商品管理' });
+    this.props.changeRoute({ path: 'product.productInfo.productList', title: '商品列表', parentTitle: '商品信息' });
 
   }
 
@@ -150,8 +151,8 @@ class Page extends Component {
   }
 
   goEdit = (id) => {
-    let title = id == '0' ? '添加客户' : "编辑客户"
-    this.props.changeRoute({ path: 'user.userManage.userEdit', title, parentTitle: '会员管理' });
+    let title = id == '0' ? '新建商品' : "编辑商品"
+    this.props.changeRoute({ path: 'product.productInfo.productEdit', title: '商品编辑', parentTitle: '商品管理' });
   }
 
   /**渲染**********************************************************************************************************************************/
@@ -163,19 +164,21 @@ class Page extends Component {
       <CommonPage title={_title} description={_description} >
 
         <div>
-          <div className="flex-between align-center margin-bottom20">
-            <div>
+          <div className="flex-between align-center margin-bottom20 flex-wrap">
+            <div style={{ minWidth: 330 }}>
               <NavLink to={productEditPath + "/0"}><Button type='primary' onClick={() => this.goEdit('0')}>创建商品</Button></NavLink>
               <Button type='primary' className='margin0-10'>批量倒入商品</Button>
               <Button type='primary' >批量删除</Button>
             </div>
-            <SearchForm
-              width={750}
-              searchText='筛选'
-              towRow={false}
-              searchClicked={this.searchClicked}
-              formItemList={this.formItemList}
-            />
+            <div style={{ minWidth: 700 }}>
+              <SearchForm
+                width={700}
+                searchText='筛选'
+                towRow={false}
+                searchClicked={this.searchClicked}
+                formItemList={this.formItemList}
+              />
+            </div>
           </div>
 
           <Table

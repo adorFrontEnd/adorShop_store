@@ -304,7 +304,7 @@ export default class PicturesWall extends Component {
           {
             <div className='clearfix'>
               <span>
-                <div className='ant-upload-list ant-upload-list-picture-card flex'>
+                <div className='ant-upload-list ant-upload-list-picture-card flex-wrap'>
                   {
                     fileList && fileList.length ?
                       fileList.map((item, index) =>
@@ -312,32 +312,45 @@ export default class PicturesWall extends Component {
                           {
                             index == fileList.length - 1 && index >= 0 ?
                               <Spin spinning={this.state.uploadIsLoading} style={{ height: 100, width: 100 }}>
-                                <div style={{ cursor: "pointer" }} className='ant-upload-list-item ant-upload-list-item-done'>
-                                  <div className='ant-upload-list-item-info'>
+                                <div className='margin-right margin-bottom'>
+                                  <div
+                                    style={{ cursor: "pointer", margin: 0 }}
+                                    className='ant-upload-list-item ant-upload-list-item-done'
+                                  >
+                                    <div className='ant-upload-list-item-info'>
+                                      {
+                                        item.url ?
+                                          <img src={item.url + "?x-oss-process=image/resize,l_100"} style={{ height: "100%", width: "100%" }} /> :
+                                          null
+                                      }
+                                    </div>
+                                    <span className='ant-upload-list-item-actions'>
+                                      <div className='margin-bottom'>
+                                        <Icon onClick={() => { this.handlePreview(item) }} title='预览' type="eye" style={{ fontSize: '18px', color: "#fff", marginRight: "6px" }} />
+                                        <Icon onClick={() => { this.deleteImage(index) }} title='删除' type="delete" style={{ fontSize: '18px', color: "#fff" }} />
+                                      </div>
+                                      {
+                                        limitFileLength > 1 ?
+                                          <div>
+                                            <Icon onClick={() => { this.picMoveLeft(index) }} title='左移' type="arrow-left" style={{ fontSize: '18px', color: "#fff", marginRight: "10px" }} />
+                                            <Icon onClick={() => { this.picMoveRight(index) }} title='右移' type="arrow-right" style={{ fontSize: '18px', color: "#fff" }} />
+                                          </div> : null
+                                      }
+                                    </span>
+                                  </div>
+                                  <div className='text-center'>
                                     {
-                                      item.url ?
-                                        <img src={item.url + "?x-oss-process=image/resize,l_100"} style={{ height: "100%", width: "100%" }} /> :
-                                        null
+                                      index == 0 ?
+                                        `主图`
+                                        :
+                                        `轮播${index}`
                                     }
                                   </div>
-                                  <span className='ant-upload-list-item-actions'>
-                                    <div className='margin-bottom'>
-                                      <Icon onClick={() => { this.handlePreview(item) }} title='预览' type="eye" style={{ fontSize: '18px', color: "#fff", marginRight: "6px" }} />
-                                      <Icon onClick={() => { this.deleteImage(index) }} title='删除' type="delete" style={{ fontSize: '18px', color: "#fff" }} />
-                                    </div>
-                                    {
-                                      limitFileLength > 1 ?
-                                        <div>
-                                          <Icon onClick={() => { this.picMoveLeft(index) }} title='左移' type="arrow-left" style={{ fontSize: '18px', color: "#fff", marginRight: "10px" }} />
-                                          <Icon onClick={() => { this.picMoveRight(index) }} title='右移' type="arrow-right" style={{ fontSize: '18px', color: "#fff" }} />
-                                        </div> : null
-                                    }
-                                  </span>
                                 </div>
                               </Spin>
                               :
-                              <div>
-                                <div style={{ cursor: "pointer" }} className='ant-upload-list-item ant-upload-list-item-done'>
+                              <div className='margin-right margin-bottom'>
+                                <div style={{ cursor: "pointer",margin:0}} className='ant-upload-list-item ant-upload-list-item-done'>
                                   <div className='ant-upload-list-item-info'>
                                     <img src={item.url + "?x-oss-process=image/resize,l_100"} style={{ height: "100%", width: "100%" }} />
                                   </div>
@@ -354,6 +367,14 @@ export default class PicturesWall extends Component {
                                         </div> : null
                                     }
                                   </span>
+                                </div>
+                                <div className='text-center'>
+                                  {
+                                    index == 0 ?
+                                      `主图`
+                                      :
+                                      `轮播${index}`
+                                  }
                                 </div>
                               </div>
                           }
