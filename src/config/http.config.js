@@ -1,12 +1,13 @@
 let domain = '';
 
-//测试服
-// domain = "http://47.103.71.160:9092";
+
 // 俊宝
 // domain = "http://192.168.20.54:9092";
 // 博文
-domain = "http://192.168.20.50:9092";
+domain = "http://192.168.20.52:9092";
 
+//测试服
+// domain = "http://47.103.71.160:9092";
 
 let uploadDomain = "http://fi.adorsmart.com";
 

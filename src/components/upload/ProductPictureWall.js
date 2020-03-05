@@ -175,6 +175,7 @@ export default class PicturesWall extends Component {
   }
 
   handleChange = (event) => {
+    console.log(event)
     let { fileList, file } = event;
     let newUploadFiles = this.getNewUploadFiles(fileList);
     if (newUploadFiles && !this.isFilesTypeValid(newUploadFiles)) {

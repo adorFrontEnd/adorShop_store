@@ -259,7 +259,6 @@ export default class PicturesWall extends Component {
     }
 
     return isValid;
-
   }
 
   isFilesTypeValid = (files) => {

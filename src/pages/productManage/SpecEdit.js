@@ -1,60 +1,117 @@
 import React, { Component } from "react";
-import { Col, Row, Checkbox, Card, Tag, Modal, Select, Spin, Icon, Form, Button, Input, Table, Radio, InputNumber, Popconfirm } from 'antd';
+import { Col, Row, Checkbox, Modal, Select, Spin, Icon, Form, Button, Badge, Input, Radio, InputNumber, Popconfirm } from 'antd';
 import Toast from '../../utils/toast';
 import PictureWall from '../../components/upload/PictureWall';
 import ProductPictureWall from '../../components/upload/ProductPictureWall';
-
+import { _getSpecDataBySpecClasses } from './specUtils';
 
 class Page extends Component {
+
   state = {
-    isMultiProduct: false,
-    singleSpecData: {
+    isMultiSpec: false,
+    singleSpecData: {},
+    multiSpecClasses: [],
+    multiSpecData: [],
+    uploadModalIsVisible: false,
+    selectProductUrls: [],
+    selectSpecIndex: 0
+  }
+
+  componentDidMount() {
+    this.onSpecDataRevert(this.props.specData);
+  }
+
+  onSpecDataChangeCallback = (isMultiSpec, singleSpecData, multiSpecData) => {
+    this.props.onChange({
+      isMultiSpec, singleSpecData, multiSpecData
+    })
+  }
+
+
+  //规格数据回滚
+  onSpecDataRevert = (data) => {
+
+    let isMultiSpec = false;
+    if (!data) {
+      this._initSpecData();
+    } else {
+      let { isMultiSpec, singleSpecData, multiSpecData } = data;
+      this.props.onChange({
+        isMultiSpec, singleSpecData, multiSpecData
+      })
+    }
+  }
+
+  _initSpecData = () => {
+    let isMultiSpec = false;
+    let singleSpecData = {
       specTitle: "无",
-      productUrl: "",
+      productUrls: [],
       productCode: "",
       barCode: "",
       originalPrice: null,
       costPrice: null,
       weight: null
-    },
-    multiSpecClasses: [],
-    multiSpecData: [],
-    uploadModalIsVisible: false
-  }
-
-  muiltiChecked = (e) => {
-    let isMultiProduct = e.target.checked;
-    if (isMultiProduct) {
-      this.revertMultiData()
+    };
+    let multiSpecData = [];
+    let data = {
+      isMultiSpec: false,
+      singleSpecData,
+      multiSpecClasses: [],
+      multiSpecData,
+      uploadModalIsVisible: false,
+      selectProductUrls: [],
+      selectSpecIndex: 0
     }
-    this.setState({
-      isMultiProduct
+    this.setState(data);
+    this.props.onChange({
+      isMultiSpec, singleSpecData, multiSpecData
     })
   }
 
-  revertMultiData = (data) => {
-    if (!data) {
-      this.setState({
-        multiSpecClasses: [{
-          specName: "",
-          specValues: [],
-          inputSpecValue: ""
-        }],
-        multiSpecData: [{
-          specTitle: "",
-          productUrl: [],
-          productCode: "",
-          barCode: "",
-          originalPrice: null,
-          costPrice: null,
-        }]
-      })
+  muiltiChecked = (e) => {
+    let isMultiSpec = e.target.checked;
+    let { singleSpecData, multiSpecData } = this.state;
+    if (isMultiSpec) {
+      this.initMultiData()
     }
+    this.setState({
+      isMultiSpec
+    })
+    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData);
   }
+
+  initMultiData = () => {
+
+    let { isMultiSpec, singleSpecData } = this.state;
+
+    let multiSpecClasses = [{
+      specName: "",
+      specValues: [],
+      inputSpecValue: ""
+    }];
+
+    let multiSpecData = [{
+      specTitle: "",
+      productUrls: [],
+      productCode: "",
+      barCode: "",
+      originalPrice: null,
+      costPrice: null,
+    }];
+
+    this.setState({
+      multiSpecClasses,
+      multiSpecData
+    })
+    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData);
+  }
+
+
 
   // 增加规格值
   addSpecValue = (specIndex) => {
-    let { multiSpecClasses } = this.state;
+    let { isMultiSpec, multiSpecClasses, singleSpecData } = this.state;
     let inputSpecValue = multiSpecClasses[specIndex]['inputSpecValue'];
     let specValues = multiSpecClasses[specIndex]['specValues'];
 
@@ -70,17 +127,18 @@ class Page extends Component {
     multiSpecClasses[specIndex]['specValues'] = [...specValues, inputSpecValue];
     multiSpecClasses[specIndex]['inputSpecValue'] = null;
 
-    let multiSpecData = this.getSpecDataBySpecClasses(multiSpecClasses);
+    let multiSpecData = _getSpecDataBySpecClasses(multiSpecClasses);
     this.setState({
       multiSpecClasses,
       multiSpecData
     })
+    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData);
   }
 
 
   onMultiSpecClassesChange = (action, specIndex, e, index) => {
 
-    let { multiSpecClasses } = this.state;
+    let { multiSpecClasses, isMultiSpec, singleSpecData } = this.state;
 
     switch (action) {
 
@@ -109,7 +167,6 @@ class Page extends Component {
       case "specNameChange":
         multiSpecClasses[specIndex]['specName'] = e.target.value.trim();;
         break;
-
     }
 
     this.setState({
@@ -117,23 +174,19 @@ class Page extends Component {
     })
 
     if (action == 'deleteItem' || action == 'delete' || action == 'specNameChange') {
-      let multiSpecData = this.getSpecDataBySpecClasses(multiSpecClasses);
+      let multiSpecData = _getSpecDataBySpecClasses(multiSpecClasses);
       this.setState({
         multiSpecData
       })
+      this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData);
     }
   }
 
-  getSpecDataBySpecClasses = (multiSpecClasses, seprator) => {
-    let list = multiSpecClasses.map(item => item.specValues);
-    let titles = this._getSpecDataTitles(list, seprator);
-    let specData = this._getSpecDataByTitles(titles);
-    return specData;
-  }
+
 
   //修改规格详细数据
   onMultiSpecDataChange = (index, key, e) => {
-    let { multiSpecData } = this.state;
+    let { multiSpecData, isMultiSpec, singleSpecData } = this.state;
 
     switch (key) {
       case 'productCode':
@@ -156,30 +209,12 @@ class Page extends Component {
     this.setState({
       multiSpecData
     })
-  }
-
-  uploadPic = (specIndex, picList) => {
-
-    let { multiSpecData } = this.state;
-    let picUrl = picList && picList.length ? picList[0] : "";
-    multiSpecData[specIndex]['productUrl'] = picUrl;
-    this.setState({
-      multiSpecData
-    })
-  }
-
-  uploadSinglePic = (picList) => {
-    let { singleSpecData } = this.state;
-    let picUrl = picList && picList.length ? picList[0] : "";
-    singleSpecData['productUrl'] = picUrl;
-    this.setState({
-      singleSpecData
-    })
+    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData);
   }
 
   //修改规格详细数据
   onSingleSpecDataChange = (key, e) => {
-    let { singleSpecData } = this.state;
+    let { isMultiSpec, singleSpecData, multiSpecData } = this.state;
 
     switch (key) {
       case 'productCode':
@@ -198,19 +233,54 @@ class Page extends Component {
     this.setState({
       singleSpecData
     })
+    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData);
   }
 
-  showUploadModal = () => {
+
+  //上传图片的modal
+  showUploadModal = (isMultiSpec, selectSpecIndex) => {
+
+    let { singleSpecData, multiSpecData } = this.state;
+    let selectProductUrls = [];
+    if (!isMultiSpec) {
+      selectProductUrls = singleSpecData['productUrls'] || [];
+    } else {
+      selectProductUrls = multiSpecData[selectSpecIndex]["productUrls"] || [];
+    }
+
     this.setState({
-      uploadModalIsVisible: true
+      selectSpecIndex,
+      selectProductUrls
+    })
+    this._showUploadModal();
+  }
+
+
+  uploadPicture = (picList) => {
+    let selectProductUrls = picList || [];
+    this.setState({
+      selectProductUrls
     })
   }
 
-  hideUploadModal = () => {
-    this.setState({
-      uploadModalIsVisible: false
-    })
+  onSavePitureModal = () => {
+    let { selectProductUrls, selectSpecIndex, isMultiSpec, singleSpecData, multiSpecData } = this.state;
+    if (!isMultiSpec) {
+      singleSpecData['productUrls'] = selectProductUrls;
+      this.setState({
+        singleSpecData
+      })
+    } else {
+      multiSpecData[selectSpecIndex]['productUrls'] = selectProductUrls;
+      this.setState({
+        multiSpecData
+      })
+    }
+    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData);
+    this.hideUploadModal();
   }
+
+
   /***渲染**********************************************************************************************************/
 
   render() {
@@ -220,11 +290,11 @@ class Page extends Component {
     return (
       <div className='padding'>
         <div style={{ background: "#f2f2f2" }} className='color333 padding border-radius font-16'>
-          <Checkbox checked={this.state.isMultiProduct} onChange={this.muiltiChecked}>多规格</Checkbox>
+          <Checkbox checked={this.state.isMultiSpec} onChange={this.muiltiChecked}>多规格</Checkbox>
         </div>
         <div style={{ minHeight: 300 }}>
           {
-            !this.state.isMultiProduct ?
+            !this.state.isMultiSpec ?
               <div>
                 <Row style={{ border: "1px solid #d9d9d9", marginTop: "10px" }}>
                   <Col span={1} className='padding'></Col>
@@ -237,10 +307,21 @@ class Page extends Component {
                   <Col span={3} className='padding' style={{ borderLeft: "1px solid #d9d9d9" }}>重量</Col>
                 </Row>
                 <Row style={{ border: "1px solid #d9d9d9", marginTop: "-1px", display: 'flex', alignItems: 'auto' }}>
-                  <Col span={1} className='padding flex-center align-center'>1</Col>
-                  <Col span={2} className='flex-middle align-center' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>
-                    <div style={{ margin: "0 auto", border: "1px dashed #ccc", borderRadius: "4px", padding: 10, cursor: "pointer" }} onClick={this.showUploadModal}>
-                      <Icon type='plus' style={{ fontSize: 20 }} />
+                  <Col span={1} className='padding flex-middle flex-center'>1</Col>
+                  <Col span={2} className='flex-middle flex-center' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>
+                    <div className='flex-middle flex-center' style={{ cursor: "pointer" }} onClick={() => this.showUploadModal()}>
+                      {
+                        singleSpecData['productUrls'] && singleSpecData['productUrls'].length ?
+                          <div className='padding'>
+                            <Badge count={singleSpecData['productUrls'].length}>
+                              <img src={singleSpecData['productUrls'][0]} style={{ height: 50, width: 50 }} />
+                            </Badge>
+                          </div>
+                          :
+                          <div style={{ margin: "0 auto", border: "1px dashed #ccc", borderRadius: "4px", padding: 10 }}>
+                            <Icon type='plus' style={{ fontSize: 20 }} />
+                          </div>
+                      }
                     </div>
                   </Col>
                   <Col span={2} className='padding flex-center align-center'><div>{singleSpecData.specTitle}</div></Col>
@@ -310,7 +391,7 @@ class Page extends Component {
                         </Row>
                       )
                       :
-                      <div className='text-center line-height40 color-gray'>暂无数据</div>
+                      <div className='text-center line-height40 color-gray' style={{ border: "1px solid #ccc", marginTop: "-1px" }}>暂无数据</div>
                   }
                 </div>
                 {
@@ -320,7 +401,7 @@ class Page extends Component {
                 }
                 <Row style={{ border: "1px solid #d9d9d9", marginTop: "10px" }}>
                   <Col span={1} className='padding'></Col>
-                  <Col span={3} className='padding' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>主图</Col>
+                  <Col span={2} className='padding' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>主图</Col>
                   <Col span={3} className='padding' >规格</Col>
                   <Col span={4} className='padding' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>商品编码</Col>
                   <Col span={4} className='padding' >条形码</Col>
@@ -345,9 +426,20 @@ class Page extends Component {
                             </div>
                           </Popconfirm>
                         </Col>
-                        <Col span={3} className='flex-middle' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>
-                          <div style={{ margin: "0 auto", border: "1px dashed #ccc", borderRadius: "4px", padding: 10, cursor: "pointer" }} onClick={this.showUploadModal}>
-                            <Icon type='plus' style={{ fontSize: 20 }} />
+                        <Col span={2} className='flex-middle flex-center' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>
+                          <div className='flex-middle flex-center' style={{ cursor: "pointer" }} onClick={() => this.showUploadModal(true, specIndex)}>
+                            {
+                              specDataItem['productUrls'] && specDataItem['productUrls'].length ?
+                                <div className='padding'>
+                                  <Badge count={specDataItem['productUrls'].length}>
+                                    <img src={specDataItem['productUrls'][0]} style={{ height: 50, width: 50 }} />
+                                  </Badge>
+                                </div>
+                                :
+                                <div style={{ margin: "0 auto", border: "1px dashed #ccc", borderRadius: "4px", padding: 10 }}>
+                                  <Icon type='plus' style={{ fontSize: 20 }} />
+                                </div>
+                            }
                           </div>
                         </Col>
                         <Col span={3} className='padding flex-center align-center'><div>{specDataItem.specTitle}</div></Col>
@@ -366,14 +458,14 @@ class Page extends Component {
                           元
                         </Col>
                         <Col span={3} className='padding flex-middle' style={{ borderLeft: "1px solid #d9d9d9" }}>
-                          <InputNumber value={specDataItem['weight']} precision={2} min={0} placeholder='输入重量' style={{ width: 120 }} onChange={(e) => this.onMultiSpecDataChange(specIndex, 'weight', e)} />
+                          <InputNumber suffix="kg" value={specDataItem['weight']} precision={2} min={0} placeholder='输入重量' style={{ width: 120 }} onChange={(e) => this.onMultiSpecDataChange(specIndex, 'weight', e)} />
                           kg
                         </Col>
                       </Row>
 
                     )
                     :
-                    <div className='text-center line-height40 color-gray'>暂无数据</div>
+                    <div className='text-center line-height40 color-gray' style={{ border: "1px solid #ccc", marginTop: "-1px" }}>暂无数据</div>
                 }
               </div>
           }
@@ -386,10 +478,20 @@ class Page extends Component {
         </div>
         <Modal
           visible={this.state.uploadModalIsVisible}
+          okText='保存'
+          onOk={this.onSavePitureModal}
           onCancel={this.hideUploadModal}
-          width={800}
+          width={640}
+          title='SKU图片信息'
         >
+          <div className='color-red line-height40'>
+            第一个为主图，其余为SKU的轮播图，最多上传15张
+            <Button onClick={this.resetPictures} type="primary" className='margin-left'>清空所有图片</Button>
+          </div>
           <ProductPictureWall
+            allowType={['1', '2']}
+            uploadCallback={this.uploadPicture}
+            pictureList={this.state.selectProductUrls || []}
             limitFileLength={15}
             folder='product'
           />
@@ -399,64 +501,24 @@ class Page extends Component {
   }
 
 
-
-  _getSpecDataByTitles = (titles) => {
-    if (!titles || !titles.length) {
-      return []
-    }
-
-    let specData = titles.map(specTitle => {
-      return {
-        specTitle,
-        productUrl: [],
-        productCode: "",
-        barCode: "",
-        originalPrice: null,
-        costPrice: null,
-      }
+  _showUploadModal = () => {
+    this.setState({
+      uploadModalIsVisible: true
     })
-    return specData
   }
 
-  _getSpecDataTitles = (multiSpecClasses, seprator) => {
-    if (!multiSpecClasses || !multiSpecClasses.length) {
-      return
-    }
-    let list1_2 = this._getSpecDataTitlesFormLists(multiSpecClasses[0], multiSpecClasses[1]);
-
-    if (multiSpecClasses.length <= 2) {
-      return list1_2;
-    }
-
-    let list3 = this._getSpecDataTitlesFormLists(list1_2, multiSpecClasses[2]);
-    return list3
+  hideUploadModal = () => {
+    this.setState({
+      uploadModalIsVisible: false
+    })
   }
 
-  _getSpecDataTitlesFormLists = (list1, list2, seprator) => {
-    seprator = seprator || " "
-    if ((!list1 || list1.length == 0) && (!list2 || list2.length == 0)) {
-      return
-    }
-
-    if ((!list1 || list1.length == 0) && list2 && list2.length > 0) {
-      return list2
-    }
-
-    if ((!list2 || list2.length == 0) && list1 && list1.length > 0) {
-      return list1
-    }
-
-    if (list1 && list1.length > 0 && list2 && list2.length > 0) {
-      let arr = [];
-      list1.forEach(item1 => {
-        list2.forEach(item2 => {
-          arr.push(`${item1}${seprator}${item2}`)
-        })
-      })
-      return arr
-    }
+  resetPictures = () => {
+    let { selectProductUrls } = this.state;
+    this.setState({
+      selectProductUrls: []
+    })
   }
-
 }
 
 export default Form.create()(Page);
