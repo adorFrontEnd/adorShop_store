@@ -68,6 +68,14 @@ const routerConfigArr = [
     icon: "block"
   },
   {
+    route_name: "productManage.other.freightTemplateEdit",
+    path: baseRoute + "/productManage/freightEdit",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "运费模板",
+    icon: "block"
+  },
+  {
     route_name: "user",
     title: "会员管理",
     icon: "team",

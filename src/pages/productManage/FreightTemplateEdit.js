@@ -1,29 +1,28 @@
 import React, { Component } from "react";
 import CommonPage from '../../components/common-page';
 import { Table, Form, Input, Select, Col, Row, Icon, Button, Divider, Popconfirm, Modal, Checkbox, InputNumber, DatePicker, Radio } from "antd";
-import { pagination } from '../../utils/pagination';
 import Toast from '../../utils/toast';
-import { examinationPassed, adjustmentAmount, searchSettlementAuditList, exportSettlementAudit } from '../../api/settlement';
 import { SearchForm, SubmitForm } from '../../components/common-form';
-
 import { NavLink, Link } from 'react-router-dom';
 import { baseRoute, routerConfig } from '../../config/router.config';
 import { connect } from 'react-redux';
 import { changeRoute } from '../../store/actions/route-actions';
 import dateUtil from '../../utils/dateUtil';
 import moment from 'moment';
-import AreaAndDisctrictSelectModal from '../../components/areaSelect/AreaAndDisctrictSelectModal';
-
-const userSearchPath = routerConfig["appManage.userSearch"].path;
+import AreaTransferModal from '../../components/areaSelect/AreaTransferModal';
 
 const _title = "运费模板";
 class Page extends Component {
 
   state = {
     showTableLoading: false,
-    inOutModalIsVisible: false,
-    companyList: null,
-    AreaAndDisctrictSelectModalVisible:false
+    pageDataList: [],
+    AreaAndDisctrictSelectModalVisible: false,
+    name: null,
+    caculateUnit: 0,
+    areaModalVisible: false,
+    checkedAreaData: {},
+    selectIndex:null
   }
 
   componentDidMount() {
@@ -34,31 +33,26 @@ class Page extends Component {
     page: 1
   }
 
-
   // 获取页面列表
   getPageData = () => {
     let _this = this;
-    this._showTableLoading();
-    searchSettlementAuditList(this.params).then(res => {
-      this._hideTableLoading();
-      let _pagination = pagination(res, (current) => {
-        this.params.page = current
-        _this.getPageData();
-      }, (cur, pageSize) => {
-        this.params.page = 1;
-        this.params.size = pageSize;
-        _this.getPageData();
-      })
-
-      this.setState({
-        pageDataList: res.data,
-        pagination: _pagination,
-
-      })
-
-    }).catch(() => {
-      this._hideTableLoading();
+    let pageDataList = [
+      { id: 1, showAddressName: "四川", firstValue: 1, firstPrice: 1.1, extendValue: 2, extendPrice: 2.2 }
+    ]
+    this.setState({
+      pageDataList
     })
+    // this._showTableLoading();
+    // searchSettlementAuditList(this.params).then(res => {    
+
+
+    //   this.setState({
+    //     pageDataList: res.data
+    //   })
+
+    // }).catch(() => {
+    //   this._hideTableLoading();
+    // })
   }
 
   _showTableLoading = () => {
@@ -72,25 +66,24 @@ class Page extends Component {
       showTableLoading: false
     })
   }
-  passedClicked = (record) => {
-    let { id } = record;
-    examinationPassed({ id })
-      .then(() => {
-        this.getPageData()
-      })
+
+  onTemplateDataChange = (index, key, e) => {
+
+    let { pageDataList } = this.state;
+    pageDataList[index][key] = e;
+    this.setState({
+      pageDataList
+    })
+
   }
 
-
-  exportSettlementClick = (record) => {
-    let { id } = record;
-    exportSettlementAudit({ id })
-  }
 
   // 表格相关列
   columns = [
-    { title: "可配送区域", dataIndex: "createTime", render: data => data ? dateUtil.getDateTime(data) : "--" },
+    { title: "可配送区域", dataIndex: "showAddressName", render: data => data || "--" },
     {
       title: null,
+      width: 100,
       render: (text, record, index) => (
         <span>
           <a target='_blank' size="small" onClick={() => { this.editItem(record) }} >修改</a>
@@ -104,156 +97,108 @@ class Page extends Component {
         </span>
       )
     },
-    { title: "首重（kg）", dataIndex: "autoSettlementAmount" },
-    { title: "运费（元）", dataIndex: "manualSettlementAmount" },
-    { title: "续重（kg）", dataIndex: "refundSettlementAmount" },
-    { title: "续费（元）", dataIndex: "commission" },
-
+    {
+      title: `${this.state.caculateUnit == 1 ? "首重（kg）" : "首件（个）"}`, dataIndex: "firstValue", render: (text, record, index) => (
+        <span><InputNumber onChange={(e) => this.onTemplateDataChange(index, "firstValue", e)} style={{ width: 140 }} value={text} precision={0} min={0} /></span>
+      )
+    },
+    {
+      title: "运费（元）", dataIndex: "firstPrice", render: (text, record, index) => (
+        <span><InputNumber onChange={(e) => this.onTemplateDataChange(index, "firstPrice", e)} style={{ width: 140, marginRight: 10 }} value={text} precision={2} min={0} />元</span>
+      )
+    },
+    {
+      title: `${this.state.caculateUnit == 1 ? "续重（kg）" : "续件（个）"}`, dataIndex: "extendValue", render: (text, record, index) => (
+        <span><InputNumber onChange={(e) => this.onTemplateDataChange(index, "extendValue", e)} style={{ width: 140 }} value={text} precision={0} min={0} /></span>
+      )
+    },
+    {
+      title: "续费（元）", dataIndex: "extendPrice", render: (text, record, index) => (
+        <span><InputNumber onChange={(e) => this.onTemplateDataChange(index, "extendPrice", e)} style={{ width: 140, marginRight: 10 }} value={text} precision={2} min={0} />元</span>
+      )
+    }
 
   ]
 
 
-  /**搜索，过滤 *******************************************************************************************************************************/
-  searchClicked = () => {
-    let params = this.props.form.getFieldsValue();
-
-    let { time, nameParam } = params;
-    if (time && time.length) {
-      let [startTime, stopTime] = time;
-      let startCreateTimeStamp = startTime ? dateUtil.getDayStartStamp(Date.parse(startTime)) : null;
-      let endCreateTimeStamp = stopTime ? dateUtil.getDayStopStamp(Date.parse(stopTime)) : null;
-      this.params = {
-        ...params,
-        startCreateTimeStamp,
-        endCreateTimeStamp,
-        time: null
-      }
-    } else {
-      this.params = {
-        ...params,
-        time: null
-      }
-    }
-    this.params.page = 1;
-    this.getPageData();
-  }
-  // 重置
-  resetClicked = () => {
-    this.props.form.resetFields();
-  }
-
-  showAreaAndDisctrictSelectModal = () => {
+  /**模板名称,计费方式 *******************************************************************************************************************************/
+  onNameChange = (e) => {
+    let name = e.target.value;
     this.setState({
-      AreaAndDisctrictSelectModalVisible: true
+      name
+    })
+  }
+  onCaculateUnitChange = (caculateUnit) => {
+    this.setState({
+      caculateUnit
     })
   }
 
-  hideAreaAndDisctrictSelectModal = () => {
+  /**地区选择 *************************************************************************************************************************************/
+
+  showAreaSelectModal = () => {
     this.setState({
-      AreaAndDisctrictSelectModalVisible: false
+      areaModalVisible: true
     })
   }
 
-  onSaveClick = (selectAreaList) => {
-    let selectAreaIds = this.getSelectAreaListLevel2Ids(selectAreaList);
-    let selectAreaNames = this.getSelectAreaListName(selectAreaList)
+  hideAreaSelectModal = () => {
     this.setState({
-      selectAreaList,
-      selectAreaIds,
-      selectAreaNames
+      areaModalVisible: false
     })
   }
 
+  onSaveClick = ({ checkedAreaIds, areaName }) => {
 
-
-  /**渲染**********************************************************************************************************************************/
+    let { pageDataList } = this.state;
+    pageDataList.push({ showAddressName: areaName, checkedAreaIds, id: Date.now() });
+    this.setState({
+      pageDataList
+    })
+    this.hideAreaSelectModal()
+  }
+  /**渲染******************************************************************************************************************************************/
 
   render() {
     const { getFieldDecorator } = this.props.form;
 
-
     return (
       <CommonPage title={_title} >
         <div className='margin10-0' >
-          <Form layout='inline' style={{ maxWidth: 1200, minWidth: 956 }}>
-            <Row>
-              <Col span={8}>
-                <Form.Item
-                  field="company"
-                  labelCol={{ span: 6 }}
-                  wrapperCol={{ span: 18 }}
-                  label='企业名'
-                >
-                  {
-                    getFieldDecorator('company', {
-                    })(
-                      <Input allowClear placeholder="输入企业名" style={{ width: "240px" }} />
-                    )
-                  }
-                </Form.Item>
-              </Col>
-
-              <Col span={8}>
-                <Form.Item
-                  labelCol={{ span: 6 }}
-                  wrapperCol={{ span: 18 }}
-                  label='创建时间'
-                  field='time'>
-                  {
-                    getFieldDecorator('time')(
-                      <DatePicker.RangePicker style={{ width: 240 }} />
-                    )
-                  }
-                </Form.Item>
-              </Col>
-
-              <Col span={8}>
-                <Form.Item
-                  style={{ width: 200 }}
-                  labelCol={{ span: 8 }}
-                  wrapperCol={{ span: 16 }}
-                  label='审核状态'
-                  field='status'
-                >
-                  {
-                    getFieldDecorator('status', {
-                      initialValue: null
-                    })(
-                      <Select>
-                        <Select.Option value={null}>选择审核状态</Select.Option>
-                        <Select.Option value='0'>待审核</Select.Option>
-                        <Select.Option value='1'>审核完成</Select.Option>
-                      </Select>
-                    )
-                  }
-                </Form.Item>
-              </Col>
-
-            </Row>
-          </Form>
+          <Row className='line-height30 margin-bottom20' style={{ width: 500 }}>
+            <Col span={5} className='label-required text-right'>模板名称：</Col>
+            <Col span={18}>
+              <Input placeholder='填写模板名称' onChange={this.onNameChange} value={this.state.name} />
+            </Col>
+          </Row>
+          <Row className='line-height30 margin-bottom20' style={{ width: 500 }}>
+            <Col span={5} className='label-required text-right'>计费方式：</Col>
+            <Col span={18}>
+              <Radio.Group defaultValue={0} value={this.state.caculateUnit} onChange={this.onCaculateUnitChange}>
+                <Radio value={0}>按件数</Radio>
+                <Radio value={1}>按重量</Radio>
+              </Radio.Group>
+            </Col>
+          </Row>
         </div>
-        <div className='padding10-0'>
-          <Button type='primary' className='normal' onClick={this.searchClicked}>筛选</Button>
-          <Button className='margin-left' onClick={this.resetClicked}>清除所有筛选</Button>
-        </div>
+
         <Table
           indentSize={20}
           rowKey="id"
           columns={this.columns}
           loading={this.state.showTableLoading}
-          pagination={this.state.pagination}
           dataSource={this.state.pageDataList}
+          pagination={false}
         />
         <div className='margin-top'>
-          <Button type='primary' onClick={this.showAreaAndDisctrictSelectModal}>指定可配送区域和运费</Button>
+          <Button type='primary' onClick={this.showAreaSelectModal}>指定可配送区域和运费</Button>
         </div>
 
-        <AreaAndDisctrictSelectModal
-          shouldNotSave={this.state.isEdit}
+        <AreaTransferModal
+          onCancel={this.hideAreaSelectModal}
           checkedAreaData={this.state.checkedAreaData}
-          hide={this.hideAreaAndDisctrictSelectModal}
-          visible={this.state.AreaAndDisctrictSelectModalVisible}
-          onSaveClick={this.onSaveClick}
+          visible={this.state.areaModalVisible}
+          onOk={this.onSaveClick}
         />
 
       </CommonPage >

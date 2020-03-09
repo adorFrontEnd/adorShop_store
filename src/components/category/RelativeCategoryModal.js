@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { Input, Select, Form, Button, Checkbox, Radio, Modal, Row, Col, Tree, Icon } from 'antd'
 import { getIdMap, getSelectArrTotalName, getCheckedNamesByIds, getCleanRelativeIdsById } from './categoryUtils';
 import { searchList } from '../../api/setting/ClasssifySetting';
-import { parseTree, getTreeMapAndData } from '../../utils/tree';
+import { getTreeMapAndData } from '../../utils/tree';
 import './category.less';
 import Toast from "../../utils/toast";
 

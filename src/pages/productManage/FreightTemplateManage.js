@@ -14,7 +14,7 @@ import dateUtil from '../../utils/dateUtil';
 import moment from 'moment';
 import AreaAndDisctrictSelectModal from '../../components/areaSelect/AreaAndDisctrictSelectModal';
 
-const userSearchPath = routerConfig["user.userManage.userList"].path;
+const freightTemplateEditPath = routerConfig["productManage.other.freightTemplateEdit"].path;
 
 const _title = "运费模板";
 class Page extends Component {
@@ -89,9 +89,11 @@ class Page extends Component {
 
   // 表格相关列
   columns = [
-    { title: "可配送区域", dataIndex: "createTime", render: data => data ? dateUtil.getDateTime(data) : "--" },
+    { title: "模板名称", dataIndex: "createTime", render: data => data => data || "--" },
+    { title: "计费方式", dataIndex: "autoSettlementAmount", render: data => data || "--" },
+    { title: "创建时间", dataIndex: "manualSettlementAmount", render: data => data ? dateUtil.getDateTime(data) : "--" },
     {
-      title: null,
+      title: "操作",
       render: (text, record, index) => (
         <span>
           <a target='_blank' size="small" onClick={() => { this.editItem(record) }} >修改</a>
@@ -105,10 +107,6 @@ class Page extends Component {
         </span>
       )
     },
-    { title: "首重（kg）", dataIndex: "autoSettlementAmount" },
-    { title: "运费（元）", dataIndex: "manualSettlementAmount" },
-    { title: "续重（kg）", dataIndex: "refundSettlementAmount" },
-    { title: "续费（元）", dataIndex: "commission" },
 
 
   ]
@@ -166,15 +164,16 @@ class Page extends Component {
   }
 
 
-  onFreightTypeChange = (e)=>{
+  onFreightTypeChange = (e) => {
     let freightType = e.target.value;
     this.setState({
       freightType
     })
   }
 
-  addFreightTemplate = ()=>{
-
+  addFreightTemplate = (id) => {
+    let title = id == '0' ? '新建模板' : "编辑模板"
+    this.props.changeRoute({ path: 'productManage.other.freightTemplateEdit', title: '运费模板', parentTitle: '其他' });
   }
   /**渲染**********************************************************************************************************************************/
 
@@ -198,10 +197,12 @@ class Page extends Component {
             <div className='margin-right20'>
               <Switch />
             </div>
-          </div>         
+          </div>
         </div>
         <div className='padding10-0'>
-          <Button type='primary' onClick={this.addFreightTemplate}>新建运费模板</Button>       
+          <NavLink to={freightTemplateEditPath + "/0"}>
+            <Button type='primary' onClick={()=>this.addFreightTemplate('0')}>新建运费模板</Button>
+          </NavLink>
         </div>
         <Table
           indentSize={20}
@@ -211,17 +212,8 @@ class Page extends Component {
           pagination={this.state.pagination}
           dataSource={this.state.pageDataList}
         />
-        <div className='margin-top'>
-          <Button type='primary' onClick={this.showAreaAndDisctrictSelectModal}>指定可配送区域和运费</Button>
-        </div>
-
-        <AreaAndDisctrictSelectModal
-          shouldNotSave={this.state.isEdit}
-          checkedAreaData={this.state.checkedAreaData}
-          hide={this.hideAreaAndDisctrictSelectModal}
-          visible={this.state.AreaAndDisctrictSelectModalVisible}
-          onSaveClick={this.onSaveClick}
-        />
+   
+       
 
       </CommonPage >
     )

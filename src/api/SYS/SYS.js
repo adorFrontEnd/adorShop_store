@@ -30,9 +30,14 @@ const sendSms = (params) => {
   })
 }
 
+const getAllCityList = (params) => {
+  return baseHttpProvider.getApi('api/city/getAllCityList', params);
+}
+
 export {
   getServerCurrentTime,
   getUpdatePictureUrl,
   getImageCaptcha,
-  sendSms
+  sendSms,
+  getAllCityList
 }
