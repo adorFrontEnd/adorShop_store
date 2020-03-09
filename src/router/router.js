@@ -26,6 +26,15 @@ const UserList = asyncComponent(() => import("../pages/user/UserList"));
 const UserGrade = asyncComponent(() => import("../pages/user/UserGrade"));
 const UserEdit = asyncComponent(() => import("../pages/user/UserEdit"));
 
+const CheckConfig = asyncComponent(() => import("../pages/sysConfig/CheckConfig"));
+const OfficialAccounts = asyncComponent(() => import("../pages/sysConfig/OfficialAccounts"));
+const PayConfig = asyncComponent(() => import("../pages/sysConfig/PayConfig"));
+const ReturnAddress = asyncComponent(() => import("../pages/sysConfig/ReturnAddress"));
+const SyncConfig = asyncComponent(() => import("../pages/sysConfig/SyncConfig"));
+const UnitConfig = asyncComponent(() => import("../pages/sysConfig/UnitConfig"));
+
+const StoreManage = asyncComponent(() => import("../pages/StoreManage/StoreManage"));
+
 export default class GlobalRouter extends React.Component {
 
   render() {
@@ -63,6 +72,15 @@ export default class GlobalRouter extends React.Component {
                   <PrivateRoute path={routerConfig["user.userManage.userList"].path} component={UserList} />
                   <PrivateRoute path={routerConfig["user.userManage.userGrade"].path} component={UserGrade} />
                   <PrivateRoute path={routerConfig["user.userManage.userEdit"].path + '/:id'} component={UserEdit} />
+
+                  <PrivateRoute path={routerConfig["sysConfig.payConfig.payConfig"].path} component={PayConfig} />
+                  <PrivateRoute path={routerConfig["sysConfig.syncConfig.syncConfig"].path} component={SyncConfig} />
+                  <PrivateRoute path={routerConfig["sysConfig.syncConfig.officialAccounts"].path} component={OfficialAccounts} />
+                  <PrivateRoute path={routerConfig["sysConfig.safeguardConfig.returnAddress"].path} component={ReturnAddress} />
+                  <PrivateRoute path={routerConfig["sysConfig.unitConfig.unitConfig"].path} component={UnitConfig} />
+                  <PrivateRoute path={routerConfig["sysConfig.checkConfig.checkConfig"].path} component={CheckConfig} />
+
+                  <PrivateRoute path={routerConfig["storeManage.storeInfo.storeManage"].path} component={StoreManage} />
 
                 </Switch>
               </Admin>

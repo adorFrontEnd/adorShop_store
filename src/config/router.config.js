@@ -21,8 +21,8 @@ const routerConfigArr = [
   {
     route_name: "accountSelect",
     path: baseRoute + "/accountSelect"
-  },  
-  
+  },
+
   {
     route_name: "productManage",
     title: "商品管理",
@@ -30,7 +30,7 @@ const routerConfigArr = [
     moduleAuth: true
   },
   {
-    route_name: "productManage.productInfo",    
+    route_name: "productManage.productInfo",
     loginRequired: true,
     moduleAuth: true,
     title: "商品信息",
@@ -82,34 +82,34 @@ const routerConfigArr = [
     moduleAuth: true
   },
   {
-    route_name: "user.userManage",    
+    route_name: "user.userManage",
     loginRequired: true,
     moduleAuth: true,
-    title: "客户管理",   
+    title: "客户管理",
   },
   {
-    route_name: "user.userManage.userList",    
+    route_name: "user.userManage.userList",
     path: baseRoute + "/user/userList",
     loginRequired: true,
     moduleAuth: true,
     icon: "solution",
-    title: "客户列表",   
+    title: "客户列表",
   },
   {
-    route_name: "user.userManage.userGrade",    
+    route_name: "user.userManage.userGrade",
     path: baseRoute + "/user/userGrade",
     loginRequired: true,
     moduleAuth: true,
     icon: "apartment",
-    title: "客户级别",   
+    title: "客户级别",
   },
   {
-    route_name: "user.userManage.userEdit",    
+    route_name: "user.userManage.userEdit",
     path: baseRoute + "/user/userEdit",
     loginRequired: true,
     moduleAuth: true,
     icon: "apartment",
-    title: "创建/编辑客户",   
+    title: "创建/编辑客户",
   },
   {
     route_name: "oper",
@@ -157,11 +157,10 @@ const routerConfigArr = [
   },
   {
     route_name: "sysConfig.payConfig",
-    path: baseRoute + "/sysConfig/payConfig",
     loginRequired: true,
     moduleAuth: true,
     title: "支付配置",
-    icon: "config"
+    icon: "team"
   },
   {
     route_name: "sysConfig.payConfig.payConfig",
@@ -169,8 +168,76 @@ const routerConfigArr = [
     loginRequired: true,
     moduleAuth: true,
     title: "支付配置",
-    icon: "config"
+    icon: "profile"
   },
+  {
+    route_name: "sysConfig.syncConfig",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "同步配置",
+    icon: "team"
+  },
+  {
+    route_name: "sysConfig.syncConfig.syncConfig",
+    path: baseRoute + "/sysConfig/syncConfig",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "网店管家",
+    icon: "profile"
+  },
+  {
+    route_name: "sysConfig.syncConfig.officialAccounts",
+    path: baseRoute + "/sysConfig/officialAccounts",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "公众号",
+    icon: "profile"
+  },
+  {
+    route_name: "sysConfig.safeguardConfig",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "维权配置",
+    icon: "team"
+  },
+  {
+    route_name: "sysConfig.safeguardConfig.returnAddress",
+    path: baseRoute + "/sysConfig/returnAddress",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "退货地址",
+    icon: "profile"
+  },
+  {
+    route_name: "sysConfig.unitConfig",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "计量单位",
+    icon: "team"
+  },
+  {
+    route_name: "sysConfig.unitConfig.unitConfig",
+    path: baseRoute + "/sysConfig/unitConfig",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "计量单位配置",
+    icon: "profile"
+  },
+  {
+    route_name: "sysConfig.checkConfig",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "审核配置",
+    icon: "team"
+  },
+  {
+    route_name: "sysConfig.checkConfig.checkConfig",
+    path: baseRoute + "/sysConfig/checkConfig",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "审单配置",
+    icon: "profile"
+  }
 
 ]
 

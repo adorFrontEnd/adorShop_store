@@ -7,7 +7,7 @@ let domain = '';
 domain = "http://192.168.20.56:9092";
 
 //测试服
-// domain = "http://47.103.71.160:9092";
+domain = "http://47.103.71.160:9092";
 
 let uploadDomain = "http://fi.adorsmart.com";
 
