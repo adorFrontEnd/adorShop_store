@@ -148,7 +148,29 @@ const routerConfigArr = [
     moduleAuth: true,
     title: "角色管理",
     icon: "solution"
-  }
+  },
+  {
+    route_name: "sysConfig",
+    title: "系统配置",
+    icon: "setting",
+    moduleAuth: true
+  },
+  {
+    route_name: "sysConfig.payConfig",
+    path: baseRoute + "/sysConfig/payConfig",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "支付配置",
+    icon: "config"
+  },
+  {
+    route_name: "sysConfig.payConfig.payConfig",
+    path: baseRoute + "/sysConfig/payConfig",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "支付配置",
+    icon: "config"
+  },
 
 ]
 
