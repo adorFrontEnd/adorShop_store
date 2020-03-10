@@ -21,7 +21,7 @@ class LeftBar extends Component {
     let userInfo = getCacheUserInfo();
     let data = userInfo.data;
     let routerData = data.filter((val) => (val.indexOf(".") != -1 || (val == 'home')));
-    this.routeList = getRouter(routerData,true);
+    this.routeList = getRouter(routerData, true);
     this.rootSubmenuKeys = this.routeList.map(item => item.key);
     const menuTree = this.renderMenu(this.routeList);
     this.setState({
@@ -53,9 +53,9 @@ class LeftBar extends Component {
 
   render() {
     return (
-      <div>        
+      <div>
         <Menu
-          
+
           selectedKeys={[this.state.current]}
           mode="inline"
           openKeys={this.state.openKeys}
@@ -79,7 +79,14 @@ class LeftBar extends Component {
         }
         if (item.level == 1) {
           return (
-            <SubMenu key={item.key} title={<span><Icon type={item.icon} style={{ fontSize: 18 }} /><span>{item.title}</span></span>} key={item.key}>
+            <SubMenu key={item.key}
+              title={
+                <span>
+                  {/* <Icon type={item.icon} style={{ fontSize: 18 }} /> */}
+                  <span>{item.title}</span>
+                </span>
+              }
+              key={item.key}>
               {this.renderMenu(item.children, item.title)}
             </SubMenu>
           )
@@ -88,7 +95,7 @@ class LeftBar extends Component {
       }
       return <Menu.Item title={item.title} onClick={() => { this.handleClick(item.key, item.title, parentTitle) }} key={item.key} mode="inline">
         <NavLink to={item.path}>
-          <Icon type={item.icon} style={{ fontSize: 18 }} />
+          {/* <Icon type={item.icon} style={{ fontSize: 18 }} /> */}
           {item.title}
         </NavLink>
       </Menu.Item>

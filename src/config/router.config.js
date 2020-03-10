@@ -237,8 +237,61 @@ const routerConfigArr = [
     moduleAuth: true,
     title: "审单配置",
     icon: "profile"
-  }
+  },
 
+  {
+    route_name: "orderManage",
+    title: "订货管理",
+    icon: "orderManage",
+    moduleAuth: true
+  },
+  {
+    route_name: "orderManage.orderProduct",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "订货商品",
+    icon: "team"
+  },
+  {
+    route_name: "orderManage.orderProduct.orderProduct",
+    path: baseRoute + "/orderManage/orderProduct",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "订货商品",
+    icon: "profile"
+  },
+  {
+    route_name: "orderManage.orderProduct.commentManage",
+    path: baseRoute + "/orderManage/commentManage",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "评论管理",
+    icon: "profile"
+  },
+  {
+    route_name: "orderManage.order",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "订货订单",
+    icon: "team"
+  },
+  {
+    route_name: "orderManage.order.orderList",
+    path: baseRoute + "/orderManage/orderList",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "订单列表",
+    icon: "team"
+  },
+  {
+    route_name: "orderManage.order.afterSaleOrder",
+    path: baseRoute + "/orderManage/afterSaleOrder",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "维权订单",
+    icon: "team"
+  } 
+  
 ]
 
 const getRouterConfig = (routerConfigArr) => {
