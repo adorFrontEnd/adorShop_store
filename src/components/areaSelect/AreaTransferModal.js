@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { Input, Select, Form, Button, Checkbox, Radio, Modal, Row, Col, Tree, Icon, Spin } from 'antd'
 import { searchList } from '../../api/setting/ClasssifySetting';
-import { getTreeMapAndData, getIdMap } from './areaUtils';
+import { getTreeMapAndData, getIdMap, getDisrtrictIds } from './areaUtils';
 import Toast from "../../utils/toast";
 import { getAllCityList } from '../../api/SYS/SYS';
 import '../category/category.less';
@@ -24,6 +24,39 @@ class AModal extends Component {
 
   componentDidMount() {
     this.getAllCityList();
+  }
+
+  componentWillReceiveProps(props) {
+    if (!props.areaIds || !this.props.areaIds || this.props.areaIds.length != props.areaIds.length || JSON.stringify(this.props.areaIds) != JSON.stringify(props.areaIds)) {
+      this.revertCheckedIds(props);
+    }
+  }
+
+  revertCheckedIds = (props) => {
+
+    let checkedAreaIds = [];
+    let selectTreeData = [];
+    let checkedKeys = [];
+    if (!props.areaIds || !props.areaIds.length) {
+      this.setState({
+        checkedAreaIds,
+        selectTreeData,
+        checkedKeys
+      })
+      return;
+    }
+    checkedAreaIds = props.areaIds;
+    let { idMap } = this.state;
+    let totalData = this.getTotalCheckedAreaList(checkedAreaIds, [], idMap);
+    let checkedAreaList = totalData.checkedAreaList;
+    let { treeData } = getTreeMapAndData(checkedAreaList);
+    selectTreeData = treeData || [];
+    checkedKeys = getDisrtrictIds(checkedAreaIds);
+    this.setState({
+      checkedAreaIds,
+      selectTreeData,
+      checkedKeys
+    })
   }
 
   getAllCityList = () => {
@@ -57,7 +90,6 @@ class AModal extends Component {
       checkedKeys,
       halfCheckedKeys
     })
-
   }
 
   onCancel = () => {
@@ -67,9 +99,8 @@ class AModal extends Component {
   onOk = () => {
     let { checkedAreaIds, idMap } = this.state;
     let areaName = this._getLevel1Names(checkedAreaIds, idMap);
-    let params = { checkedAreaIds, areaName };
+    let params = { checkedAreaIds, areaName, idMap };
     this.props.onOk(params);
-    this.props.onCancel();
   }
 
   // 添加
@@ -195,14 +226,14 @@ class AModal extends Component {
 
       let level2Id = id.substr(0, 4) + "00";
       // 删除相关的第二级
-      subKeys = subKeys.filter(item => item != level2Id);  
+      subKeys = subKeys.filter(item => item != level2Id);
       let level2_SiblingsKeys = this._getSiblingsKeys(subKeys, level2Id, '2');
       if (level2_SiblingsKeys && level2_SiblingsKeys.length) {
         return subKeys || []
       }
       let level1Id = id.substr(0, 2) + "0000";
       // 删除相关的第一级
-      subKeys = subKeys.filter(item => item != level1Id); 
+      subKeys = subKeys.filter(item => item != level1Id);
       return subKeys || []
     }
   }

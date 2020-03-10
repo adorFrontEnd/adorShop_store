@@ -8,6 +8,7 @@ import { baseRoute, routerConfig } from '../../config/router.config';
 import { connect } from 'react-redux';
 import { changeRoute } from '../../store/actions/route-actions';
 import dateUtil from '../../utils/dateUtil';
+import { cityIdsIsRepeat } from '../../components/areaSelect/areaUtils';
 import moment from 'moment';
 import { saveOrUpdateFreightItem, getFreightItemDetail, getFreightDetail, deleteTemplateItem } from '../../api/product/freight';
 import AreaTransferModal from '../../components/areaSelect/AreaTransferModal';
@@ -23,7 +24,7 @@ class Page extends Component {
     name: null,
     caculateUnit: 0,
     areaModalVisible: false,
-    checkedAreaData: {},
+    selectAreaIds: null,
     selectIndex: null,
     showLoading: false
   }
@@ -55,6 +56,7 @@ class Page extends Component {
       return;
     }
 
+    this._showLoading();
     getFreightDetail({ id })
       .then((freightDetail) => {
         let { itemList, name, caculateUnit } = freightDetail;
@@ -67,6 +69,10 @@ class Page extends Component {
         this.setState({
           name, caculateUnit, itemList
         })
+        this._hideLoading();
+      })
+      .catch(() => {
+        this._hideLoading();
       })
   }
 
@@ -89,7 +95,6 @@ class Page extends Component {
     this.setState({
       itemList
     })
-
   }
 
 
@@ -101,7 +106,7 @@ class Page extends Component {
       width: 100,
       render: (text, record, index) => (
         <span>
-          <a target='_blank' size="small" onClick={() => { this.editItem(record) }} >修改</a>
+          <a target='_blank' size="small" onClick={() => { this.editItem(record, index) }} >修改</a>
           <Divider type="vertical" />
           <Popconfirm
             placement="topLeft" title='确认要禁用吗？'
@@ -113,26 +118,29 @@ class Page extends Component {
       )
     },
     {
-      title: `${this.state.caculateUnit == 1 ? "首重（kg）" : "首件（个）"}`, dataIndex: "firstValue", render: (text, record, index) => (
+      title: `${this.state.caculateUnit == 1 ? "首重（kg）" : "首件（个）"}`, width: 180,
+      dataIndex: "firstValue", render: (text, record, index) => (
         <span><InputNumber onChange={(e) => this.onTemplateDataChange(index, "firstValue", e)} style={{ width: 140 }} value={text} precision={0} min={0} /></span>
       )
     },
     {
-      title: "运费（元）", dataIndex: "firstPrice", render: (text, record, index) => (
+      title: "运费（元）", dataIndex: "firstPrice", width: 180,
+      render: (text, record, index) => (
         <span><InputNumber onChange={(e) => this.onTemplateDataChange(index, "firstPrice", e)} style={{ width: 140, marginRight: 10 }} value={text} precision={2} min={0} />元</span>
       )
     },
     {
-      title: `${this.state.caculateUnit == 1 ? "续重（kg）" : "续件（个）"}`, dataIndex: "extendValue", render: (text, record, index) => (
+      title: `${this.state.caculateUnit == 1 ? "续重（kg）" : "续件（个）"}`, width: 180,
+      dataIndex: "extendValue", render: (text, record, index) => (
         <span><InputNumber onChange={(e) => this.onTemplateDataChange(index, "extendValue", e)} style={{ width: 140 }} value={text} precision={0} min={0} /></span>
       )
     },
     {
-      title: "续费（元）", dataIndex: "extendPrice", render: (text, record, index) => (
+      title: "续费（元）", dataIndex: "extendPrice", width: 180,
+      render: (text, record, index) => (
         <span><InputNumber onChange={(e) => this.onTemplateDataChange(index, "extendPrice", e)} style={{ width: 140, marginRight: 10 }} value={text} precision={2} min={0} />元</span>
       )
     }
-
   ]
 
   /**编辑单个数据************************************************************************/
@@ -154,6 +162,11 @@ class Page extends Component {
       })
   }
 
+  editItem = (record, index) => {
+    let { cityIdList } = record;
+    this.showAreaSelectModal(cityIdList, index)
+  }
+
   /**模板名称,计费方式 *******************************************************************************************************************************/
   onNameChange = (e) => {
     let name = e.target.value;
@@ -163,7 +176,6 @@ class Page extends Component {
   }
 
   onCaculateUnitChange = (e) => {
-
     let caculateUnit = e.target.value;
     this.setState({
       caculateUnit
@@ -172,12 +184,13 @@ class Page extends Component {
 
   /**地区选择 *************************************************************************************************************************************/
 
-  showAreaSelectModal = (item) => {
-
-    let selectIndex = null;
+  showAreaSelectModal = (areaList, index) => {
+    let selectIndex = index;
+    let selectAreaIds = areaList || [];
     this.setState({
       areaModalVisible: true,
-      selectIndex
+      selectIndex,
+      selectAreaIds
     })
   }
 
@@ -185,35 +198,55 @@ class Page extends Component {
     this.setState({
       areaModalVisible: false
     })
-
   }
-
-
   // 保存modal Area数据
-  onAreaModalSaveClick = ({ checkedAreaIds, areaName }) => {
+  onAreaModalSaveClick = ({ checkedAreaIds, areaName, idMap }) => {
 
-    let { itemList } = this.state;
+    let { itemList, selectIndex } = this.state;
     if (!checkedAreaIds || !checkedAreaIds.length) {
       Toast('请设置配送区域！');
       return;
     }
 
-    let cityIds = checkedAreaIds;
+    //新建的情况
+    let totalList = this.getTotalList(itemList, selectIndex);
+    let repeatCityId = cityIdsIsRepeat(checkedAreaIds, totalList);
+    if (repeatCityId) {
+      let cityName = idMap[repeatCityId]['name'];
+      Toast(`选择地区"${cityName}"重复！`)
+      return;
+    }
+    let cityIdList = checkedAreaIds;
 
     itemList.push({
       showAddressName: areaName,
-      cityIds,
+      cityIdList,
       _id: Date.now(),
       firstValue: null,
       firstPrice: null,
       extendValue: null,
       extendPrice: null
     });
+
     this.setState({
       itemList
     })
 
     this.hideAreaSelectModal()
+  }
+
+  getTotalList = (itemList, selectIndex) => {
+
+    let totalList = [];
+    if (!itemList || !itemList.length) {
+      return []
+    }
+    itemList.forEach((item, index) => {
+      if (index != selectIndex) {
+        totalList = totalList.concat(item.cityIdList);
+      }
+    })
+    return totalList
   }
 
   onSaveClick = () => {
@@ -228,7 +261,12 @@ class Page extends Component {
       Toast('请设置运费模板配送区域！');
       return
     }
-
+    let isValidStr = this.isfreightListValid(itemList);
+    if (isValidStr) {
+      Toast(isValidStr);
+      return;
+    }
+    
     let itemStrList = this.formatFreightList(itemList);
     let params = {
       name,
@@ -237,9 +275,9 @@ class Page extends Component {
     }
     saveOrUpdateFreightItem(params)
       .then(() => {
-
+        Toast('保存成功！');
+        this.getDetail();
       })
-
   }
 
   formatFreightList = (itemList) => {
@@ -247,14 +285,42 @@ class Page extends Component {
       return ''
     }
     let list = itemList.map(item => {
-      let { _id, cityIds, ...other } = item;
-      cityIds = cityIds.join();
+      let { _id, cityIdList, ...other } = item;
+      let cityIds = cityIdList.join();
       return {
         ...other,
         cityIds
       }
     })
     return JSON.stringify(list);
+  }
+
+  isfreightListValid = (freightList) => {
+
+    if (!freightList || !freightList.length) {
+      return `请设置可配送区域！`;
+    }
+
+    for (let i = 0; i < freightList.length; i++) {
+
+      let { firstValue, firstPrice, extendValue, extendPrice } = freightList[i];
+      if (!firstValue) {
+        return `请设置第${i + 1}条数据的首件！`
+      }
+
+      if (!firstPrice && firstPrice != 0) {
+        return `请设置第${i + 1}条数据的运费！`
+      }
+
+      if (!extendValue) {
+        return `请设置第${i + 1}条数据的续件！`
+      }
+
+      if (!extendPrice) {
+        return `请设置第${i + 1}条数据的续费！`
+      }
+    }
+    return;
   }
 
   // 返回
@@ -296,7 +362,7 @@ class Page extends Component {
         />
 
         <div className='margin-top'>
-          <Button type='primary' onClick={this.showAreaSelectModal}>指定可配送区域和运费</Button>
+          <Button type='primary' onClick={() => this.showAreaSelectModal(null, null)}>指定可配送区域和运费</Button>
         </div>
 
         <div className='flex-end margin-top20 margin-right'>
@@ -306,7 +372,7 @@ class Page extends Component {
 
         <AreaTransferModal
           onCancel={this.hideAreaSelectModal}
-          checkedAreaData={this.state.checkedAreaData}
+          areaIds={this.state.selectAreaIds}
           visible={this.state.areaModalVisible}
           onOk={this.onAreaModalSaveClick}
         />

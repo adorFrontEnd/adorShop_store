@@ -56,13 +56,13 @@ const _getTreeDataByTreeMap = (map) => {
   let result = treeData = treeData.map(item => {
     let { children, ...other } = item;
     let values = Object.values(children);
-    children = values && values.length ? values.map(childItem => {     
-      let _children = Object.values(childItem.children);     
-      return {      
+    children = values && values.length ? values.map(childItem => {
+      let _children = Object.values(childItem.children);
+      return {
         ...childItem,
-        children:_children,
+        children: _children,
       }
-      
+
     }) : []
 
     return {
@@ -87,9 +87,42 @@ const getIdMap = (arr) => {
   return idMap;
 }
 
+const getDisrtrictIds = (checkedAreaIds) => {
+  if (!checkedAreaIds || !checkedAreaIds.length) {
+    return []
+  }
+  let disrtrictIds = checkedAreaIds.filter(item => item.toString().substr(4, 2) != '00');
+  return disrtrictIds;
+}
+
+const cityIdsIsRepeat = (list, totalList) => {
+
+  if (!list || !totalList.length || !list.length || !totalList.length) {
+    return;
+  }
+
+  let disrtrictIds = getDisrtrictIds(list);
+  let totalDisrtrictIds = getDisrtrictIds(totalList);
+
+  if (!disrtrictIds || !disrtrictIds || !totalDisrtrictIds.length || !totalDisrtrictIds.length) {
+    return;
+  }
+
+  for (let i = 0; i < disrtrictIds.length; i++) {
+    let item = parseInt(disrtrictIds[i]);
+    let index = totalDisrtrictIds.indexOf(item);
+    if (index != -1) {
+      return disrtrictIds[i];
+      break;
+    }
+  }
+  return
+
+}
 
 export {
-  
   getIdMap,
-  getTreeMapAndData
+  getTreeMapAndData,
+  getDisrtrictIds,
+  cityIdsIsRepeat
 }
