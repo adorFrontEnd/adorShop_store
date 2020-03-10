@@ -160,7 +160,7 @@ const routerConfigArr = [
     loginRequired: true,
     moduleAuth: true,
     title: "仓库信息",
-    icon: "team"
+    icon: "profile"
   },
   {
     route_name: "storeManage.storeInfo.storeManage",
