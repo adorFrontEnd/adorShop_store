@@ -77,7 +77,7 @@ class Page extends Component {
         <div>
           <div className=" align-center margin-bottom20 " style={{display:'flex'}}>
            <div style={{marginRight:'15px'}}> <Input placeholder='填写单位名称' /></div>
-            <Button type='primary' onClick={() => { this.showEditModalClick() }}>新增单位</Button>
+            <Button type='primary' >新增单位</Button>
 
           </div>
 

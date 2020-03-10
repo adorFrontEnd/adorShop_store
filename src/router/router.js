@@ -80,7 +80,7 @@ export default class GlobalRouter extends React.Component {
                   <PrivateRoute path={routerConfig["sysConfig.unitConfig.unitConfig"].path} component={UnitConfig} />
                   <PrivateRoute path={routerConfig["sysConfig.checkConfig.checkConfig"].path} component={CheckConfig} />
 
-                  {/* <PrivateRoute path={routerConfig["storeManage.storeInfo.storeManage"].path} component={StoreManage} /> */}
+                  <PrivateRoute path={routerConfig["storeManage.storeInfo.storeManage"].path} component={StoreManage} />
 
                 </Switch>
               </Admin>

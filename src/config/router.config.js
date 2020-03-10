@@ -150,6 +150,27 @@ const routerConfigArr = [
     icon: "solution"
   },
   {
+    route_name: "storeManage",
+    title: "仓库管理",
+    icon: "setting",
+    moduleAuth: true
+  },
+  {
+    route_name: "storeManage.storeInfo",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "仓库信息",
+    icon: "team"
+  },
+  {
+    route_name: "storeManage.storeInfo.storeManage",
+    path: baseRoute + "/storeManage/storeManage",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "仓库管理",
+    icon: "profile"
+  },
+  {
     route_name: "sysConfig",
     title: "系统配置",
     icon: "setting",
