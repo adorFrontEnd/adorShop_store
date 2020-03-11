@@ -261,6 +261,29 @@ const routerConfigArr = [
   },
 
   {
+    route_name: "sysConfig.orderConfig",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "订单配置",
+    icon: "team"
+  },
+  {
+    route_name: "sysConfig.orderConfig.smartLexicon",
+    path: baseRoute + "/sysConfig/smartLexicon",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "智能词库",
+    icon: "profile"
+  },
+  {
+    route_name: "sysConfig.orderConfig.lexiconConfig",
+    path: baseRoute + "/sysConfig/lexiconConfig",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "词库配置",
+    icon: "profile"
+  },
+  {
     route_name: "orderManage",
     title: "订货管理",
     icon: "orderManage",
@@ -319,7 +342,30 @@ const routerConfigArr = [
     moduleAuth: true,
     title: "智能下单",
     icon: "team"
-  }   
+  } ,
+  
+  
+  {
+    route_name: "fundsManage",
+    title: "资金管理",
+    icon: "orderManage",
+    moduleAuth: true
+  },
+  {
+    route_name: "fundsManage.fundsCheck",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "资金审核",
+    icon: "team"
+  },
+  {
+    route_name: "fundsManage.fundsCheck.performanceCheck",
+    path: baseRoute + "/fundsManage/performanceCheck",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "业绩审核",
+    icon: "profile"
+  },
 ]
 
 const getRouterConfig = (routerConfigArr) => {
