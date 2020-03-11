@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import CommonPage from '../../components/common-page';
-import { Table, Form, Input, Select, Col, Row, Icon, Button, Divider, Popconfirm, Modal, Checkbox, InputNumber, DatePicker, Radio } from "antd";
+import { Table, Form, Input, Select, Col, Row, Icon, Button, Divider, Popconfirm, Modal, Checkbox, InputNumber, DatePicker, Radio, Spin } from "antd";
 import Toast from '../../utils/toast';
 import { SearchForm, SubmitForm } from '../../components/common-form';
 import { NavLink, Link } from 'react-router-dom';
@@ -52,7 +52,7 @@ class Page extends Component {
   // 获取页面列表
   getDetail = (id) => {
 
-    if (!id) {
+    if (!id || id == '0') {
       return;
     }
 
@@ -69,6 +69,8 @@ class Page extends Component {
         this.setState({
           name, caculateUnit, itemList
         })
+        this.columns[2]['title'] = caculateUnit == 0 ? "首件（个）" : "首重（kg）";
+        this.columns[4]['title'] = caculateUnit == 0 ? "续件（个）" : "续重（kg）";
         this._hideLoading();
       })
       .catch(() => {
@@ -118,7 +120,7 @@ class Page extends Component {
       )
     },
     {
-      title: `${this.state.caculateUnit == 1 ? "首重（kg）" : "首件（个）"}`, width: 180,
+      title: <span>{this.state.caculateUnit == 0 ? "首件（个）" : "首重（kg）"}</span>, width: 180,
       dataIndex: "firstValue", render: (text, record, index) => (
         <span><InputNumber onChange={(e) => this.onTemplateDataChange(index, "firstValue", e)} style={{ width: 140 }} value={text} precision={0} min={0} /></span>
       )
@@ -130,7 +132,7 @@ class Page extends Component {
       )
     },
     {
-      title: `${this.state.caculateUnit == 1 ? "续重（kg）" : "续件（个）"}`, width: 180,
+      title: <span>{this.state.caculateUnit == 0 ? "续件（个）" : "续重（kg）"}</span>, width: 180,
       dataIndex: "extendValue", render: (text, record, index) => (
         <span><InputNumber onChange={(e) => this.onTemplateDataChange(index, "extendValue", e)} style={{ width: 140 }} value={text} precision={0} min={0} /></span>
       )
@@ -180,6 +182,9 @@ class Page extends Component {
     this.setState({
       caculateUnit
     })
+
+    this.columns[2]['title'] = caculateUnit == 0 ? "首件（个）" : "首重（kg）";
+    this.columns[4]['title'] = caculateUnit == 0 ? "续件（个）" : "续重（kg）";
   }
 
   /**地区选择 *************************************************************************************************************************************/
@@ -217,16 +222,21 @@ class Page extends Component {
       return;
     }
     let cityIdList = checkedAreaIds;
+    if (!selectIndex && selectIndex != 0) {
+      itemList.push({
+        showAddressName: areaName,
+        cityIdList,
+        _id: Date.now(),
+        firstValue: null,
+        firstPrice: null,
+        extendValue: null,
+        extendPrice: null
+      });
+    } else {
+      itemList[selectIndex]["cityIdList"] = cityIdList;
+      itemList[selectIndex]["showAddressName"] = areaName;
+    }
 
-    itemList.push({
-      showAddressName: areaName,
-      cityIdList,
-      _id: Date.now(),
-      firstValue: null,
-      firstPrice: null,
-      extendValue: null,
-      extendPrice: null
-    });
 
     this.setState({
       itemList
@@ -266,17 +276,24 @@ class Page extends Component {
       Toast(isValidStr);
       return;
     }
-    
+
     let itemStrList = this.formatFreightList(itemList);
+    let id = this.state.id && this.state.id != 0 ? this.state.id : null;
     let params = {
+      id,
       name,
       caculateUnit,
       itemStrList
     }
+    this._showLoading();
     saveOrUpdateFreightItem(params)
       .then(() => {
         Toast('保存成功！');
+        this._hideLoading();
         this.getDetail();
+      })
+      .catch(() => {
+        this._hideLoading();
       })
   }
 
@@ -334,41 +351,42 @@ class Page extends Component {
 
     return (
       <CommonPage title={_title} >
-        <div className='margin10-0' >
-          <Row className='line-height30 margin-bottom20' style={{ width: 500 }}>
-            <Col span={5} className='label-required text-right'>模板名称：</Col>
-            <Col span={18}>
-              <Input placeholder='填写模板名称' onChange={this.onNameChange} value={this.state.name} />
-            </Col>
-          </Row>
-          <Row className='line-height30 margin-bottom20' style={{ width: 500 }}>
-            <Col span={5} className='label-required text-right'>计费方式：</Col>
-            <Col span={18}>
-              <Radio.Group defaultValue={0} value={this.state.caculateUnit} onChange={this.onCaculateUnitChange}>
-                <Radio value={0}>按件数</Radio>
-                <Radio value={1}>按重量</Radio>
-              </Radio.Group>
-            </Col>
-          </Row>
-        </div>
+        <Spin spinning={this.state.showLoading}>
+          <div className='margin10-0' >
+            <Row className='line-height30 margin-bottom20' style={{ width: 500 }}>
+              <Col span={5} className='label-required text-right'>模板名称：</Col>
+              <Col span={18}>
+                <Input placeholder='填写模板名称' onChange={this.onNameChange} value={this.state.name} />
+              </Col>
+            </Row>
+            <Row className='line-height30 margin-bottom20' style={{ width: 500 }}>
+              <Col span={5} className='label-required text-right'>计费方式：</Col>
+              <Col span={18}>
+                <Radio.Group defaultValue={0} value={this.state.caculateUnit} onChange={this.onCaculateUnitChange}>
+                  <Radio value={0}>按件数</Radio>
+                  <Radio value={1}>按重量</Radio>
+                </Radio.Group>
+              </Col>
+            </Row>
+          </div>
 
-        <Table
-          indentSize={20}
-          rowKey="_id"
-          columns={this.columns}
-          loading={this.state.showLoading}
-          dataSource={this.state.itemList}
-          pagination={false}
-        />
+          <Table
+            indentSize={20}
+            rowKey="_id"
+            columns={this.columns}
+            dataSource={this.state.itemList}
+            pagination={false}
+          />
 
-        <div className='margin-top'>
-          <Button type='primary' onClick={() => this.showAreaSelectModal(null, null)}>指定可配送区域和运费</Button>
-        </div>
+          <div className='margin-top'>
+            <Button type='primary' onClick={() => this.showAreaSelectModal(null, null)}>指定可配送区域和运费</Button>
+          </div>
 
-        <div className='flex-end margin-top20 margin-right'>
-          <Button type='primary' className='margin-right normal' onClick={this.onSaveClick}>保存</Button>
-          <Button type='primary' className='normal' onClick={this.goBack}>返回</Button>
-        </div>
+          <div className='flex-end margin-top20 margin-right'>
+            <Button type='primary' className='margin-right normal' onClick={this.onSaveClick}>保存</Button>
+            <Button type='primary' className='normal' onClick={this.goBack}>返回</Button>
+          </div>
+        </Spin>
 
         <AreaTransferModal
           onCancel={this.hideAreaSelectModal}

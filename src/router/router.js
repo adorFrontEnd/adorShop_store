@@ -35,6 +35,13 @@ const UnitConfig = asyncComponent(() => import("../pages/sysConfig/UnitConfig"))
 
 const StoreManage = asyncComponent(() => import("../pages/StoreManage/StoreManage"));
 
+const OrderProduct = asyncComponent(() => import("../pages/orderManage/OrderProduct"));
+const CommentManage = asyncComponent(() => import("../pages/orderManage/CommentManage"));
+const OrderList = asyncComponent(() => import("../pages/orderManage/OrderList"));
+const AfterSaleOrder = asyncComponent(() => import("../pages/orderManage/AfterSaleOrder"));
+const IntelliOrder = asyncComponent(() => import("../pages/orderManage/IntelliOrder"));
+
+
 export default class GlobalRouter extends React.Component {
 
   render() {
@@ -81,6 +88,13 @@ export default class GlobalRouter extends React.Component {
                   <PrivateRoute path={routerConfig["sysConfig.checkConfig.checkConfig"].path} component={CheckConfig} />
 
                   <PrivateRoute path={routerConfig["storeManage.storeInfo.storeManage"].path} component={StoreManage} />
+
+                  <PrivateRoute path={routerConfig["orderManage.orderProduct.orderProduct"].path} component={OrderProduct} />
+                  <PrivateRoute path={routerConfig["orderManage.orderProduct.commentManage"].path} component={CommentManage} />
+                  <PrivateRoute path={routerConfig["orderManage.order.orderList"].path} component={OrderList} />
+                  <PrivateRoute path={routerConfig["orderManage.order.afterSaleOrder"].path} component={AfterSaleOrder} />
+                  <PrivateRoute path={routerConfig["orderManage.order.intelliOrder"].path} component={IntelliOrder} />
+                 
 
                 </Switch>
               </Admin>

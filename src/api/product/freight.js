@@ -24,7 +24,7 @@ const getFreightItemDetail = (params) => {
 }
 
 const deleteTemplate = (params) => {
-  return baseHttpProvider.postFormApi('api/freight/delete', params)
+  return baseHttpProvider.getApi('api/freight/delete', params)
 }
 
 const getFreightDetail = (params) => {

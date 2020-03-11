@@ -311,8 +311,15 @@ const routerConfigArr = [
     moduleAuth: true,
     title: "维权订单",
     icon: "team"
-  } 
-  
+  },
+  {
+    route_name: "orderManage.order.intelliOrder",
+    path: baseRoute + "/orderManage/intelliOrder",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "智能下单",
+    icon: "team"
+  }   
 ]
 
 const getRouterConfig = (routerConfigArr) => {

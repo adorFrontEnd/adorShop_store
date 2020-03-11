@@ -137,7 +137,7 @@ class Page extends Component {
       render: (text, record, index) => (
         <span>
           <NavLink to={freightTemplateEditPath + "/" + record.id}>
-            <a target='_blank' size="small" onClick={() => { this.editFreightTemplate(record.id) }} >修改</a>
+            <span target='_blank' size="small" onClick={() => { this.editFreightTemplate(record.id) }} >修改</span>
           </NavLink>
           <Divider type="vertical" />
           <Popconfirm

@@ -51,7 +51,7 @@ class AModal extends Component {
     let checkedAreaList = totalData.checkedAreaList;
     let { treeData } = getTreeMapAndData(checkedAreaList);
     selectTreeData = treeData || [];
-    checkedKeys = getDisrtrictIds(checkedAreaIds);
+  
     this.setState({
       checkedAreaIds,
       selectTreeData,
@@ -106,6 +106,7 @@ class AModal extends Component {
   // 添加
   addClicked = () => {
     let { checkedKeys, idMap, halfCheckedKeys } = this.state;
+
     let { checkedAreaIds, checkedAreaList } = this.getTotalCheckedAreaList(checkedKeys, halfCheckedKeys, idMap);
     let { treeData } = getTreeMapAndData(checkedAreaList);
     this.setState({
@@ -191,12 +192,12 @@ class AModal extends Component {
 
     let subKeys = [];
     if (level == '1') {
-      subKeys = keys.filter(item => item.substr(0, 2) != id.substr(0, 2))
+      subKeys = keys.filter(item => item.toString().substr(0, 2) != id.substr(0, 2))
       return subKeys || []
     }
 
     if (level == '2') {
-      subKeys = keys.filter(item => item.substr(0, 4) != id.substr(0, 4))
+      subKeys = keys.filter(item => item.toString().substr(0, 4) != id.substr(0, 4))
       if (!subKeys || !subKeys.length) {
         return []
       }
@@ -247,12 +248,12 @@ class AModal extends Component {
     }
 
     if (level == '1') {
-      subKeys = halfKeys.filter(item => item.substr(0, 2) != id.substr(0, 2))
+      subKeys = halfKeys.filter(item => item.toString().substr(0, 2) != id.substr(0, 2))
       return subKeys || []
     }
 
     if (level == '2') {
-      subKeys = halfKeys.filter(item => item.substr(0, 4) != id.substr(0, 4));
+      subKeys = halfKeys.filter(item => item.toString().substr(0, 4) != id.substr(0, 4));
       if (!subKeys || !subKeys.length) {
         return []
       }
@@ -283,13 +284,13 @@ class AModal extends Component {
 
     if (level == '2') {
       let level1Id = id.substr(0, 2);
-      let result = keys.filter(item => item.substr(0, 2) == level1Id && item.substr(2, 2) != '00' && item.substr(4, 2) == '00')
+      let result = keys.filter(item => item.toString().substr(0, 2) == level1Id && item.toString().substr(2, 2) != '00' && item.toString().substr(4, 2) == '00')
       return result;
     }
 
     if (level == '3') {
       let level2Id = id.substr(0, 4);
-      let result = keys.filter(item => item.substr(0, 4) == level2Id && item.substr(4, 2) != '00')
+      let result = keys.filter(item => item.toString().substr(0, 4) == level2Id && item.toString().substr(4, 2) != '00')
       return result;
     }
   }
@@ -300,7 +301,7 @@ class AModal extends Component {
       return;
     }
 
-    let level1Ids = arr.filter(item => item.substr(2, 4) == '0000');
+    let level1Ids = arr.filter(item => item.toString().substr(2, 4) == '0000');
     let result = level1Ids.map(item => idMap[item]['name']).join('、');
     return result;
   }
