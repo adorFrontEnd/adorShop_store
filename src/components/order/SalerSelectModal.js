@@ -1,15 +1,15 @@
 import { Upload, Radio, InputNumber, Form, Col, Input, Row, Modal, Button, Select, Table } from 'antd';
 import React, { Component } from 'react';
-import { SearchForm } from '../../components/common-form';
+import { SearchForm } from '../common-form';
 import Toast from '../../utils/toast';
 import { pagination } from '../../utils/pagination';
-import { searchPublicSelectMember } from '../../api/order/order';
+import { searchSalesman } from '../../api/order/order';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
 const RadioGroup = Radio.Group;
 
-class UserModal extends Component {
+class SalerModal extends Component {
 
   state = {
     tableLoading: false
@@ -19,7 +19,6 @@ class UserModal extends Component {
     this.getPageData();
   }
 
-  
   params = {
     page: 1
   }
@@ -42,7 +41,7 @@ class UserModal extends Component {
     let _this = this;
     this._showTableLoading();
 
-    searchPublicSelectMember(this.params).then(res => {
+    searchSalesman(this.params).then(res => {
       this._hideTableLoading();
       let _pagination = pagination(res, (current) => {
         this.params.page = current
@@ -87,21 +86,23 @@ class UserModal extends Component {
       </span>
     )
   }
+
   // 表格相关列
   columns = [
-    { title: "会员名称", dataIndex: "customerName", render: data => data || "--" },
-    { title: "会员手机号", dataIndex: "accountNumber", render: data => data || "--" },
-    { title: "会员等级", dataIndex: "gradeName", render: data => data || "--" },
+    { title: "业务员名称", dataIndex: "salesmanName", render: data => data || "--" },
+    { title: "手机号", dataIndex: "salesmanPhone", render: data => data || "--" },
+    { title: "备注", dataIndex: "remark", render: data => data || "--" },
     {
       title: '操作',
-      render: (text, record, index) => this.renderAction(text, record, index)    }
+      render: (text, record, index) => this.renderAction(text, record, index)
+    }
   ]
 
   selectItem = (record, index) => {
-    let { customerName, accountNumber, id } = record;
+    let { salesmanName, salesmanPhone, id } = record;
     let params = {
-      name: customerName,
-      phone: accountNumber,
+      name: salesmanName,
+      phone: salesmanPhone,
       id
     }
     this.props.selectItem(params, index);
@@ -116,10 +117,10 @@ class UserModal extends Component {
       <Modal
         maskClosable={false}
         width={700}
-        title="选择会员"
+        title="选择业务员"
         visible={this.props.visible}
         onCancel={this.onCancel}
-        footer={null}      
+        footer={null}   
       >
         <div>
           <div>
@@ -133,7 +134,7 @@ class UserModal extends Component {
                   type: "INPUT",
                   field: "likeName",
                   style: { width: 300 },
-                  placeholder: "会员名称/会员手机号/会员等级"
+                  placeholder: "业务员名称/手机号/备注"
                 }
               ]}
             />
@@ -154,4 +155,4 @@ class UserModal extends Component {
     )
   }
 }
-export default Form.create()(UserModal)
+export default Form.create()(SalerModal)
