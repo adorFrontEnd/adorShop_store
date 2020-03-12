@@ -15,7 +15,7 @@ const getIdMap = (arr, totalName) => {
     arr.forEach(item => {
       let id = item.id;
       if (!totalNameIdMap[id]) {
-        let totalName = getTotalName(id, idMap, '/');
+        let totalName = getTotalName(id, idMap, '-');
         totalNameIdMap[id] = { ...item, name: totalName };
       }
     });

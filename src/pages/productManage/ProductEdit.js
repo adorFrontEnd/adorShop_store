@@ -11,9 +11,7 @@ import UploadVideo from '../../components/upload/UploadVideo';
 import RichText from '../../components/RichText/RichText';
 import { searchFreightList } from '../../api/product/freight';
 import { getUnitConfigList } from '../../api/sysConfig/sysConfig';
-
-// import PictureWall from '../../components/upload/PictureWall';
-
+import { saveOrUpdateProduct } from '../../api/product/product';
 
 const _description = "";
 const _statusEnum = {
@@ -29,12 +27,12 @@ class Page extends Component {
     showLoading: false,
     baseUnitId: "",
     baseUnitQty: null,
-    packageUnitId: "",
-    hasPackageUnit: false,
+    containerUnitId: null,
+    isContainerUnit: false,
     areaModalIsVisible: false,
     selectAreaData: null,
     cModalIsVisible: false,
-    category: null,
+    categoryNames: null,
     categoryIds: [],
     specData: null,
     productUrls: [],
@@ -134,19 +132,68 @@ class Page extends Component {
 
   saveDataClicked = () => {
 
-    this.props.form.validateFields((err, params) => {
+    this.props.form.validateFields((err, data) => {
       if (err) {
         return;
       }
-      let { channel } = params;
+      let { name, channel, baseUnitId, specifications } = data;
+      let { unitListMap, isContainerUnit, containerUnitId, baseUnitQty, categoryIds, categoryNames } = this.state;
+
+
+      //单位
+      if (!baseUnitId) {
+        Toast("请设置计量单位！");
+        return;
+      }
+
+      if (!categoryIds || !categoryIds.length) {
+        Toast("请设置商品分类！");
+        return;
+      }
+
+      let baseUnit = unitListMap[baseUnitId];
+      let containerUnit = null;
+      if (isContainerUnit) {
+
+        if (!containerUnitId) {
+          Toast("请设置容器单位！");
+          return;
+        }
+
+        if (!baseUnitQty) {
+          Toast("请输入计量单位的数量！");
+          return;
+        }
+
+        let containerUnitName = unitListMap[containerUnitId] || containerUnitId;
+        containerUnit = {
+          containerUnitId,
+          containerUnitName,
+          baseUnitQty
+        }
+      }
+
+      //可购渠道
       channel = this._getChannelValue(channel);
-      // addDealerAndUpdate({ ...params, ...authObj, ...station, id, labelId })
-      //   .then(res => {
-      //     if (res.status == "SUCCEED") {
-      //       Toast(`${id ? "保存" : "添加"}成功!`, "success");
-      //       this.goBack();
-      //     }
+
+      let params = {
+        name,
+        baseUnit,
+        isContainerUnit,
+        containerUnit: containerUnit ? JSON.stringify(containerUnit) : null,
+        specifications,
+        channel,
+        categoryIds:categoryIds.join(','),
+        categoryNames
+      };
+
+      console.log(params);
+
+      // saveOrUpdateProduct(params)
+      //   .then(() => {
+
       //   })
+
     })
   }
 
@@ -160,17 +207,17 @@ class Page extends Component {
     })
   }
 
-  onPackageUnitChange = (e) => {
-    let packageUnitId = e;
+  onContainerUnitChange = (e) => {
+    let containerUnitId = e;
     this.setState({
-      packageUnitId
+      containerUnitId
     })
   }
 
   onHasPackageUnitChange = (e) => {
-    let hasPackageUnit = e.target.checked;
+    let isContainerUnit = e.target.checked;
     this.setState({
-      hasPackageUnit
+      isContainerUnit
     })
   }
 
@@ -189,7 +236,7 @@ class Page extends Component {
 
   cModalSaveClick = (params) => {
     let { categoryIds, category } = params;
-    this.setState({ cModalIsVisible: false, category, categoryIds });
+    this.setState({ cModalIsVisible: false, categoryNames: category, categoryIds });
   }
 
   hideCModal = () => {
@@ -230,7 +277,7 @@ class Page extends Component {
 
   render() {
     const { getFieldDecorator } = this.props.form;
-    let { labelList, selectAreaData,unitListMap } = this.state;
+    let { labelList, selectAreaData, unitListMap } = this.state;
 
     return (
       <CommonPage title={this.state._title} description={_description} >
@@ -263,9 +310,9 @@ class Page extends Component {
             labelCol={{ span: 6 }}
             wrapperCol={{ span: 16 }}
             label='计量单位：'
-            field='unit'>
+            field='baseUnitId'>
             {
-              getFieldDecorator('unit', {
+              getFieldDecorator('baseUnitId', {
                 initialValue: null,
                 rules: [
                   { required: true, message: '请输入计量单位!' }
@@ -279,12 +326,12 @@ class Page extends Component {
                 </Select>
               )
             }
-            <Checkbox style={{ marginLeft: 10 }} checked={this.state.hasPackageUnit} onChange={this.onHasPackageUnitChange}>容器单位</Checkbox>
+            <Checkbox style={{ marginLeft: 10 }} checked={this.state.isContainerUnit} onChange={this.onHasPackageUnitChange}>容器单位</Checkbox>
             {
-              this.state.hasPackageUnit ?
+              this.state.isContainerUnit ?
                 <span>
                   <span style={{ margin: "0 10px" }}>1</span>
-                  <Select style={{ width: 90 }} defaultValue={null} onChange={this.onPackageUnitChange}>
+                  <Select style={{ width: 90 }} defaultValue={null} value={this.state.containerUnitId} onChange={this.onContainerUnitChange}>
                     <Select.Option value={null}>请选择</Select.Option>
                     {
                       Object.keys(unitListMap).map(item => <Select.Option key={item} disabled={item == this.state.baseUnitId} value={item}>{unitListMap[item]}</Select.Option>)
@@ -313,7 +360,7 @@ class Page extends Component {
                   { required: true, message: '请输入包装规格!' }
                 ]
               })(
-                <Input minLength={0} maxLength={11} />
+                <Input minLength={0} maxLength={30} />
               )
             }
           </Form.Item>
@@ -323,9 +370,9 @@ class Page extends Component {
               <span><Button type='primary' onClick={this.showCModal}>选择分类</Button></span>
               <span className='margin-left'>
                 {
-                  this.state.category ?
+                  this.state.categoryNames ?
                     <span>
-                      {this.state.category}
+                      {this.state.categoryNames}
                     </span>
                     :
                     "暂未选择商品分类"
