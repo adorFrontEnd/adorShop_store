@@ -37,6 +37,9 @@ const LexiconConfig = asyncComponent(() => import("../pages/sysConfig/LexiconCon
 
 const StoreManage = asyncComponent(() => import("../pages/StoreManage/StoreManage"));
 
+const PerformanceCheck = asyncComponent(() => import("../pages/fundsManage/PerformanceCheck"));
+
+
 const OrderProduct = asyncComponent(() => import("../pages/orderManage/OrderProduct"));
 const CommentManage = asyncComponent(() => import("../pages/orderManage/CommentManage"));
 const OrderList = asyncComponent(() => import("../pages/orderManage/OrderList"));
@@ -92,6 +95,8 @@ export default class GlobalRouter extends React.Component {
                   <PrivateRoute path={routerConfig["sysConfig.orderConfig.lexiconConfig"].path + '/:id'} component={LexiconConfig} />
 
                   <PrivateRoute path={routerConfig["storeManage.storeInfo.storeManage"].path} component={StoreManage} />
+
+                  <PrivateRoute path={routerConfig["fundsManage.fundsCheck.performanceCheck"].path} component={PerformanceCheck} />
 
                   <PrivateRoute path={routerConfig["orderManage.orderProduct.orderProduct"].path} component={OrderProduct} />
                   <PrivateRoute path={routerConfig["orderManage.orderProduct.commentManage"].path} component={CommentManage} />
