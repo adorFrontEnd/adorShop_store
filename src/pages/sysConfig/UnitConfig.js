@@ -10,7 +10,7 @@ import { NavLink, Link } from 'react-router-dom';
 import { baseRoute, routerConfig } from '../../config/router.config';
 import { connect } from 'react-redux';
 import { changeRoute } from '../../store/actions/route-actions';
-
+import { getUnitConfigList, saveUnitOrUpdate, deleteUnit } from '../../api/sysConfig/sysConfig';
 
 const _title = "计量单位配置";
 const _description = "";
@@ -25,8 +25,7 @@ class Page extends Component {
   }
 
   componentDidMount() {
-
-
+    this.getPageData();
   }
 
 
@@ -34,9 +33,51 @@ class Page extends Component {
   params = {
     page: 1
   }
+  getPageData = () => {
+    let _this = this;
+    this._showTableLoading();
+    getUnitConfigList(this.params).then(res => {
+      this._hideTableLoading();
+      let _pagination = pagination(res, (current) => {
+        this.params.page = current
+        _this.getPageData();
+      }, (cur, pageSize) => {
+        this.params.page = 1;
+        this.params.size = pageSize
+        _this.getPageData();
+      })
+      this.setState({
+        tableDataList: res.data,
+        pagination: _pagination
+      })
+    }).catch(() => {
+      this._hideTableLoading();
+    })
+  }
+  saveUnit = () => {
+    this.props.form.validateFields((err, data) => {
+      if (err) {
+        return;
+      }
+      let { name } = data;
+      saveUnitOrUpdate({ name })
+        .then(() => {
+          Toast('添加成功');
+          this.props.form.resetFields();
+          this.getPageData();
+        })
+    })
+  }
 
-
-
+  // 删除单位
+  deleteUnit = (record) => {
+    let { id } = record;
+    deleteUnit({ id })
+      .then(() => {
+        Toast("删除成功！");
+        this.getPageData();
+      })
+  }
 
 
 
@@ -47,7 +88,7 @@ class Page extends Component {
     {
       title: '操作',
       render: (text, record, index) => (
-        <span onClick={() => this.showEditModalClick()}>删除</span>
+        <span onClick={() => this.deleteUnit(record)}>删除</span>
       )
     }
   ]
@@ -75,11 +116,23 @@ class Page extends Component {
       <CommonPage title={_title} description={_description} >
 
         <div>
-          <div className=" align-center margin-bottom20 " style={{display:'flex'}}>
-           <div style={{marginRight:'15px'}}> <Input placeholder='填写单位名称' /></div>
-            <Button type='primary' >新增单位</Button>
+          <Form layout='inline' style={{marginBottom:'20px'}}>
+            <Form.Item>
+              {
+                getFieldDecorator('name', {
+                  rules: [
+                    { required: true, message: '填写单位名称' }
+                  ]
+                })(
+                  <Input placeholder='填写单位名称' allowClear />
+                )
+              }
 
-          </div>
+            </Form.Item>
+            <Form.Item>
+              <Button type='primary' onClick={() => { this.saveUnit() }}>新增单位</Button>
+            </Form.Item>
+          </Form>
 
           <Table
             indentSize={10}

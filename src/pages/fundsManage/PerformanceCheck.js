@@ -174,9 +174,8 @@ class Page extends Component {
               </Form.Item>
             </Form>
 
+
           </div>
-
-
         </div>
         <Table
           indentSize={10}

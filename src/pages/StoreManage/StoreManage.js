@@ -84,7 +84,7 @@ class Page extends Component {
     {
       title: '操作',
       render: (text, record, index) => (
-          <span onClick={() => this.showEditModalClick()}>删除</span>
+        <span onClick={() => this.showEditModalClick()}>删除</span>
       )
     }
   ]
@@ -115,14 +115,49 @@ class Page extends Component {
 
         <div>
           <div className="flex-between align-center margin-bottom20 flex-wrap">
-            <div className=" align-center margin-bottom20 " style={{ display: 'flex' }}>
-              <div style={{ marginRight: '15px' }}> <Input placeholder='仓库编号' /></div>
-              <div style={{ marginRight: '15px' }}> <Input placeholder='仓库名称' /></div>
-              <div style={{ marginRight: '15px' }}> <Input placeholder='编号' /></div>
-              <Button type='primary' onClick={() => { this.showEditModalClick() }}>添加新仓</Button>
+          <Form layout='inline' style={{marginBottom:'20px'}}>
+            <Form.Item>
+              {
+                getFieldDecorator('number', {
+                  rules: [
+                    { required: true, message: '仓库编号' }
+                  ]
+                })(
+                  <Input placeholder='仓库编号' allowClear />
+                )
+              }
 
-            </div>
-         
+            </Form.Item>
+            <Form.Item>
+              {
+                getFieldDecorator('name', {
+                  rules: [
+                    { required: true, message: '仓库名称' }
+                  ]
+                })(
+                  <Input placeholder='仓库名称' allowClear />
+                )
+              }
+
+            </Form.Item>
+            <Form.Item>
+              {
+                getFieldDecorator('remark', {
+                  rules: [
+                    { required: true, message: '仓库备注' }
+                  ]
+                })(
+                  <Input placeholder='仓库备注' allowClear />
+                )
+              }
+
+            </Form.Item>
+            <Form.Item>
+              <Button type='primary' onClick={() => { this.saveUnit() }}>添加新仓</Button>
+            </Form.Item>
+          </Form>
+
+
             <div >
               <SearchForm
                 searchText='筛选'
