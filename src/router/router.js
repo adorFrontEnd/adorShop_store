@@ -32,6 +32,8 @@ const PayConfig = asyncComponent(() => import("../pages/sysConfig/PayConfig"));
 const ReturnAddress = asyncComponent(() => import("../pages/sysConfig/ReturnAddress"));
 const SyncConfig = asyncComponent(() => import("../pages/sysConfig/SyncConfig"));
 const UnitConfig = asyncComponent(() => import("../pages/sysConfig/UnitConfig"));
+const SmartLexicon = asyncComponent(() => import("../pages/sysConfig/SmartLexicon"));
+const LexiconConfig = asyncComponent(() => import("../pages/sysConfig/LexiconConfig"));
 
 const StoreManage = asyncComponent(() => import("../pages/StoreManage/StoreManage"));
 
@@ -86,6 +88,8 @@ export default class GlobalRouter extends React.Component {
                   <PrivateRoute path={routerConfig["sysConfig.safeguardConfig.returnAddress"].path} component={ReturnAddress} />
                   <PrivateRoute path={routerConfig["sysConfig.unitConfig.unitConfig"].path} component={UnitConfig} />
                   <PrivateRoute path={routerConfig["sysConfig.checkConfig.checkConfig"].path} component={CheckConfig} />
+                  <PrivateRoute path={routerConfig["sysConfig.orderConfig.smartLexicon"].path} component={SmartLexicon} />
+                  <PrivateRoute path={routerConfig["sysConfig.orderConfig.lexiconConfig"].path + '/:id'} component={LexiconConfig} />
 
                   <PrivateRoute path={routerConfig["storeManage.storeInfo.storeManage"].path} component={StoreManage} />
 
