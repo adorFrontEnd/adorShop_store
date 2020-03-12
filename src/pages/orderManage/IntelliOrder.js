@@ -25,7 +25,9 @@ class Page extends Component {
     skuModalIsVisible: false,
     selectUser: null,
     selectSaler: null,
-    selectSKU: null
+    selectSKU: null,
+    remarkDataList: [],
+    productDataList: []
   }
 
   componentDidMount() {
@@ -75,6 +77,12 @@ class Page extends Component {
     this._hideSKUModal();
   }
 
+  // 表格相关列
+  remarkColumns = [
+    { title: "操作时间", width: 140, dataIndex: "customerName", render: data => data || "--" },
+    { title: "操作类型", width: 140, dataIndex: "customerName", render: data => data || "--" },
+    { title: "相关信息", dataIndex: "customerName", render: data => data || "--" }
+  ]
 
   /**渲染**********************************************************************************************************************************/
 
@@ -174,7 +182,7 @@ class Page extends Component {
                 columns={this.columns}
                 loading={this.state.tableLoading}
                 pagination={false}
-                dataSource={this.state.tableDataList}
+                dataSource={this.state.productDataList}
               />
             </div>
             <div><Button onClick={this._showSKUModal} type='primary' className='normal margin-top'>添加</Button></div>
@@ -186,6 +194,25 @@ class Page extends Component {
           <div className='margin-top20'>
             <div className='line-height40 font-18 color333 font-bold'>包裹信息</div>
             <div>发货后生成包裹信息</div>
+          </div>
+          <div className='margin-top20 flex-middle'>
+            <div className='line-height40 font-18 color333 font-bold'>操作日志</div>
+            <Select style={{ width: 100, marginLeft: 10 }}>
+              <Select.Option value={1}>备注</Select.Option>
+            </Select>
+            <Input className='margin-left' style={{ width: 200 }} />
+            <Button className='margin-left' type='primary'>添加日志</Button>
+          </div>
+          <div className='margin-top'>
+            <Table
+              style={{ width: 800 }}
+              indentSize={10}
+              rowKey="id"
+              columns={this.remarkColumns}
+              loading={this.state.tableLoading}
+              pagination={false}
+              dataSource={this.state.remarkDataList}
+            />
           </div>
         </div>
 

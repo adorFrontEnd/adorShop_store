@@ -1,5 +1,5 @@
 
-const getIdMap = (arr) => {
+const getIdMap = (arr, totalName) => {
   let idMap = {};
   if (!arr || !arr.length) {
     return idMap;
@@ -10,23 +10,38 @@ const getIdMap = (arr) => {
       idMap[id] = item;
     }
   });
+  if (totalName) {
+    let totalNameIdMap = {};
+    arr.forEach(item => {
+      let id = item.id;
+      if (!totalNameIdMap[id]) {
+        let totalName = getTotalName(id, idMap, '/');
+        totalNameIdMap[id] = { ...item, name: totalName };
+      }
+    });
+    return totalNameIdMap;
+  }
+
   return idMap;
 }
 
 
-const getTotalName = (id, idMap) => {
+
+
+const getTotalName = (id, idMap, seprator) => {
   let item = idMap[id];
+  seprator = seprator || '-';
   let parentId = item.parentId;
   if (parentId == '0') {
     return item.name
   } else {
     let parent = idMap[parentId];
     if (parent.parentId == '0') {
-      return `${parent.name}-${item.name}`;
+      return `${parent.name}${seprator}${item.name}`;
     } else {
       let grandParentId = idMap[parentId]['parentId'];
       let grandParent = idMap[grandParentId];
-      return `${grandParent.name}-${parent.name}-${item.name}`;
+      return `${grandParent.name}${seprator}${parent.name}${seprator}${item.name}`;
     }
   }
 }

@@ -9,6 +9,7 @@ import SpecEdit from './SpecEdit';
 import ProductPictureWall from '../../components/upload/ProductPictureWall';
 import UploadVideo from '../../components/upload/UploadVideo';
 import RichText from '../../components/RichText/RichText';
+import { searchFreightList } from '../../api/product/freight';
 
 // import PictureWall from '../../components/upload/PictureWall';
 
@@ -34,7 +35,6 @@ class Page extends Component {
     baseUnitQty: null,
     packageUnitId: "",
     hasPackageUnit: false,
-
     areaModalIsVisible: false,
     selectAreaData: null,
     cModalIsVisible: false,
@@ -43,7 +43,8 @@ class Page extends Component {
     specData: null,
     productUrls: [],
     videoFile: null,
-    details: null
+    details: null,
+    freightList: []
   }
 
   componentWillMount() {
@@ -56,6 +57,10 @@ class Page extends Component {
     })
     // this.getDetail(id);
     // this._getOrganization(id);
+  }
+
+  componentDidMount() {
+    this.searchFreightList()
   }
 
 
@@ -101,6 +106,15 @@ class Page extends Component {
     })
   }
 
+  searchFreightList = () => {
+    searchFreightList({ page: 1, size: 100 })
+      .then((res) => {
+        let freightList = res.data;
+        this.setState({
+          freightList
+        })
+      })
+  }
 
 
   // 返回
@@ -114,6 +128,8 @@ class Page extends Component {
       if (err) {
         return;
       }
+      let { channel } = params;
+      channel = this._getChannelValue(channel);
       // addDealerAndUpdate({ ...params, ...authObj, ...station, id, labelId })
       //   .then(res => {
       //     if (res.status == "SUCCEED") {
@@ -321,9 +337,9 @@ class Page extends Component {
                 ]
               })(
                 <Checkbox.Group>
-                  <Checkbox disabled={true} value='0'>直购</Checkbox>
-                  <Checkbox value='1'>订货</Checkbox>
-                  <Checkbox disabled={true} value='2'>云市场</Checkbox>
+                  <Checkbox disabled={true} value={1}>直购</Checkbox>
+                  <Checkbox value={2}>订货</Checkbox>
+                  <Checkbox disabled={true} value={4}>云市场</Checkbox>
                 </Checkbox.Group>
               )
             }
@@ -381,14 +397,26 @@ class Page extends Component {
             <Col span={18}>
               <Radio.Group defaultValue={1}>
                 <Radio value={1} style={{ display: 'block', height: '40px', lineHeight: '30px' }}>
-                  <span>统一运费</span><InputNumber precision={2} style={{ width: 140,marginLeft:10,marginRight:10 }} placeholder='填写运费价格' />元
+                  <span>统一运费</span>
+                  <InputNumber
+                    precision={2}
+                    style={{ width: 140, marginLeft: 10, marginRight: 10 }}
+                    min={0}
+                    placeholder='填写运费价格'
+                  />元
                 </Radio>
                 <Radio value={2} style={{ display: 'block', height: '40px', lineHeight: '30px' }}>
                   <span>运费模板</span>
-                  <Select defaultValue={null} style={{ width: 140 ,marginLeft:10 }}>
+                  <Select defaultValue={null} style={{ width: 140, marginLeft: 10 }}>
                     <Select.Option value={null}>请选择</Select.Option>
-                    <Select.Option value={1}>模板1</Select.Option>
-                    <Select.Option value={2}>模板2</Select.Option>
+                    {
+                      this.state.freightList && this.state.freightList.length ?
+                        this.state.freightList.map(item =>
+                          <Select.Option key={item.id} value={item.id}>{item.name}</Select.Option>
+                        )
+                        : null
+                    }
+
                   </Select>
                 </Radio>
               </Radio.Group>
@@ -397,6 +425,7 @@ class Page extends Component {
         </Form>
 
         <RelativeCategoryModal
+          showList={true}
           maxLength={5}
           categoryIds={this.state.categoryIds}
           onOk={this.cModalSaveClick}
@@ -405,6 +434,27 @@ class Page extends Component {
         />
       </CommonPage >)
   }
+
+
+  _getChannelValue = (channel) => {
+    let result = 0;
+    if (!channel || !channel.length) {
+      return
+    }
+    channel.forEach(item => {
+      result += parseInt(item);
+    })
+    return result
+  }
+
+  _parseChannelValue = (channel) => {
+    channel = parseInt(channel);
+    let str = "000" + channel.toString(2);
+    str = str.substr(-3, 3);
+    let arr = str.split('').map(item => parseInt(item));
+    return arr;
+  }
+
 }
 
 export default Form.create()(Page);

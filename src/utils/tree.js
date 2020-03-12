@@ -132,13 +132,13 @@ const _getTreeDataByTreeMap = (map) => {
   let result = treeData = treeData.map(item => {
     let { children, ...other } = item;
     let values = Object.values(children);
-    children = values && values.length ? values.map(childItem => {     
-      let _children = Object.values(childItem.children);     
-      return {      
+    children = values && values.length ? values.map(childItem => {
+      let _children = Object.values(childItem.children);
+      return {
         ...childItem,
-        children:_children,
+        children: _children,
       }
-      
+
     }) : []
 
     return {
@@ -149,7 +149,36 @@ const _getTreeDataByTreeMap = (map) => {
   return result;
 }
 
+const getListMapAndData = (list) => {
+
+  let listMap = {};
+  if (!list || !list.length) {
+    return listMap
+  }
+
+  list.forEach(item => {
+    let { id, name, parentId } = item;
+    listMap[id] = {
+      id, name, parentId, title: name, key: id, totalId: id
+    }
+  })
+
+  let listData = _geListDataByListMap(listMap);
+
+  return { treeMap: listMap, treeData: listData }
+}
+
+const _geListDataByListMap = (map) => {
+
+  let listData = [];
+  if (!map) {
+    return listData
+  }
+  listData = Object.values(map);
+  return listData;
+}
 export {
   parseTree,
-  getTreeMapAndData
+  getTreeMapAndData,
+  getListMapAndData
 }

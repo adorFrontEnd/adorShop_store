@@ -1,8 +1,8 @@
 import React, { Component } from "react";
 import { Input, Select, Form, Button, Checkbox, Radio, Modal, Row, Col, Tree, Icon } from 'antd'
 import { getIdMap, getSelectArrTotalName, getCheckedNamesByIds, getCleanRelativeIdsById } from './categoryUtils';
-import { searchList } from '../../api/setting/ClasssifySetting';
-import { getTreeMapAndData } from '../../utils/tree';
+import { searchList, searchAllList } from '../../api/setting/ClasssifySetting';
+import { getTreeMapAndData, getListMapAndData } from '../../utils/tree';
 import './category.less';
 import Toast from "../../utils/toast";
 
@@ -25,7 +25,8 @@ class cModal extends Component {
   }
 
   componentDidMount() {
-    this.getClassify();
+
+    this.getAllClassify();
   }
 
   componentWillReceiveProps(props) {
@@ -46,6 +47,19 @@ class cModal extends Component {
 
     categoryIds = categoryIds || [];
     let { idMap } = this.state;
+    if (this.props.showList) {
+      let categoryList = categoryIds.map(item => {
+        return {
+          id: item,
+          totalName: idMap[item]['name']
+        }
+      })
+      this.setState({
+        checkedKeys: categoryIds,
+        categoryList
+      })
+      return;
+    }
     let categoryList = getSelectArrTotalName(categoryIds, idMap);
     this.setState({
       checkedKeys: {
@@ -55,23 +69,49 @@ class cModal extends Component {
       categoryList
     })
   }
-
-  // 获取所有分类
-  getClassify = () => {
+  //获取所有分类
+  getAllClassify = () => {
+    this.setState({
+      showClassifyLoading: true
+    })
+    searchAllList()
+      .then((res) => {
+        let rawClassifyList = res.data;
+        let idMap = getIdMap(rawClassifyList, this.props.showList)
+        this.setState({
+          idMap
+        })
+        this.getClassify(idMap);
+      })
+      .catch(() => {
+        this.setState({
+          showClassifyLoading: false
+        })
+      })
+  }
+  // 获取店铺所有分类
+  getClassify = (idMap) => {
     this.setState({
       showClassifyLoading: true
     })
     searchList()
-      .then(res => {
+      .then((res) => {
         let rawClassifyList = res.data;
-        let { treeData, treeMap } = getTreeMapAndData(rawClassifyList);
-        let idMap = getIdMap(rawClassifyList)
+        if(this.props.showList){
+          rawClassifyList = rawClassifyList.map(item=>{
+            return {
+              ...item,
+              name:idMap[item.id]['name']
+            }
+          })
+        }
+        let parseMapData = this.props.showList ? getListMapAndData : getTreeMapAndData
+        let { treeData, treeMap } = parseMapData(rawClassifyList);
         this.setState({
           showClassifyLoading: false,
           treeData,
           treeMap,
-          rawClassifyList,
-          idMap
+          rawClassifyList
         })
       })
       .catch(() => {
@@ -88,6 +128,29 @@ class cModal extends Component {
 
   onOk = () => {
     let { checkedKeys, idMap } = this.state;
+
+    if (this.props.showList) {
+      let checkedIds = checkedKeys;
+      if (this.props.maxLength && (checkedIds && checkedIds.length > this.props.maxLength)) {
+        Toast(`最多选择${this.props.maxLength}个`);
+        return;
+      }
+      let categoryList = checkedKeys.map(item => {
+        return {
+          id: item,
+          totalName: idMap[item]['name']
+        }
+      })
+      let category = categoryList.map(item => item.totalName).join(' ');
+      let params = {
+        categoryIds: checkedKeys,
+        category,
+        categoryList
+      };
+      this.props.onOk(params)
+      return;
+    }
+
     let checkedIds = checkedKeys.checked;
     if (this.props.maxLength && (checkedIds && checkedIds.length > this.props.maxLength)) {
       Toast(`最多选择${this.props.maxLength}个`);
@@ -123,10 +186,42 @@ class cModal extends Component {
     })
   };
 
+  onListCheck = (checkedKeys) => {
+    let { categoryIds, idMap } = this.state;
+    let categoryList = checkedKeys.map(item => {
+      return {
+        id: item,
+        totalName: idMap[item]['name']
+      }
+    })
+
+    this.setState({
+      checkedKeys,
+      categoryList
+    })
+  }
+
   delateClass = (item) => {
+
     let { checkedKeys, idMap } = this.state;
     let { id } = item;
-    let newCheckedIds = checkedKeys.checked.filter(i => i != id);
+    let newCheckedIds = checkedKeys.filter(i => i != id);
+
+    if (this.props.showList) {
+      let categoryList = newCheckedIds.map(item => {
+        return {
+          id: item,
+          totalName: idMap[item]['name']
+        }
+      })
+
+      this.setState({
+        categoryList,
+        checkedKeys: newCheckedIds
+      });
+      return;
+    }
+
     let categoryList = getSelectArrTotalName(newCheckedIds, idMap);
     this.setState({
       categoryList,
@@ -157,7 +252,7 @@ class cModal extends Component {
 
     let { inputKeywords } = this.state;
     this.setState({
-      keywords:inputKeywords
+      keywords: inputKeywords
     })
   }
 
@@ -189,16 +284,30 @@ class cModal extends Component {
               <Button type='primary' onClick={this.resetClicked}>重置</Button>
             </div>
             <div className='font-14 margin-top margin-left'>所有分类</div>
-            <Tree
-              checkStrictly={true}
-              showIcon
-              checkedKeys={this.state.checkedKeys}
-              defaultExpandAll={false}
-              checkable
-              onCheck={this.onCheck}
-              treeData={this.state.treeData}
-              filterTreeNode={this.filterTreeNode}
-            />
+            {
+              this.props.showList ?
+                <Tree
+
+                  showIcon
+                  checkedKeys={this.state.checkedKeys}
+                  defaultExpandAll={false}
+                  checkable
+                  onCheck={this.onListCheck}
+                  treeData={this.state.treeData}
+                  filterTreeNode={this.filterTreeNode}
+                /> :
+                <Tree
+                  checkStrictly={true}
+                  showIcon
+                  checkedKeys={this.state.checkedKeys}
+                  defaultExpandAll={false}
+                  checkable
+                  onCheck={this.onCheck}
+                  treeData={this.state.treeData}
+                  filterTreeNode={this.filterTreeNode}
+                />
+            }
+
 
           </div>
           <div style={{ padding: '10px', width: '50%' }} className='flex-column flex-between'>

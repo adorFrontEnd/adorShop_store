@@ -8,6 +8,9 @@ import baseHttpProvider from '../base/baseHttpProvider';
 const searchList = (params) => {
     return baseHttpProvider.postFormApi('api/category/getList', params, { total: true });
 }
+const searchAllList = (params) => {
+    return baseHttpProvider.getApi('api/category/getAllList', params, { total: true });
+}
 
 const saveOrUpdate = (params) => {
     return baseHttpProvider.postFormApi('api/category/saveOrUpdate', params)
@@ -24,6 +27,7 @@ const deleteClassify = (params) => {
 }
 export {
     searchList,
+    searchAllList,
     saveOrUpdate,
     levelList,
     saveSort,
