@@ -10,6 +10,7 @@ import ProductPictureWall from '../../components/upload/ProductPictureWall';
 import UploadVideo from '../../components/upload/UploadVideo';
 import RichText from '../../components/RichText/RichText';
 import { searchFreightList } from '../../api/product/freight';
+import { getUnitConfigList } from '../../api/sysConfig/sysConfig';
 
 // import PictureWall from '../../components/upload/PictureWall';
 
@@ -20,11 +21,6 @@ const _statusEnum = {
   "2": "待审核",
   "3": "未通过",
   "4": "已停用"
-}
-const _unitEnum = {
-  "0": "箱",
-  "1": "包",
-  "2": "罐"
 }
 
 class Page extends Component {
@@ -44,7 +40,8 @@ class Page extends Component {
     productUrls: [],
     videoFile: null,
     details: null,
-    freightList: []
+    freightList: [],
+    unitListMap: {}
   }
 
   componentWillMount() {
@@ -60,7 +57,8 @@ class Page extends Component {
   }
 
   componentDidMount() {
-    this.searchFreightList()
+    this.searchFreightList();
+    this.getUnitConfigList();
   }
 
 
@@ -116,7 +114,19 @@ class Page extends Component {
       })
   }
 
-
+  getUnitConfigList = () => {
+    getUnitConfigList({ page: 1, size: 100 })
+      .then((res) => {
+        let unitList = res.data;
+        let unitListMap = {};
+        unitList.forEach(item => {
+          unitListMap[item.id] = item.name;
+        })
+        this.setState({
+          unitListMap
+        })
+      })
+  }
   // 返回
   goBack = () => {
     window.history.back();
@@ -220,7 +230,7 @@ class Page extends Component {
 
   render() {
     const { getFieldDecorator } = this.props.form;
-    let { labelList, selectAreaData } = this.state;
+    let { labelList, selectAreaData,unitListMap } = this.state;
 
     return (
       <CommonPage title={this.state._title} description={_description} >
@@ -264,7 +274,7 @@ class Page extends Component {
                 <Select style={{ width: 90 }} onChange={this.onUnitChange}>
                   <Select.Option value={null}>请选择</Select.Option>
                   {
-                    Object.keys(_unitEnum).map(item => <Select.Option key={item} value={item}>{_unitEnum[item]}</Select.Option>)
+                    Object.keys(unitListMap).map(item => <Select.Option key={item} value={item}>{unitListMap[item]}</Select.Option>)
                   }
                 </Select>
               )
@@ -277,14 +287,14 @@ class Page extends Component {
                   <Select style={{ width: 90 }} defaultValue={null} onChange={this.onPackageUnitChange}>
                     <Select.Option value={null}>请选择</Select.Option>
                     {
-                      Object.keys(_unitEnum).map(item => <Select.Option key={item} disabled={item == this.state.baseUnitId} value={item}>{_unitEnum[item]}</Select.Option>)
+                      Object.keys(unitListMap).map(item => <Select.Option key={item} disabled={item == this.state.baseUnitId} value={item}>{unitListMap[item]}</Select.Option>)
                     }
                   </Select>
                   <span style={{ margin: "0 10px" }}>=</span>
                   <InputNumber min={0} value={this.state.baseUnitQty} onChange={this.onBaseUnitQtyChange} />
                   {
                     this.state.baseUnitId ?
-                      <span>{_unitEnum[this.state.baseUnitId]}</span>
+                      <span>{unitListMap[this.state.baseUnitId]}</span>
                       : null
                   }
                 </span>
