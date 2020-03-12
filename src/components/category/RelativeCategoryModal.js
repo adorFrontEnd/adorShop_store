@@ -141,7 +141,7 @@ class cModal extends Component {
           totalName: idMap[item]['name']
         }
       })
-      let category = categoryList.map(item => item.totalName).join(' ');
+      let category = categoryList.map(item => item.totalName).join('、');
       let params = {
         categoryIds: checkedKeys,
         category,
@@ -156,7 +156,7 @@ class cModal extends Component {
       Toast(`最多选择${this.props.maxLength}个`);
       return;
     }
-    let category = getCheckedNamesByIds(idMap, checkedIds, " ");
+    let category = getCheckedNamesByIds(idMap, checkedIds, "、");
     let categoryList = getSelectArrTotalName(checkedIds, idMap);
 
     let params = {
