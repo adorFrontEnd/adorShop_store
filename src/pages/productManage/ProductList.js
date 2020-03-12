@@ -71,7 +71,6 @@ class Page extends Component {
     }]
   //查询按钮点击事件
   searchClicked = (params) => {
-
     let { inputData } = params;
     inputData = inputData || null;
     this.params = {

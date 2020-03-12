@@ -45,6 +45,12 @@ const CommentManage = asyncComponent(() => import("../pages/orderManage/CommentM
 const OrderList = asyncComponent(() => import("../pages/orderManage/OrderList"));
 const AfterSaleOrder = asyncComponent(() => import("../pages/orderManage/AfterSaleOrder"));
 const IntelliOrder = asyncComponent(() => import("../pages/orderManage/IntelliOrder"));
+const Salesman = asyncComponent(() => import("../pages/orderManage/Salesman"));
+const StockLog = asyncComponent(() => import("../pages/orderManage/StockLog"));
+const StockManage = asyncComponent(() => import("../pages/orderManage/StockManage"));
+const PerformanceConfig = asyncComponent(() => import("../pages/orderManage/PerformanceConfig"));
+const PerformanceStatc = asyncComponent(() => import("../pages/orderManage/PerformanceStatc"));
+const PerformanceEdit = asyncComponent(() => import("../pages/orderManage/PerformanceEdit"));
 
 
 export default class GlobalRouter extends React.Component {
@@ -103,6 +109,12 @@ export default class GlobalRouter extends React.Component {
                   <PrivateRoute path={routerConfig["orderManage.order.orderList"].path} component={OrderList} />
                   <PrivateRoute path={routerConfig["orderManage.order.afterSaleOrder"].path} component={AfterSaleOrder} />
                   <PrivateRoute path={routerConfig["orderManage.order.intelliOrder"].path} component={IntelliOrder} />
+                  <PrivateRoute path={routerConfig["orderManage.salesman.salesman"].path} component={Salesman} />
+                  <PrivateRoute path={routerConfig["orderManage.stockManage.stockManage"].path} component={StockManage} />
+                  <PrivateRoute path={routerConfig["orderManage.stockManage.stockLog"].path} component={StockLog} />
+                  <PrivateRoute path={routerConfig["orderManage.performanceManage.performanceConfig"].path} component={PerformanceConfig} />
+                  <PrivateRoute path={routerConfig["orderManage.performanceManage.performanceStatc"].path} component={PerformanceStatc} />
+                  <PrivateRoute path={routerConfig["orderManage.stockManage.performanceEdit"].path} component={PerformanceEdit} />
                  
 
                 </Switch>
