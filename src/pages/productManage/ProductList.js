@@ -10,6 +10,7 @@ import { NavLink, Link } from 'react-router-dom';
 import { baseRoute, routerConfig } from '../../config/router.config';
 import { connect } from 'react-redux';
 import { changeRoute } from '../../store/actions/route-actions';
+import { searchProductList, deleteProduct } from '../../api/product/product';
 
 
 const _title = "商品列表";
@@ -33,19 +34,11 @@ class Page extends Component {
   }
 
   componentDidMount() {
+    this.getPageData();
     this.props.changeRoute({ path: 'product.productInfo.productList', title: '商品列表', parentTitle: '商品信息' });
 
   }
 
-  goIntegralRecord = () => {
-    let title = '积分记录';
-    this.props.changeRoute({ path: 'marketManage.integralRecord', title, parentTitle: '市场营销' });
-  }
-
-  goGiftRecord = () => {
-    let title = '兑奖记录';
-    this.props.changeRoute({ path: 'marketManage.giftRecord', title, parentTitle: '市场营销' });
-  }
 
   params = {
     page: 1
@@ -91,7 +84,7 @@ class Page extends Component {
   getPageData = () => {
     let _this = this;
     this._showTableLoading();
-    searchUserList(this.params).then(res => {
+    searchProductList(this.params).then(res => {
       this._hideTableLoading();
 
       let _pagination = pagination(res, (current) => {
@@ -116,16 +109,16 @@ class Page extends Component {
   // 表格相关列
   columns = [
     { title: "商品名称", dataIndex: "name", render: data => data || "--" },
-    { title: "商品图", dataIndex: "imageUrl", render: data => data ? (<img src={data} style={{ height: 40, width: 40 }} />) : "--" },
+    { title: "商品图", dataIndex: "imageUrl", render: data => this.getImgUrl(data) },
     { title: "包装规格", dataIndex: "specifications", render: data => data || "--" },
-    { title: "可用渠道", dataIndex: "channel", render: data => data || "--" },
-    { title: "单位", dataIndex: "unit", render: data => data || "--" },
+    { title: "可用渠道", dataIndex: "channelStr", render: data => data || "--" },
+    { title: "单位", dataIndex: "baseUnit", render: data => data || "--" },
     { title: "新增时间", dataIndex: "gmtCreate", render: data => data ? dateUtil.getDateTime(data) : "--" },
     {
       title: '操作',
       render: (text, record, index) => (
         <span>
-          <span onClick={() => { this.goIntegralRecord(record.id) }}><NavLink to={integralRecordPath + "/" + record.id}>编辑</NavLink></span>
+          <span onClick={() => { this.goEdit(record.id) }}><NavLink to={productEditPath + "/" + record.id}>编辑</NavLink></span>
           <Divider type="vertical" />
           <Popconfirm
             placement="topLeft" title='确认要删除吗？'
@@ -136,6 +129,29 @@ class Page extends Component {
       )
     }
   ]
+
+  getImgUrl = (data) => {
+    if (!data) {
+      return '--';
+    }
+    let urlArr = data.split('|');
+    if (!urlArr || !urlArr.length || !urlArr[0]) {
+      return '--'
+    }
+    return (
+      <img src={urlArr[0]} style={{ height: 40, width: 40 }} />
+    )
+  }
+
+  // 删除
+  deleteTableItem = (record) => {
+    let { id } = record;
+    deleteProduct({ id })
+      .then(() => {
+        Toast("删除成功！");
+        this.getPageData();
+      })
+  }
 
   _showTableLoading = () => {
 

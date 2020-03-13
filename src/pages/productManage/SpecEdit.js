@@ -21,9 +21,15 @@ class Page extends Component {
     this.onSpecDataRevert(this.props.specData);
   }
 
-  onSpecDataChangeCallback = (isMultiSpec, singleSpecData, multiSpecData) => {
+  componentWillReceiveProps(props) {
+    if (!props.specData || (props.specData && props.shouldChange)) {
+      this.onSpecDataRevert(props.specData);
+    }
+  }
+
+  onSpecDataChangeCallback = (isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses) => {
     this.props.onChange({
-      isMultiSpec, singleSpecData, multiSpecData
+      isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses
     })
   }
 
@@ -35,29 +41,34 @@ class Page extends Component {
     if (!data) {
       this._initSpecData();
     } else {
-      let { isMultiSpec, singleSpecData, multiSpecData } = data;
-      this.props.onChange({
-        isMultiSpec, singleSpecData, multiSpecData
+      let { isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses } = data;
+      this.setState({
+        isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses
       })
+      this.props.onChange({
+        isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses
+      })
+
     }
   }
 
   _initSpecData = () => {
     let isMultiSpec = false;
     let singleSpecData = {
-      specTitle: "无",
-      productUrls: [],
-      productCode: "",
+      specValue: "无",
+      imageUrl: [],
+      number: "",
       barCode: "",
-      originalPrice: null,
+      marketPrice: null,
       costPrice: null,
       weight: null
     };
     let multiSpecData = [];
+    let multiSpecClasses = [];
     let data = {
       isMultiSpec: false,
       singleSpecData,
-      multiSpecClasses: [],
+      multiSpecClasses,
       multiSpecData,
       uploadModalIsVisible: false,
       selectProductUrls: [],
@@ -65,20 +76,20 @@ class Page extends Component {
     }
     this.setState(data);
     this.props.onChange({
-      isMultiSpec, singleSpecData, multiSpecData
+      isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses
     })
   }
 
   muiltiChecked = (e) => {
     let isMultiSpec = e.target.checked;
-    let { singleSpecData, multiSpecData } = this.state;
+    let { singleSpecData, multiSpecData, multiSpecClasses } = this.state;
     if (isMultiSpec) {
       this.initMultiData()
     }
     this.setState({
       isMultiSpec
     })
-    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData);
+    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses);
   }
 
   initMultiData = () => {
@@ -92,11 +103,11 @@ class Page extends Component {
     }];
 
     let multiSpecData = [{
-      specTitle: "",
-      productUrls: [],
-      productCode: "",
+      specValue: "",
+      imageUrl: [],
+      number: "",
       barCode: "",
-      originalPrice: null,
+      marketPrice: null,
       costPrice: null,
     }];
 
@@ -104,7 +115,7 @@ class Page extends Component {
       multiSpecClasses,
       multiSpecData
     })
-    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData);
+    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses);
   }
 
 
@@ -132,7 +143,7 @@ class Page extends Component {
       multiSpecClasses,
       multiSpecData
     })
-    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData);
+    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses);
   }
 
 
@@ -178,7 +189,7 @@ class Page extends Component {
       this.setState({
         multiSpecData
       })
-      this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData);
+      this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses);
     }
   }
 
@@ -186,16 +197,16 @@ class Page extends Component {
 
   //修改规格详细数据
   onMultiSpecDataChange = (index, key, e) => {
-    let { multiSpecData, isMultiSpec, singleSpecData } = this.state;
+    let { multiSpecData, isMultiSpec, singleSpecData, multiSpecClasses } = this.state;
 
     switch (key) {
-      case 'productCode':
+      case 'number':
       case 'barCode':
         let val = e.target.value;
         multiSpecData[index][key] = val;
         break;
 
-      case 'originalPrice':
+      case 'marketPrice':
       case 'costPrice':
       case "weight":
         multiSpecData[index][key] = e;
@@ -209,21 +220,21 @@ class Page extends Component {
     this.setState({
       multiSpecData
     })
-    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData);
+    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses);
   }
 
   //修改规格详细数据
   onSingleSpecDataChange = (key, e) => {
-    let { isMultiSpec, singleSpecData, multiSpecData } = this.state;
+    let { isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses } = this.state;
 
     switch (key) {
-      case 'productCode':
+      case 'number':
       case 'barCode':
         let val = e.target.value;
         singleSpecData[key] = val;
         break;
 
-      case 'originalPrice':
+      case 'marketPrice':
       case 'costPrice':
       case 'weight':
         singleSpecData[key] = e;
@@ -233,7 +244,7 @@ class Page extends Component {
     this.setState({
       singleSpecData
     })
-    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData);
+    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses);
   }
 
 
@@ -243,9 +254,9 @@ class Page extends Component {
     let { singleSpecData, multiSpecData } = this.state;
     let selectProductUrls = [];
     if (!isMultiSpec) {
-      selectProductUrls = singleSpecData['productUrls'] || [];
+      selectProductUrls = singleSpecData['imageUrl'] || [];
     } else {
-      selectProductUrls = multiSpecData[selectSpecIndex]["productUrls"] || [];
+      selectProductUrls = multiSpecData[selectSpecIndex]["imageUrl"] || [];
     }
 
     this.setState({
@@ -264,19 +275,19 @@ class Page extends Component {
   }
 
   onSavePitureModal = () => {
-    let { selectProductUrls, selectSpecIndex, isMultiSpec, singleSpecData, multiSpecData } = this.state;
+    let { selectProductUrls, selectSpecIndex, isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses } = this.state;
     if (!isMultiSpec) {
-      singleSpecData['productUrls'] = selectProductUrls;
+      singleSpecData['imageUrl'] = selectProductUrls;
       this.setState({
         singleSpecData
       })
     } else {
-      multiSpecData[selectSpecIndex]['productUrls'] = selectProductUrls;
+      multiSpecData[selectSpecIndex]['imageUrl'] = selectProductUrls;
       this.setState({
         multiSpecData
       })
     }
-    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData);
+    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses)
     this.hideUploadModal();
   }
 
@@ -311,10 +322,10 @@ class Page extends Component {
                   <Col span={2} className='flex-middle flex-center' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>
                     <div className='flex-middle flex-center' style={{ cursor: "pointer" }} onClick={() => this.showUploadModal()}>
                       {
-                        singleSpecData['productUrls'] && singleSpecData['productUrls'].length ?
+                        singleSpecData['imageUrl'] && singleSpecData['imageUrl'].length ?
                           <div className='padding'>
-                            <Badge count={singleSpecData['productUrls'].length}>
-                              <img src={singleSpecData['productUrls'][0]} style={{ height: 50, width: 50 }} />
+                            <Badge count={singleSpecData['imageUrl'].length}>
+                              <img src={singleSpecData['imageUrl'][0]} style={{ height: 50, width: 50 }} />
                             </Badge>
                           </div>
                           :
@@ -324,15 +335,15 @@ class Page extends Component {
                       }
                     </div>
                   </Col>
-                  <Col span={2} className='padding flex-center align-center'><div>{singleSpecData.specTitle}</div></Col>
+                  <Col span={2} className='padding flex-center align-center'><div>{singleSpecData.specValue}</div></Col>
                   <Col span={4} className='padding flex-middle' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>
-                    <Input placeholder='输入商品编码' value={singleSpecData['productCode']} style={{ maxWidth: "100%" }} onChange={(e) => this.onSingleSpecDataChange('productCode', e)} />
+                    <Input placeholder='输入商品编码' value={singleSpecData['number']} style={{ maxWidth: "100%" }} onChange={(e) => this.onSingleSpecDataChange('number', e)} />
                   </Col>
                   <Col span={4} className='padding flex-middle'>
                     <Input placeholder='输入条形码' value={singleSpecData['barCode']} style={{ maxWidth: "100%" }} onChange={(e) => this.onSingleSpecDataChange('barCode', e)} />
                   </Col>
                   <Col span={4} className='padding flex-middle' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>
-                    <InputNumber value={singleSpecData['originalPrice']} precision={2} min={0} placeholder='输入划线价' style={{ width: 120 }} onChange={(e) => this.onSingleSpecDataChange('originalPrice', e)} />
+                    <InputNumber value={singleSpecData['marketPrice']} precision={2} min={0} placeholder='输入划线价' style={{ width: 120 }} onChange={(e) => this.onSingleSpecDataChange('marketPrice', e)} />
                     元
                   </Col>
                   <Col span={4} className='padding flex-middle'>
@@ -429,10 +440,10 @@ class Page extends Component {
                         <Col span={2} className='flex-middle flex-center' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>
                           <div className='flex-middle flex-center' style={{ cursor: "pointer" }} onClick={() => this.showUploadModal(true, specIndex)}>
                             {
-                              specDataItem['productUrls'] && specDataItem['productUrls'].length ?
+                              specDataItem['imageUrl'] && specDataItem['imageUrl'].length ?
                                 <div className='padding'>
-                                  <Badge count={specDataItem['productUrls'].length}>
-                                    <img src={specDataItem['productUrls'][0]} style={{ height: 50, width: 50 }} />
+                                  <Badge count={specDataItem['imageUrl'].length}>
+                                    <img src={specDataItem['imageUrl'][0]} style={{ height: 50, width: 50 }} />
                                   </Badge>
                                 </div>
                                 :
@@ -442,15 +453,15 @@ class Page extends Component {
                             }
                           </div>
                         </Col>
-                        <Col span={3} className='padding flex-center align-center'><div>{specDataItem.specTitle}</div></Col>
+                        <Col span={3} className='padding flex-center align-center'><div>{specDataItem.specValue}</div></Col>
                         <Col span={4} className='padding flex-middle' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>
-                          <Input placeholder='输入商品编码' value={specDataItem['productCode']} style={{ maxWidth: "100%" }} onChange={(e) => this.onMultiSpecDataChange(specIndex, 'productCode', e)} />
+                          <Input placeholder='输入商品编码' value={specDataItem['number']} style={{ maxWidth: "100%" }} onChange={(e) => this.onMultiSpecDataChange(specIndex, 'number', e)} />
                         </Col>
                         <Col span={4} className='padding flex-middle'>
                           <Input placeholder='输入条形码' value={specDataItem['barCode']} style={{ maxWidth: "100%" }} onChange={(e) => this.onMultiSpecDataChange(specIndex, 'barCode', e)} />
                         </Col>
                         <Col span={3} className='padding flex-middle' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>
-                          <InputNumber value={specDataItem['originalPrice']} precision={2} min={0} placeholder='输入划线价' style={{ width: 120 }} onChange={(e) => this.onMultiSpecDataChange(specIndex, 'originalPrice', e)} />
+                          <InputNumber value={specDataItem['marketPrice']} precision={2} min={0} placeholder='输入划线价' style={{ width: 120 }} onChange={(e) => this.onMultiSpecDataChange(specIndex, 'marketPrice', e)} />
                           元
                         </Col>
                         <Col span={3} className='padding flex-middle'>

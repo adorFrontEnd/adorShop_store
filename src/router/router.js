@@ -79,7 +79,7 @@ export default class GlobalRouter extends React.Component {
                   <PrivateRoute path={routerConfig["productManage.productInfo.productList"].path} component={ProductList} />
                   <PrivateRoute path={routerConfig["productManage.other.freightTemplate"].path} component={FreightTemplate} />
                   <PrivateRoute path={routerConfig["productManage.other.freightTemplateEdit"].path + '/:id'} component={FreightTemplateEdit} />
-                  <PrivateRoute path={routerConfig["productManage.productInfo.productEdit"].path} component={ProductEdit} />
+                  <PrivateRoute path={routerConfig["productManage.productInfo.productEdit"].path + '/:id'} component={ProductEdit} />
 
                   <PrivateRoute path={routerConfig["user.userManage.userList"].path} component={UserList} />
                   <PrivateRoute path={routerConfig["user.userManage.userGrade"].path} component={UserGrade} />
@@ -103,7 +103,7 @@ export default class GlobalRouter extends React.Component {
                   <PrivateRoute path={routerConfig["orderManage.order.orderList"].path} component={OrderList} />
                   <PrivateRoute path={routerConfig["orderManage.order.afterSaleOrder"].path} component={AfterSaleOrder} />
                   <PrivateRoute path={routerConfig["orderManage.order.intelliOrder"].path} component={IntelliOrder} />
-                 
+
 
                 </Switch>
               </Admin>
