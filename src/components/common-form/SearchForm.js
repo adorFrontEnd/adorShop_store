@@ -139,6 +139,21 @@ class SearchForm extends Component {
             formItems.push(INPUT)
             break;
 
+          case "DATE_RANGE":
+            const DATE_RANGE = <Form.Item label={label || '开始时间'} key={field} colon={colon}>
+              {
+                getFieldDecorator(field)(
+                  <DatePicker.RangePicker
+                    showTime={{ format: 'HH:mm:ss' }}
+                    format="YYYY-MM-DD HH:mm:ss"
+                    style={style || { width: 240 }}
+                  />
+                )
+              }
+            </Form.Item>
+            formItems.push(DATE_RANGE)
+            break;
+
           // 输入框
           case "INPUT_RANGE":
             const INPUT_START = <FormItem label={label} key={field} colon={colon}>
@@ -157,6 +172,7 @@ class SearchForm extends Component {
                 )
               }
             </FormItem>
+
             const INPUT_STOP = <FormItem label={labelStop || "~"} key={fieldStop} colon={false}>
               {
                 getFieldDecorator(fieldStop, {
@@ -236,7 +252,7 @@ class SearchForm extends Component {
         </div>
       </div>
     );
-    return (<div style={this.props.towRow ? { width: this.props.width || "100%" }  : { display: "flex",  width: this.props.width || "100%" }}>{_forms}{_buttons}</div>)
+    return (<div style={this.props.towRow ? { width: this.props.width || "100%" } : { display: "flex", width: this.props.width || "100%" }}>{_forms}{_buttons}</div>)
   }
   autoCompleteFilter = (inputValue, option) => {
     return option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1

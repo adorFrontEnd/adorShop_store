@@ -179,6 +179,31 @@ const getDayStopStamp = (stamp) => {
   return result;
 }
 
+const parseDateRange = (time, isDay) => {
+  if (!time || !time.length) {
+    return [null, null];
+  }
+  let [startTime, stopTime] = time;
+
+  let startCreateTimeStamp = null;
+  let endCreateTimeStamp = null;
+  if (startTime) {
+    startCreateTimeStamp = Date.parse(startTime);
+    if (isDay) {
+      startCreateTimeStamp = getDayStartStamp(startCreateTimeStamp);
+    }
+  }
+
+  if (stopTime) {
+    endCreateTimeStamp = Date.parse(stopTime);
+    if (isDay) {
+      endCreateTimeStamp = getDayStartStamp(endCreateTimeStamp);
+    }
+  }
+
+  return [startCreateTimeStamp,endCreateTimeStamp]
+}
+
 export default {
   formatDuration,
   formatDuration_hanzi,
@@ -195,5 +220,6 @@ export default {
   getRecentDays,
   getRecentYears,
   getDayStartStamp,
-  getDayStopStamp
+  getDayStopStamp,
+  parseDateRange
 }

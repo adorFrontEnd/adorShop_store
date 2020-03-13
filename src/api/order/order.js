@@ -15,9 +15,19 @@ const getPrdSkuList = (params) => {
   return baseHttpProvider.postFormApi('api/sellPrdSku/getPrdSkuList', { page: 1, size: 10, ...params }, { total: true })
 }
 
+const smartOrder = (params) => {
+  return baseHttpProvider.postFormApi('api/order/smartOrder', params, { total: true })
+}
+
+const getOrderlist = (params) => {
+  return baseHttpProvider.postFormApi('api/order/list', { page: 1, size: 10, ...params }, { total: true })
+}
+
 export {
   searchPublicSelectMember,
   searchSalesman,
-  getPrdSkuList  
+  getPrdSkuList,
+  smartOrder,
+  getOrderlist
 }
 

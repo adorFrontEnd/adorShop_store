@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import CommonPage from '../../components/common-page';
-import { Table, Form, Input, Select, Col, Row, Icon, Button, Divider, Popconfirm, Radio, Modal, Checkbox, InputNumber, Upload } from "antd";
+import { Table, Form, Input, Select, Col, Row, Icon, Button, Divider, Spin, Popconfirm, Radio, Modal, Checkbox, InputNumber, Upload } from "antd";
 import { pagination } from '../../utils/pagination';
 import Toast from '../../utils/toast';
 import { SearchForm, SubmitForm } from '../../components/common-form';
@@ -10,9 +10,14 @@ import { NavLink, Link } from 'react-router-dom';
 import { baseRoute, routerConfig } from '../../config/router.config';
 import { connect } from 'react-redux';
 import { changeRoute } from '../../store/actions/route-actions';
+import { smartOrder } from '../../api/order/order';
+import NumberFilter from '../../utils/filter/number';
+import { getOrderSaveData } from './orderUtils';
+
 import UserSelectModal from '../../components/order/UserSelectModal';
 import SalerSelectModal from '../../components/order/SalerSelectModal';
 import SKUSelectModal from '../../components/order/SKUSelectModal';
+import SingleDistrictSelect from '../../components/areaSelect/SingleDistrictSelect';
 
 const _title = "智能下单";
 const _description = '';
@@ -20,41 +25,61 @@ const _description = '';
 class Page extends Component {
 
   state = {
+    showLoading: false,
     userModalIsVisible: false,
     salerModalIsVisible: false,
     skuModalIsVisible: false,
+    areaModalIsVisible: false,
     selectUser: null,
-    selectSaler: null,
-    selectSKU: null,
-    remarkDataList: [],
-    productDataList: []
+    selectSaler: null,   
+
+    orderRemarkList: [],
+    orderSKUList: [],
+    orderSKUIds: [],
+    orderBaseInfo: {},
+    selectAreaData: null,
+    remark: null,
+    storageId: 1,
+    selectIndex:null
   }
 
   componentDidMount() {
 
   }
 
+  /**x下单 */
+  saveDataClicked = () => {
+    let { orderBaseInfo, orderSKUList, storageId, selectAreaData, remark, selectUser, selectSaler } = this.state;
+    let params = getOrderSaveData({ orderBaseInfo, storageId, orderSKUList, selectAreaData, remark, selectSaler, selectUser });
 
-  // 表格相关列
-  columns = [
-    { title: "类型", dataIndex: "customerName", render: data => data || "--" },
-    { title: "商品编码", dataIndex: "customerName", render: data => data || "--" },
-    { title: "商品名称", dataIndex: "customerName", render: data => data || "--" },
-    { title: "商品规格", dataIndex: "customerName", render: data => data || "--" },
-    { title: "单位", dataIndex: "customerName", render: data => data || "--" },
-    { title: "单价（元）", dataIndex: "customerName", render: data => data || "--" },
-    { title: "数量", dataIndex: "customerName", render: data => data || "--" },
-    { title: "外部订单", dataIndex: "accountNumber", render: data => data || "--" },
-    { title: "相关活动", dataIndex: "accountNumber", render: data => data || "--" },
-    { title: "优惠价格（元）", dataIndex: "accountNumber", render: data => data || "--" },
-    { title: "小计（元）", dataIndex: "gradeName", render: data => data || "--" },
-    { title: "状态", dataIndex: "gradeName", render: data => data || "--" },
-    {
-      title: '操作',
-      render: (text, record, index) => this.renderAction(text, record, index)
+    if (!params) {
+      return;
     }
-  ]
+    this._showPageLoading();
+    smartOrder(params)
+      .then(() => {
+        Toast('下单成功！');
+        this.resetPageData();
+        this._hidePageLoading();
+      })
+      .catch(() => {
+        this._hidePageLoading();
+      })
+  }
 
+  resetPageData = () => {
+
+    this.setState({
+      orderSKUList: [],
+      orderSKUIds: [],
+      orderBaseInfo: {},
+      selectAreaData: null,
+      remark: null,
+      storageId: 1,
+      selectIndex:null
+    })   
+  } 
+  /*基本信息****************************************************************************************************************/
 
   selectUserClicked = (selectUser) => {
     this.setState({
@@ -70,152 +95,344 @@ class Page extends Component {
     this._hideSalerModal();
   }
 
-  selectSKUClicked = (selectSKU) => {
+  onOrderInfoChange = (key, e) => {
+
+    let { orderBaseInfo } = this.state;
+    orderBaseInfo[key] = e;
     this.setState({
-      selectSKU
+      orderBaseInfo
+    })
+  }
+
+  _showPageLoading = () => {
+    this.setState({
+      showLoading: true
+    })
+  }
+
+  _hidePageLoading = () => {
+    this.setState({
+      showLoading: false
+    })
+  }
+
+  /*修改商品****************************************************************************************************************/
+
+  // 表格相关列
+  columns = [
+    { title: "类型", align: "center", dataIndex: "productType", render: data => "商品" },
+    { title: "商品编码", align: "center", dataIndex: "number", render: data => data || "--" },
+    { title: "商品名称", align: "center", dataIndex: "name", render: data => data || "--" },
+    { title: "商品规格", align: "center", dataIndex: "specValue", render: data => data || "--" },
+    { title: "单位", align: "center", dataIndex: "baseUnit", render: data => data || "--" },
+    { title: "单价（元）", align: "center", dataIndex: "unitPrice", render: (text, record, index) => <InputNumber value={text} onChange={(e) => this.onOrderProductChange('unitPrice', index, e)} precision={2} min={0} /> },
+    { title: "数量", align: "center", dataIndex: "buyQty", render: (text, record, index) => <InputNumber value={text} onChange={(e) => this.onOrderProductChange('buyQty', index, e)} precision={0} min={0} /> },
+    { title: "外部订单", align: "center", dataIndex: "text1", render: data => data || "--" },
+    { title: "相关活动", align: "center", dataIndex: "text2", render: data => data || "--" },
+    { title: "优惠价格（元）", align: "center", dataIndex: "text3", render: data => data || "--" },
+    { title: "小计（元）", align: "center", dataIndex: "total", render: data => (data || data == 0) ? NumberFilter(data) : "--" },
+    { title: "状态", align: "center", dataIndex: "status", render: data => data || "--" },
+    {
+      title: '操作', align: "center",
+      render: (text, record, index) => (
+        <span>
+          <a onClick={() => this.editProduct(record, index)}>预测商品</a>
+          <Divider type="vertical" />
+          <Popconfirm
+            placement="topLeft" title='确认要删除吗？'
+            onConfirm={() => { this.deleteTableItem(index) }} >
+            <a size="small" className="color-red">删除</a>
+          </Popconfirm>
+        </span>
+      )
+    }
+  ]
+
+  deleteTableItem = (index) => {
+    let { orderSKUList, orderSKUIds } = this.state;
+    orderSKUList.splice(index, 1);
+    orderSKUIds.splice(index, 1);
+    this.setState({
+      orderSKUList,
+      orderSKUIds
+    })
+  }
+
+  // 修改商品表格
+  onOrderProductChange = (action, index, e) => {
+
+    let { orderSKUList } = this.state;
+    switch (action) {
+      case "unitPrice":
+      case "buyQty":
+        orderSKUList[index][action] = e;
+        let { unitPrice, buyQty } = orderSKUList[index];
+        orderSKUList[index]['total'] = parseInt(unitPrice * 100) * buyQty * 0.01;
+        break;
+    }
+
+    this.setState({
+      orderSKUList
+    })
+  }
+
+  addProduct = () => {
+    let selectIndex = null;
+    this.setState({
+      selectIndex
+    })
+    this._showSKUModal();
+  }
+
+  editProduct = (record, index) => {
+    let selectIndex = index;
+    this.setState({
+      selectIndex
+    })
+    this._showSKUModal();
+  }
+
+  selectSKUClicked = (selectSKU) => {
+
+    if (!selectSKU) {
+      return;
+    }
+
+    let { skuData, id } = selectSKU;
+    let { orderSKUList, selectIndex } = this.state;
+    let item = {
+      sellPrdSkuId: id,
+      unitPrice: 0,
+      buyQty: 1,
+      total: 0,
+      _id: Date.now(),
+      ...skuData
+    }
+    if (selectIndex || selectIndex == 0) {
+      let oldItem = orderSKUList[selectIndex];
+      orderSKUList[selectIndex] = {
+        ...oldItem,
+        ...skuData
+      };
+    } else {
+      orderSKUList.push(item);
+    }
+
+    let orderSKUIds = orderSKUList.map(item => item.sellPrdSkuId);
+
+    this.setState({
+      orderSKUList,
+      orderSKUIds
     })
     this._hideSKUModal();
   }
-
+  /*备注*********************************************************************************************************************************/
   // 表格相关列
   remarkColumns = [
-    { title: "操作时间", width: 140, dataIndex: "customerName", render: data => data || "--" },
-    { title: "操作类型", width: 140, dataIndex: "customerName", render: data => data || "--" },
-    { title: "相关信息", dataIndex: "customerName", render: data => data || "--" }
+    { title: "操作时间", width: 140, dataIndex: "time", render: data => data || "--" },
+    { title: "操作类型", width: 140, dataIndex: "type", render: data => data || "--" },
+    { title: "相关信息", dataIndex: "info", render: data => data || "--" }
   ]
 
+  /**选择地区 ***************************************************************************************************************************/
+  showAreaSelectModal = () => {
+    this.setState({
+      areaModalIsVisible: true
+    })
+  }
+
+  _hideAreaSelectModal = () => {
+    this.setState({
+      areaModalIsVisible: false
+    })
+  }
+
+  selectArea = () => {
+    this.showAreaSelectModal()
+  }
+
+  selectAreaSaveClicked = (selectAreaData) => {
+    if (!selectAreaData || !selectAreaData.districtId) {
+      return;
+    }
+
+    this.setState({
+      selectAreaData
+    })
+    this._hideAreaSelectModal()
+  }
+
+  onRemarkChange = (remark) => {
+    this.setState({
+      remark
+    })
+  }
   /**渲染**********************************************************************************************************************************/
 
   render() {
     const { getFieldDecorator } = this.props.form;
-    const { selectUser, selectSaler, selectSKU } = this.state;
+    const { selectUser, selectSaler, selectSKU, selectAreaData, orderBaseInfo } = this.state;
     let selectUserId = (selectUser && selectUser.id) ? selectUser.id : null;
     let selectSalerId = (selectSaler && selectSaler.id) ? selectSaler.id : null;
-    let selectSKUId = (selectSKU && selectSKU.id) ? selectSKU.id : null;
 
     return (
       <CommonPage title={_title} description={_description} >
-        <div>
+        <Spin spinning={this.state.showLoading}>
           <div>
-            <Input.TextArea style={{ minHeight: 120, width: 700 }}></Input.TextArea>
-          </div>
-
-          <div className='margin-top'><Button type='primary'>智能识别</Button></div>
-
-          <div className='margin-top20'>
-            <div className='line-height40 font-18 color333 font-bold'>基本信息</div>
-            <div className='line-height40'>
-              {
-                selectUser ?
-                  <span>
-                    <span>
-                      {selectUser.name}
-                    </span>
-                    <span className='margin0-10'>{selectUser.phone}</span>
-                  </span>
-                  : null
-              }
-              <a onClick={this._showUserModal}>选择会员</a>
-              <span className='margin0-10'>--</span>
-              {
-                selectSaler ?
-                  <span>
-                    <span>
-                      {selectSaler.name}
-                    </span>
-                    <span className='margin0-10'>{selectSaler.phone}</span>
-                  </span>
-                  : null
-              }
-              <a onClick={this._showSalerModal}>选择业务员（可为空）</a></div>
-          </div>
-          <div>
-            <Row className='line-height30' style={{ borderTop: '1px solid #f2f2f2' }}>
-              <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>订单号</Col>
-              <Col span={8} ></Col>
-              <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>收货人</Col>
-              <Col span={8}></Col>
-            </Row>
-            <Row className='line-height30' style={{ borderTop: '1px solid #f2f2f2' }}>
-              <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>下单时间</Col>
-              <Col span={8} ></Col>
-              <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>联系电话</Col>
-              <Col span={8}></Col>
-            </Row>
-            <Row className='line-height30' style={{ borderTop: '1px solid #f2f2f2' }}>
-              <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>订单状态</Col>
-              <Col span={8} ></Col>
-              <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>省市区</Col>
-              <Col span={8}></Col>
-            </Row>
-            <Row className='line-height30' style={{ borderTop: '1px solid #f2f2f2' }}>
-              <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>订单总金额</Col>
-              <Col span={8} ></Col>
-              <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>运费</Col>
-              <Col span={8}></Col>
-            </Row>
-            <Row className='line-height30' style={{ borderTop: '1px solid #f2f2f2' }}>
-              <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>商品总金额</Col>
-              <Col span={8} ></Col>
-              <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>累计优惠</Col>
-              <Col span={8}></Col>
-            </Row>
-            <Row className='line-height30' style={{ borderTop: '1px solid #f2f2f2' }}>
-              <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>支付方式</Col>
-              <Col span={8} ></Col>
-              <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>买家备注</Col>
-              <Col span={8}></Col>
-            </Row>
-            <Row className='line-height30' style={{ borderTop: '1px solid #f2f2f2', borderBottom: '1px solid #f2f2f2' }}>
-              <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>发货仓库</Col>
-              <Col span={20} ></Col>
-            </Row>
-
-
-          </div>
-          <div className='margin-top20'>
-            <div className='line-height40 font-18 color333 font-bold'>商品信息</div>
-            <div>
-              <Table
-                indentSize={10}
-                rowKey="id"
-                columns={this.columns}
-                loading={this.state.tableLoading}
-                pagination={false}
-                dataSource={this.state.productDataList}
-              />
+            <div style={{ position: "fixed", bottom: "10%", right: "5%", zIndex: "999" }}>
+              <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} onClick={this.saveDataClicked}>
+                确认<br />
+              收款
+            </Button>
             </div>
-            <div><Button onClick={this._showSKUModal} type='primary' className='normal margin-top'>添加</Button></div>
-          </div>
-          <div className='margin-top20'>
-            <div className='line-height40 font-18 color333 font-bold'>优惠券信息</div>
-            <div>--</div>
-          </div>
-          <div className='margin-top20'>
-            <div className='line-height40 font-18 color333 font-bold'>包裹信息</div>
-            <div>发货后生成包裹信息</div>
-          </div>
-          <div className='margin-top20 flex-middle'>
-            <div className='line-height40 font-18 color333 font-bold'>操作日志</div>
-            <Select style={{ width: 100, marginLeft: 10 }}>
+
+            <div>
+              <Input.TextArea style={{ minHeight: 120, width: 700 }}></Input.TextArea>
+            </div>
+
+            <div className='margin-top'><Button type='primary'>智能识别</Button></div>
+
+            <div className='margin-top20'>
+              <div className='line-height40 font-18 color333 font-bold'>基本信息</div>
+              <div className='line-height40'>
+                {
+                  selectUser ?
+                    <span>
+                      <span>
+                        {selectUser.name}
+                      </span>
+                      <span className='margin0-10'>{selectUser.phone}</span>
+                    </span>
+                    : null
+                }
+                <a onClick={this._showUserModal}>选择会员</a>
+                <span className='margin0-10'>--</span>
+                {
+                  selectSaler ?
+                    <span>
+                      <span>
+                        {selectSaler.name}
+                      </span>
+                      <span className='margin0-10'>{selectSaler.phone}</span>
+                    </span>
+                    : null
+                }
+                <a onClick={this._showSalerModal}>选择业务员（可为空）</a></div>
+            </div>
+            <div className='line-height40' style={{ minWidth: 940 }}>
+              <Row style={{ borderTop: '1px solid #f2f2f2' }}>
+                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>订单号</Col>
+                <Col span={8} className='padding-left'>
+                  <Input value={orderBaseInfo.mark} onChange={(e) => this.onOrderInfoChange("mark", e.target.value)} style={{ width: 140, marginRight: 10 }} placeholder='填写订单标志' />此部分订单号自动生成</Col>
+                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>收货人</Col>
+                <Col span={8} className='padding-left'>
+                  <Input value={orderBaseInfo.contactPerson} onChange={(e) => this.onOrderInfoChange("contactPerson", e.target.value)} style={{ width: 200 }} placeholder='收货人' />
+                </Col>
+              </Row>
+              <Row style={{ borderTop: '1px solid #f2f2f2' }}>
+                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>下单时间</Col>
+                <Col span={8} className='padding-left'></Col>
+                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>联系电话</Col>
+                <Col span={8} className='padding-left'>
+                  <Input value={orderBaseInfo.contactPhone} onChange={(e) => this.onOrderInfoChange("contactPhone", e.target.value)} style={{ width: 200 }} />
+                </Col>
+              </Row>
+              <Row style={{ borderTop: '1px solid #f2f2f2' }}>
+                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>订单状态</Col>
+                <Col span={8} className='padding-left' ></Col>
+                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>省市区</Col>
+                <Col span={8} className='padding-left'>
+                  {
+                    selectAreaData ?
+                      <span>
+                        {`${selectAreaData.proviceName}-${selectAreaData.cityName}-${selectAreaData.districtName}`}
+                      </span>
+                      :
+                      "暂未选择地区"
+                  }
+                  <Button onClick={this.selectArea} type='primary' className='margin-left'>修改</Button>
+                </Col>
+              </Row>
+              <Row style={{ borderTop: '1px solid #f2f2f2' }}>
+                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>支付状态</Col>
+                <Col span={8} className='padding-left' ></Col>
+                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>详细地址</Col>
+                <Col span={8} className='padding-left'>
+                  <Input value={orderBaseInfo.contactAddress} onChange={(e) => this.onOrderInfoChange("contactAddress", e.target.value)} style={{ width: "80%" }} /></Col>
+              </Row>
+              <Row style={{ borderTop: '1px solid #f2f2f2' }}>
+                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>订单总金额</Col>
+                <Col span={8} className='padding-left'></Col>
+                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>运费</Col>
+                <Col span={8} className='padding-left'>
+                  <InputNumber value={orderBaseInfo.fare} precision={2} onChange={(e) => this.onOrderInfoChange("fare", e)} min={0} style={{ width: 140 }} />
+                </Col>
+              </Row>
+              <Row style={{ borderTop: '1px solid #f2f2f2' }}>
+                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>商品总金额</Col>
+                <Col span={8} className='padding-left'></Col>
+                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>累计优惠</Col>
+                <Col span={8} className='padding-left'></Col>
+              </Row>
+              <Row style={{ borderTop: '1px solid #f2f2f2' }}>
+                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>支付方式</Col>
+                <Col span={8} className='padding-left'></Col>
+                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>买家备注</Col>
+                <Col span={8} className='padding-left'></Col>
+              </Row>
+              <Row style={{ borderTop: '1px solid #f2f2f2', borderBottom: '1px solid #f2f2f2' }}>
+                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>发货仓库</Col>
+                <Col span={20} className='padding-left'></Col>
+              </Row>
+            </div>
+            <div className='margin-top20'>
+              <div className='line-height40 font-18 color333 font-bold'>商品信息</div>
+              <div>
+                <Table
+                  indentSize={10}
+                  rowKey="_id"
+                  bordered={true}
+                  columns={this.columns}
+                  loading={this.state.tableLoading}
+                  pagination={false}
+                  dataSource={this.state.orderSKUList}
+                />
+              </div>
+              <div><Button onClick={this.addProduct} type='primary' className='normal margin-top'>添加</Button></div>
+            </div>
+            <div className='margin-top20'>
+              <div className='line-height40 font-18 color333 font-bold'>优惠券信息</div>
+              <div>--</div>
+            </div>
+            <div className='margin-top20'>
+              <div className='line-height40 font-18 color333 font-bold'>包裹信息</div>
+              <div>发货后生成包裹信息</div>
+            </div>
+            <div className='margin-top20 flex-middle'>
+              <div className='line-height40 font-18 color333 font-bold'>操作日志</div>
+              {/* <Select style={{ width: 100, marginLeft: 10 }}>
               <Select.Option value={1}>备注</Select.Option>
+              <Select.Option value={2}>备注</Select.Option>
             </Select>
             <Input className='margin-left' style={{ width: 200 }} />
-            <Button className='margin-left' type='primary'>添加日志</Button>
-          </div>
-          <div className='margin-top'>
-            <Table
-              style={{ width: 800 }}
-              indentSize={10}
-              rowKey="id"
-              columns={this.remarkColumns}
-              loading={this.state.tableLoading}
-              pagination={false}
-              dataSource={this.state.remarkDataList}
-            />
-          </div>
-        </div>
+            <Button className='margin-left' type='primary'>添加日志</Button> */}
+              <div><span className='margin0-10'>备注:</span> <Input value={this.state.remark} onChange={(e) => this.onRemarkChange(e.target.value)} style={{ width: 400 }} />
+              </div>
 
+            </div>
+            <div className='margin-top'>
+              <Table
+                style={{ width: 800 }}
+                indentSize={10}
+                rowKey="id"
+                columns={this.remarkColumns}
+                loading={this.state.tableLoading}
+                pagination={false}
+                dataSource={this.state.orderRemarkList}
+              />
+            </div>
+          </div>
+        </Spin>
 
 
 
@@ -237,7 +454,14 @@ class Page extends Component {
           visible={this.state.skuModalIsVisible}
           onCancel={this._hideSKUModal}
           selectItem={this.selectSKUClicked}
-          selectId={selectSKUId}
+          selectIds={this.state.orderSKUIds}
+        />
+
+        <SingleDistrictSelect
+          checkedAreaData={this.state.selectAreaData}
+          visible={this.state.areaModalIsVisible}
+          hide={this._hideAreaSelectModal}
+          onOk={this.selectAreaSaveClicked}
         />
       </CommonPage >
     )

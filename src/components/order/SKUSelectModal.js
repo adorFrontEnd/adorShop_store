@@ -75,10 +75,15 @@ class SKUModal extends Component {
 
   renderAction = (text, record, index) => {
 
+    let isSelect = false;
+    if (this.props.selectIds && this.props.selectIds.length > 0) {
+      isSelect = this.props.selectIds.indexOf(record.sellPrdSkuId) != -1;
+    }
+
     return (
       <span>
         {
-          record.id == this.props.selectId ?
+          isSelect ?
             <span className='theme-color'>已选择</span>
             :
             <Button onClick={() => this.selectItem(record, index)} type='primary'>选择</Button>
@@ -87,22 +92,25 @@ class SKUModal extends Component {
     )
   }
 
+
   // 表格相关列
   columns = [
-    { title: "商品编号", dataIndex: "salesmanName", render: data => data || "--" },
-    { title: "商品主图", dataIndex: "salesmanPhone", render: data => data ? <img src={data} style={{ height: 40, width: 40 }} /> : '--' },
-    { title: "商品名称", dataIndex: "salesmanPhone", render: data => data || "--" },
-    { title: "商品分类", dataIndex: "salesmanPhone", render: data => data || "--" },
-    { title: "商品规格", dataIndex: "salesmanPhone", render: data => data || "--" },
-    { title: "单选商品", dataIndex: "salesmanPhone", render: (text, record, index) => this.renderAction(text, record, index) }
+    { title: "商品编号", dataIndex: "number", render: data => data || "--" },
+    { title: "商品主图", dataIndex: "imageUrl", render: data => data ? <img src={data} style={{ height: 40, width: 40 }} /> : '--' },
+    { title: "商品名称", dataIndex: "name", render: data => data || "--" },
+    { title: "商品分类", dataIndex: "prdCategory", render: data => data || "--" },
+    { title: "商品规格", dataIndex: "specValue", render: data => data || "--" },
+    {
+      title: '单选商品',
+      render: (text, record, index) => this.renderAction(text, record, index)
+    }
   ]
 
   selectItem = (record, index) => {
-    let { salesmanName, salesmanPhone, id } = record;
+    let { sellPrdSkuId } = record;
     let params = {
-      name: salesmanName,
-      phone: salesmanPhone,
-      id
+      skuData: record,
+      id: sellPrdSkuId
     }
     this.props.selectItem(params, index);
   }
@@ -116,7 +124,7 @@ class SKUModal extends Component {
       <Modal
         maskClosable={false}
         width={700}
-        title="选择SKU"
+        title="预测商品SKU选择"
         visible={this.props.visible}
         onCancel={this.onCancel}
         footer={null}
@@ -133,7 +141,7 @@ class SKUModal extends Component {
                   type: "INPUT",
                   field: "likeName",
                   style: { width: 300 },
-                  placeholder: "业务员名称/手机号/备注"
+                  placeholder: "商品名称/商品编号/商品分类"
                 }
               ]}
             />
@@ -141,7 +149,7 @@ class SKUModal extends Component {
           <div>
             <Table
               indentSize={10}
-              rowKey="id"
+              rowKey="sellPrdSkuId"
               columns={this.columns}
               loading={this.state.tableLoading}
               pagination={this.state.pagination}

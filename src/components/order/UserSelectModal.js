@@ -19,7 +19,7 @@ class UserModal extends Component {
     this.getPageData();
   }
 
-  
+
   params = {
     page: 1
   }
@@ -94,7 +94,8 @@ class UserModal extends Component {
     { title: "会员等级", dataIndex: "gradeName", render: data => data || "--" },
     {
       title: '操作',
-      render: (text, record, index) => this.renderAction(text, record, index)    }
+      render: (text, record, index) => this.renderAction(text, record, index)
+    }
   ]
 
   selectItem = (record, index) => {
@@ -119,7 +120,7 @@ class UserModal extends Component {
         title="选择会员"
         visible={this.props.visible}
         onCancel={this.onCancel}
-        footer={null}      
+        footer={null}
       >
         <div>
           <div>
