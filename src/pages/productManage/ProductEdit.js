@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Col, Row, Checkbox, Card, Modal, Select, Spin, Form, Button, Input, Table, Radio, InputNumber } from 'antd';
+import { Col, Row, Checkbox, Card, Modal, Select, Spin, Form, Button, Input, AutoComplete, Table, Radio, InputNumber } from 'antd';
 import Toast from '../../utils/toast';
 import CommonPage from '../../components/common-page';
 import { SearchForm } from '../../components/common-form';
@@ -11,7 +11,8 @@ import UploadVideo from '../../components/upload/UploadVideo';
 import RichText from '../../components/RichText/RichText';
 import { searchFreightList } from '../../api/product/freight';
 import { getUnitConfigList } from '../../api/sysConfig/sysConfig';
-import { saveOrUpdateProduct } from '../../api/product/product';
+import { saveOrUpdateProduct, getProductDetail } from '../../api/product/product';
+import { getSaveData, getParseDetailData } from './productUtils';
 
 const _description = "";
 const _statusEnum = {
@@ -24,22 +25,33 @@ const _statusEnum = {
 class Page extends Component {
   state = {
     id: 0,
+    productDetail: {},
     showLoading: false,
-    baseUnitId: "",
+
+    baseUnit: "",
     baseUnitQty: null,
-    containerUnitId: null,
+    containerUnitName: "",
     isContainerUnit: false,
+
     areaModalIsVisible: false,
     selectAreaData: null,
+
     cModalIsVisible: false,
     categoryNames: null,
     categoryIds: [],
+
     specData: null,
-    productUrls: [],
+
+    imageUrl: [],
     videoFile: null,
     details: null,
+
     freightList: [],
-    unitListMap: {}
+    unitList: [],
+    freightType: 0,
+    unifiedFreight: null,
+    freightTemplateId: null,
+    isSpecChange: false
   }
 
   componentWillMount() {
@@ -50,8 +62,7 @@ class Page extends Component {
       _title: isEdit ? "编辑商品" : "创建商品",
       showLoading: false
     })
-    // this.getDetail(id);
-    // this._getOrganization(id);
+    this.getDetail(id);
   }
 
   componentDidMount() {
@@ -67,64 +78,36 @@ class Page extends Component {
     }
 
     this._showDetailLoading();
-    // getDealerDetails({ id })
-    //   .then(dealerDetail => {
-
-    //     let { dealerName, name, unit, tencentLng, tencentLat, address, shipStatus, storeStatus } = dealerDetail;
-    //     let location = { address, tencentLng, tencentLat };
-    //     this.setState({
-    //       dealerDetail,
-    //       location
-    //     })
-    //     this.revertAuth(shipStatus, storeStatus);
-    //     this.props.form.setFieldsValue({
-    //       dealerName,
-    //       name,
-    //       unit
-    //     });
-    //     this._hideDetailLoading();
-
-    //   })
-    //   .catch(() => {
-    //     this._hideDetailLoading();
-    //   })
-  }
-
-  _showDetailLoading = () => {
-    this.setState({
-      showLoading: true
-    })
-  }
-
-  _hideDetailLoading = () => {
-    this.setState({
-      showLoading: false
-    })
-  }
-
-  searchFreightList = () => {
-    searchFreightList({ page: 1, size: 100 })
-      .then((res) => {
-        let freightList = res.data;
+    getProductDetail({ id })
+      .then(productDetail => {
+        this._hideDetailLoading();
+        this.revertProductDetail(productDetail);
         this.setState({
-          freightList
+          productDetail
         })
+      })
+      .catch(() => {
+        this._hideDetailLoading();
       })
   }
 
-  getUnitConfigList = () => {
-    getUnitConfigList({ page: 1, size: 100 })
-      .then((res) => {
-        let unitList = res.data;
-        let unitListMap = {};
-        unitList.forEach(item => {
-          unitListMap[item.id] = item.name;
-        })
-        this.setState({
-          unitListMap
-        })
+  revertProductDetail = (productDetail) => {
+
+    let { formData, stateData, specData } = getParseDetailData(productDetail);
+    this.setState(stateData);
+    this.setState({
+      specData,
+      isSpecChange: true
+    }, () => {
+      this.setState({
+        isSpecChange: false
       })
+    })
+    this.props.form.setFieldsValue(formData);
   }
+
+
+
   // 返回
   goBack = () => {
     window.history.back();
@@ -136,157 +119,146 @@ class Page extends Component {
       if (err) {
         return;
       }
-      let { name, channel, baseUnitId, specifications } = data;
-      let { unitListMap, isContainerUnit, containerUnitId, baseUnitQty, categoryIds, categoryNames } = this.state;
 
-
-      //单位
-      if (!baseUnitId) {
-        Toast("请设置计量单位！");
-        return;
-      }
-
-      if (!categoryIds || !categoryIds.length) {
-        Toast("请设置商品分类！");
-        return;
-      }
-
-      let baseUnit = unitListMap[baseUnitId];
-      let containerUnit = null;
-      if (isContainerUnit) {
-
-        if (!containerUnitId) {
-          Toast("请设置容器单位！");
-          return;
-        }
-
-        if (!baseUnitQty) {
-          Toast("请输入计量单位的数量！");
-          return;
-        }
-
-        let containerUnitName = unitListMap[containerUnitId] || containerUnitId;
-        containerUnit = {
-          containerUnitId,
-          containerUnitName,
-          baseUnitQty
-        }
-      }
-
-      //可购渠道
-      channel = this._getChannelValue(channel);
-
-      let params = {
-        name,
-        baseUnit,
-        isContainerUnit,
-        containerUnit: containerUnit ? JSON.stringify(containerUnit) : null,
-        specifications,
-        channel,
-        categoryIds:categoryIds.join(','),
-        categoryNames
+      let { productDetail, isContainerUnit, containerUnitName, baseUnitQty,
+        categoryIds, categoryNames, specData, imageUrl, videoFile, details, freightType, unifiedFreight, freightTemplateId } = this.state;
+      let stateData = {
+        isContainerUnit, containerUnitName, baseUnitQty,
+        categoryIds, categoryNames, specData, imageUrl, videoFile, details, freightType, unifiedFreight, freightTemplateId
       };
+      let id = productDetail && productDetail.id ? productDetail.id : null;
+      let isEdit = !!id;
+      let params = getSaveData(data, stateData,isEdit);
 
-      console.log(params);
+      if (!params) {
+        return;
+      }
+     console.log(params);
+      this._showDetailLoading();
+      saveOrUpdateProduct({ ...params, id })
+      .then(() => {
+        Toast('保存成功！');
+        this._hideDetailLoading();
+        // this.getDetail(this.state.id);
+      })
+      .catch(() => {
+        this._hideDetailLoading();
+      })
+  })
+}
 
-      // saveOrUpdateProduct(params)
-      //   .then(() => {
 
-      //   })
 
-    })
-  }
+/**基础信息 ********************************************************************************************************************/
 
-  /**基础信息 ********************************************************************************************************************/
+/**单位更改 **************/
+onUnitChange = (e) => {
+  let baseUnit = e;
+  this.setState({
+    baseUnit
+  })
+}
 
-  /**单位更改 **************/
-  onUnitChange = (e) => {
-    let baseUnitId = e;
-    this.setState({
-      baseUnitId
-    })
-  }
+onContainerUnitChange = (e) => {
+  let containerUnitName = e;
+  this.setState({
+    containerUnitName
+  })
+}
 
-  onContainerUnitChange = (e) => {
-    let containerUnitId = e;
-    this.setState({
-      containerUnitId
-    })
-  }
+onHasPackageUnitChange = (e) => {
+  let isContainerUnit = e.target.checked;
+  this.setState({
+    isContainerUnit
+  })
+}
 
-  onHasPackageUnitChange = (e) => {
-    let isContainerUnit = e.target.checked;
-    this.setState({
-      isContainerUnit
-    })
-  }
+onBaseUnitQtyChange = (e) => {
+  let baseUnitQty = e;
+  this.setState({
+    baseUnitQty
+  })
+}
 
-  onBaseUnitQtyChange = (e) => {
-    let baseUnitQty = e;
-    this.setState({
-      baseUnitQty
-    })
-  }
+/**选择分类 ***********/
 
-  /**选择分类 ***********/
+showCModal = () => {
+  this.setState({ cModalIsVisible: true })
+}
 
-  showCModal = () => {
-    this.setState({ cModalIsVisible: true })
-  }
+cModalSaveClick = (params) => {
+  let { categoryIds, category } = params;
+  this.setState({ cModalIsVisible: false, categoryNames: category, categoryIds });
+}
 
-  cModalSaveClick = (params) => {
-    let { categoryIds, category } = params;
-    this.setState({ cModalIsVisible: false, categoryNames: category, categoryIds });
-  }
+hideCModal = () => {
+  this.setState({ cModalIsVisible: false })
+}
 
-  hideCModal = () => {
-    this.setState({ cModalIsVisible: false })
-  }
+/**规格信息**********************************************************************************************************/
+onSpecDataChange = (specData) => {
 
-  /**规格信息**********************************************************************************************************/
-  onSpecDataChange = (specData) => {
+  this.setState({
+    specData
+  })
+}
 
-    this.setState({
-      specData
-    })
-  }
+/**商品图及详情*********************************************************************************************************/
 
-  /**商品图及详情*********************************************************************************************************/
+/**上传图片，视频**************/
+uploadPicture = (imageUrl) => {
+  imageUrl = imageUrl || [];
+  this.setState({
+    imageUrl
+  })
+}
 
-  /**上传图片，视频**************/
-  uploadPicture = (productUrls) => {
-    productUrls = productUrls || [];
-    this.setState({
-      productUrls
-    })
-  }
+uploadVideo = (videoFile) => {
+  this.setState({
+    videoFile
+  })
+}
 
-  uploadVideo = (videoFile) => {
-    this.setState({
-      videoFile
-    })
-  }
+/**富文本 **************/
+onTextChange = (details) => {
+  this.setState({
+    details
+  })
+}
 
-  /**富文本 **************/
-  onTextChange = (details) => {
-    this.setState({
-      details
-    })
-  }
-  /***渲染**********************************************************************************************************/
+onFreightTypeChange = (e) => {
+  let freightType = e.target.value;
+  this.setState({
+    freightType
+  })
+}
 
-  render() {
-    const { getFieldDecorator } = this.props.form;
-    let { labelList, selectAreaData, unitListMap } = this.state;
+onUnifiedFreightChange = (unifiedFreight) => {
 
-    return (
-      <CommonPage title={this.state._title} description={_description} >
-        <Row style={{ width: 700 }} className='line-height40 padding10-0'>
-          <Col offset={3}>
-            <Button type='primary' style={{ width: 100 }} onClick={this.saveDataClicked}>保存</Button>
-            <Button type='primary' className='yellow-btn margin-left20' style={{ width: 100 }} onClick={this.goBack}>返回</Button>
-          </Col>
-        </Row>
+  this.setState({
+    unifiedFreight
+  })
+}
+
+onManagementIdChange = (e) => {
+  let freightTemplateId = e;
+  this.setState({
+    freightTemplateId
+  })
+}
+/***渲染**********************************************************************************************************/
+
+render() {
+  const { getFieldDecorator } = this.props.form;
+  let { labelList, selectAreaData, unitList, showLoading } = this.state;
+
+  return (
+    <CommonPage title={this.state._title} description={_description} >
+      <div style={{ position: "fixed", bottom: "10%", right: "10%", zIndex: "999" }}>
+        <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} onClick={this.saveDataClicked}>保存</Button>
+        <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} className='yellow-btn margin-left20' onClick={this.goBack}>返回</Button>
+      </div>
+      <Spin spinning={showLoading}>
         <Form className='common-form'>
           <div style={{ background: "#f2f2f2", borderLeft: "6px solid #ff8716" }} className='color333 padding border-radius font-16 margin-bottom'>基础信息</div>
           <Form.Item
@@ -308,22 +280,26 @@ class Page extends Component {
           <Form.Item
             style={{ width: 700 }}
             labelCol={{ span: 6 }}
-            wrapperCol={{ span: 16 }}
+            wrapperCol={{ span: 18 }}
             label='计量单位：'
-            field='baseUnitId'>
+            field='baseUnit'>
             {
-              getFieldDecorator('baseUnitId', {
+              getFieldDecorator('baseUnit', {
                 initialValue: null,
                 rules: [
                   { required: true, message: '请输入计量单位!' }
                 ]
               })(
-                <Select style={{ width: 90 }} onChange={this.onUnitChange}>
-                  <Select.Option value={null}>请选择</Select.Option>
-                  {
-                    Object.keys(unitListMap).map(item => <Select.Option key={item} value={item}>{unitListMap[item]}</Select.Option>)
+                <AutoComplete
+                  allowClear
+                  onChange={this.onUnitChange}
+                  style={{ width: 120 }}
+                  dataSource={unitList}
+                  placeholder="请输入计量单位"
+                  filterOption={(inputValue, option) =>
+                    option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
                   }
-                </Select>
+                />
               )
             }
             <Checkbox style={{ marginLeft: 10 }} checked={this.state.isContainerUnit} onChange={this.onHasPackageUnitChange}>容器单位</Checkbox>
@@ -331,19 +307,20 @@ class Page extends Component {
               this.state.isContainerUnit ?
                 <span>
                   <span style={{ margin: "0 10px" }}>1</span>
-                  <Select style={{ width: 90 }} defaultValue={null} value={this.state.containerUnitId} onChange={this.onContainerUnitChange}>
-                    <Select.Option value={null}>请选择</Select.Option>
-                    {
-                      Object.keys(unitListMap).map(item => <Select.Option key={item} disabled={item == this.state.baseUnitId} value={item}>{unitListMap[item]}</Select.Option>)
+                  <AutoComplete
+                    allowClear
+                    style={{ width: 120 }}
+                    value={this.state.containerUnitName}
+                    onChange={this.onContainerUnitChange}
+                    dataSource={unitList}
+                    placeholder="请输入计量单位"
+                    filterOption={(inputValue, option) =>
+                      option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
                     }
-                  </Select>
+                  />
                   <span style={{ margin: "0 10px" }}>=</span>
                   <InputNumber min={0} value={this.state.baseUnitQty} onChange={this.onBaseUnitQtyChange} />
-                  {
-                    this.state.baseUnitId ?
-                      <span>{unitListMap[this.state.baseUnitId]}</span>
-                      : null
-                  }
+                  <span>{this.state.baseUnit}</span>
                 </span>
                 : null
             }
@@ -405,6 +382,7 @@ class Page extends Component {
           <div style={{ background: "#f2f2f2", borderLeft: "6px solid #ff8716" }} className='color333 padding border-radius font-16 margin-bottom'>规格信息</div>
           <div>
             <SpecEdit
+              shouldChange={this.state.isSpecChange}
               specData={this.state.specData}
               onChange={this.onSpecDataChange}
             />
@@ -421,7 +399,7 @@ class Page extends Component {
               </div>
               <ProductPictureWall
                 uploadCallback={this.uploadPicture}
-                pictureList={this.state.productUrls || []}
+                pictureList={this.state.imageUrl || []}
                 limitFileLength={15}
                 folder='product'
                 allowType={['1', '2']}
@@ -452,19 +430,21 @@ class Page extends Component {
           <Row className='line-height30 margin-bottom20' style={{ width: 700 }}>
             <Col span={6} className='label-required text-right'>快递运费：</Col>
             <Col span={18}>
-              <Radio.Group defaultValue={1}>
-                <Radio value={1} style={{ display: 'block', height: '40px', lineHeight: '30px' }}>
+              <Radio.Group value={this.state.freightType} onChange={this.onFreightTypeChange}>
+                <Radio value={0} style={{ display: 'block', height: '40px', lineHeight: '30px' }}>
                   <span>统一运费</span>
                   <InputNumber
                     precision={2}
+                    value={this.state.unifiedFreight}
+                    onChange={this.onUnifiedFreightChange}
                     style={{ width: 140, marginLeft: 10, marginRight: 10 }}
                     min={0}
                     placeholder='填写运费价格'
                   />元
                 </Radio>
-                <Radio value={2} style={{ display: 'block', height: '40px', lineHeight: '30px' }}>
+                <Radio value={1} style={{ display: 'block', height: '40px', lineHeight: '30px' }}>
                   <span>运费模板</span>
-                  <Select defaultValue={null} style={{ width: 140, marginLeft: 10 }}>
+                  <Select value={this.state.freightTemplateId} onChange={this.onManagementIdChange} style={{ width: 140, marginLeft: 10 }}>
                     <Select.Option value={null}>请选择</Select.Option>
                     {
                       this.state.freightList && this.state.freightList.length ?
@@ -480,37 +460,53 @@ class Page extends Component {
             </Col>
           </Row>
         </Form>
-
-        <RelativeCategoryModal
-          showList={true}
-          maxLength={5}
-          categoryIds={this.state.categoryIds}
-          onOk={this.cModalSaveClick}
-          onCancel={this.hideCModal}
-          visible={this.state.cModalIsVisible}
-        />
-      </CommonPage >)
-  }
+      </Spin>
 
 
-  _getChannelValue = (channel) => {
-    let result = 0;
-    if (!channel || !channel.length) {
-      return
-    }
-    channel.forEach(item => {
-      result += parseInt(item);
+      <RelativeCategoryModal
+        showList={true}
+        maxLength={5}
+        categoryIds={this.state.categoryIds}
+        onOk={this.cModalSaveClick}
+        onCancel={this.hideCModal}
+        visible={this.state.cModalIsVisible}
+      />
+    </CommonPage >)
+}
+
+searchFreightList = () => {
+  searchFreightList({ page: 1, size: 100 })
+    .then((res) => {
+      let freightList = res.data;
+      this.setState({
+        freightList
+      })
     })
-    return result
-  }
+}
 
-  _parseChannelValue = (channel) => {
-    channel = parseInt(channel);
-    let str = "000" + channel.toString(2);
-    str = str.substr(-3, 3);
-    let arr = str.split('').map(item => parseInt(item));
-    return arr;
-  }
+getUnitConfigList = () => {
+  getUnitConfigList({ page: 1, size: 100 })
+    .then((res) => {
+      let arr = res.data;
+      let unitList = arr.map(item => item.name);
+      this.setState({
+        unitList
+      })
+    })
+}
+
+
+_showDetailLoading = () => {
+  this.setState({
+    showLoading: true
+  })
+}
+
+_hideDetailLoading = () => {
+  this.setState({
+    showLoading: false
+  })
+}
 
 }
 

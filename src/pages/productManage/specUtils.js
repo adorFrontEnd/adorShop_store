@@ -11,13 +11,13 @@ const _getSpecDataByTitles = (titles) => {
     return []
   }
 
-  let specData = titles.map(specTitle => {
+  let specData = titles.map(specValue => {
     return {
-      specTitle,
+      specValue,
       productUrls: [],
-      productCode: "",
+      number: "",
       barCode: "",
-      originalPrice: null,
+      marketPrice: null,
       costPrice: null,
     }
   })
