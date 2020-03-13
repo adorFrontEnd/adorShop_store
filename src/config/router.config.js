@@ -210,14 +210,14 @@ const routerConfigArr = [
     route_name: "sysConfig.syncConfig.officialAccounts",
     path: baseRoute + "/sysConfig/officialAccounts",
     loginRequired: true,
-    moduleAuth: true,
+    moduleAuth: false,
     title: "公众号",
     icon: "profile"
   },
   {
     route_name: "sysConfig.safeguardConfig",
     loginRequired: true,
-    moduleAuth: true,
+    moduleAuth: false,
     title: "维权配置",
     icon: "team"
   },
@@ -225,7 +225,7 @@ const routerConfigArr = [
     route_name: "sysConfig.safeguardConfig.returnAddress",
     path: baseRoute + "/sysConfig/returnAddress",
     loginRequired: true,
-    moduleAuth: true,
+    moduleAuth: false,
     title: "退货地址",
     icon: "profile"
   },
