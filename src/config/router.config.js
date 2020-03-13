@@ -179,7 +179,7 @@ const routerConfigArr = [
   {
     route_name: "sysConfig.payConfig",
     loginRequired: true,
-    moduleAuth: true,
+    moduleAuth: false,
     title: "支付配置",
     icon: "team"
   },
@@ -187,7 +187,7 @@ const routerConfigArr = [
     route_name: "sysConfig.payConfig.payConfig",
     path: baseRoute + "/sysConfig/payConfig",
     loginRequired: true,
-    moduleAuth: true,
+    moduleAuth: false,
     title: "支付配置",
     icon: "profile"
   },
@@ -342,19 +342,86 @@ const routerConfigArr = [
     moduleAuth: true,
     title: "智能下单",
     icon: "team"
-  } ,
-  
-  
+  },
+  {
+    route_name: "orderManage.salesman",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "业务员",
+    icon: "team"
+  },
+  {
+    route_name: "orderManage.salesman.salesman",
+    path: baseRoute + "/orderManage/salesman",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "业务员管理",
+    icon: "team"
+  },
+  {
+    route_name: "orderManage.stockManage",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "库存管理",
+    icon: "team"
+  },
+  {
+    route_name: "orderManage.stockManage.stockManage",
+    path: baseRoute + "/orderManage/stockManage",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "库存管理",
+    icon: "team"
+  },
+  {
+    route_name: "orderManage.stockManage.stockLog",
+    path: baseRoute + "/orderManage/stockLog",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "库存日志",
+    icon: "team"
+  },
+  {
+    route_name: "orderManage.performanceManage",
+    loginRequired: true,
+    moduleAuth: false,
+    title: "业绩管理",
+    icon: "team"
+  },
+  {
+    route_name: "orderManage.performanceManage.performanceConfig",
+    path: baseRoute + "/orderManage/performanceConfig",
+    loginRequired: true,
+    moduleAuth: false,
+    title: "业绩配置",
+    icon: "team"
+  },
+  {
+    route_name: "orderManage.stockManage.performanceEdit",
+    path: baseRoute + "/orderManage/performanceEdit",
+    loginRequired: true,
+    moduleAuth: false,
+    title: "编辑业绩",
+    icon: "team"
+  },
+  {
+    route_name: "orderManage.performanceManage.performanceStatc",
+    path: baseRoute + "/orderManage/performanceStatc",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "业绩统计",
+    icon: "team"
+  },
   {
     route_name: "fundsManage",
     title: "资金管理",
     icon: "orderManage",
-    moduleAuth: true
+    moduleAuth: false
   },
   {
     route_name: "fundsManage.fundsCheck",
     loginRequired: true,
-    moduleAuth: true,
+    moduleAuth: false,
     title: "资金审核",
     icon: "team"
   },
@@ -362,7 +429,7 @@ const routerConfigArr = [
     route_name: "fundsManage.fundsCheck.performanceCheck",
     path: baseRoute + "/fundsManage/performanceCheck",
     loginRequired: true,
-    moduleAuth: true,
+    moduleAuth: false,
     title: "业绩审核",
     icon: "profile"
   },
