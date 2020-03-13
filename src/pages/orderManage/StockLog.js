@@ -167,7 +167,7 @@ class Page extends Component {
                   getFieldDecorator('type', {
                     initialValue: "null"
                   })(
-                    <Select>
+                    <Select style={{width:140}}>
                       <Select.Option value='null'>全部</Select.Option>
                       <Select.Option value='1'>库存管理</Select.Option>
                       <Select.Option value='0'>订货交易</Select.Option>
