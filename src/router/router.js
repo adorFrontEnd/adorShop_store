@@ -53,6 +53,7 @@ const PerformanceStatc = asyncComponent(() => import("../pages/orderManage/Perfo
 const PerformanceEdit = asyncComponent(() => import("../pages/orderManage/PerformanceEdit"));
 
 
+
 export default class GlobalRouter extends React.Component {
 
   render() {
@@ -109,7 +110,10 @@ export default class GlobalRouter extends React.Component {
                   <PrivateRoute path={routerConfig["orderManage.order.orderList"].path} component={OrderList} />
                   <PrivateRoute path={routerConfig["orderManage.order.afterSaleOrder"].path} component={AfterSaleOrder} />
                   <PrivateRoute path={routerConfig["orderManage.order.intelliOrder"].path} component={IntelliOrder} />
-
+                  <PrivateRoute path={routerConfig["orderManage.salesman.salesman"].path} component={Salesman} />
+                  <PrivateRoute path={routerConfig["orderManage.stockManage.stockLog"].path} component={StockLog} />
+                  <PrivateRoute path={routerConfig["orderManage.stockManage.stockManage"].path} component={StockManage} />
+                  
                 </Switch>
               </Admin>
               : <Redirect to={{ pathname: routerConfig["login"].path }} />
