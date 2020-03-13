@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import CommonPage from '../../components/common-page';
-import { Table, Form, Input, Col, Switch, Row, Button, Modal, Popconfirm, Divider } from "antd";
+import { Table, Form, Input, Col, Switch, Row, Button, Modal, Popconfirm, Divider, InputNumber } from "antd";
 import { NavLink, Link } from 'react-router-dom';
 import { pagination } from '../../utils/pagination';
 import dateUtil from '../../utils/dateUtil';
@@ -24,7 +24,8 @@ class Page extends Component {
 
   state = {
     status: false,
-    pageData: null
+    pageData: null,
+    changedClassifySort: {}
   }
 
   componentDidMount() {
@@ -69,7 +70,7 @@ class Page extends Component {
     { title: "缺货SKU数", dataIndex: "lackSkuQty", render: data => data },
     { title: "最近补货时间", dataIndex: "recentReplenishmentDate", render: data => data ? dateUtil.getDateTime(data) : "--" },
     {
-      title: "库存预警", dataIndex: "gmtCreate", render: (text, record, index) => (
+      title: "库存预警", dataIndex: "warning", render: (text, record, index) => (
         <span>
           {
             record.warning > 0 ?
@@ -81,7 +82,7 @@ class Page extends Component {
     {
       title: '操作',
       render: (text, record, index) => (
-        <span onClick={() => { this.showStockModal(record) }}>
+        <span onClick={() => { this.showStockModal(record) }} style={{ color: '#FF9530' }}>
           补货
         </span>
       )
@@ -92,7 +93,7 @@ class Page extends Component {
   formItemList = [
     {
       type: "SELECT",
-      field: "status",
+      field: "storeStatus",
       style: { width: 140 },
       defaultOption: { id: null, name: "所有类别" },
       placeholder: '选择类别',
@@ -108,15 +109,16 @@ class Page extends Component {
 
   //查询按钮点击事件
   searchClicked = (params) => {
-    console.log(params)
-    // let { inputData } = params;
-    // inputData = inputData || null;
-    // this.params = {
-    //   page: 1,
-    //   ...params,
-    //   inputData
-    // }
-    // this.getPageData();
+    let { inputData, storeStatus } = params;
+    inputData = inputData || null;
+    storeStatus = storeStatus || null;
+    this.params = {
+      page: 1,
+      ...params,
+      inputData,
+      storeStatus
+    }
+    this.getPageData();
   }
 
   _showTableLoading = () => {
@@ -137,8 +139,8 @@ class Page extends Component {
     let selectOper = data || null;
     let { id } = data;
     getDetail({ id })
-      .then(() => {
-
+      .then((data) => {
+        this.setState({ stockData: data })
       })
   }
   // 关闭modal
@@ -147,9 +149,71 @@ class Page extends Component {
       newItemModalVisible: false
     })
   }
+  saveClicked = () => {
+    let order = this.formatSortSaveData(this.state.changedClassifySort)
+    console.log(order)
+  }
+  // 修改库存预警
+  stockWarning = (value, id) => {
 
+    let { stockData } = this.state;
+    if (!stockData) {
+      return;
+    }
+    let index = this.findClassifyIndexById(id, stockData);
+    if (index || index == 0) {
+      stockData[index]['alarmQty'] = value;
+      let changedClassifySort = this.state.changedClassifySort;
+      changedClassifySort['alarmQty'] = value;
+      changedClassifySort['id'] = id;
+      this.setState({
+        changedClassifySort,
+        stockData
+      })
 
+    }
+  }
+  //格式化保存分类的数据
+  formatSortSaveData = (changedClassifySort) => {
+    if (!changedClassifySort || !Object.keys(changedClassifySort).length) {
+      return;
+    }
+    let result = Object.keys(changedClassifySort).map(k => {
+      return {
+        alarmQty: changedClassifySort['alarmQty'],
+        changeQty: changedClassifySort['changeQty'],
+        id: changedClassifySort['id']
+      }
+    });
+    return result;
+  }
+  // 查找分类在数组的索引
+  findClassifyIndexById = (id, arr) => {
+    if (!id || !arr || !arr.length) {
+      return;
+    }
+    let index = arr.findIndex((item) => {
+      return item.id && item.id == id;
+    });
+    return index >= 0 ? index : null;
+  }
+  // 修改库存
+  changeStock = (e, id) => {
+    let { stockData } = this.state;
+    if (!stockData) {
+      return;
+    }
+    let index = this.findClassifyIndexById(id, stockData);
+    if (index || index == 0) {
+      stockData[index]['changeQty'] = e.target.value;
+      let changedClassifySort = this.state.changedClassifySort;
+      changedClassifySort['changeQty'] = e.target.value;
+      this.setState({
+        changedClassifySort
+      })
 
+    }
+  }
 
   render() {
 
@@ -177,27 +241,71 @@ class Page extends Component {
           pagination={this.state.pagination}
           dataSource={this.state.tableDataList}
         />
+
+
         <Modal maskClosable={false}
           title="补货"
           visible={this.state.newItemModalVisible}
           onCancel={this._hideNewItemModal}
+          onOk={this.saveClicked}
           className='noPadding'
           width={1200}
         >
           <div style={{ minHeight: 300, padding: "10px" }}>
+            <div style={{ display: 'flex' }}>
+              <Button type='primary'>刷新</Button>
+              <div style={{ marginLeft: '10px', color: '#FF9530', lineHeight: '32px' }}>刷新当前实际库存</div>
+            </div>
             <div>
               <Row style={{ border: "1px solid #d9d9d9", marginTop: "10px" }}>
-                <Col span={1} className='padding'></Col>
-                <Col span={2} className='padding' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>规格</Col>
-                <Col span={2} className='padding' >规格</Col>
-                <Col span={3} className='padding' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>商品编码</Col>
-                <Col span={3} className='padding' >条形码</Col>
-                <Col span={2} className='padding' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>状态</Col>
-                <Col span={3} className='padding'>预警库存</Col>
-                <Col span={2} className='padding' style={{ borderLeft: "1px solid #d9d9d9" }}>当前库存</Col>
-                <Col span={3} className='padding' style={{ borderLeft: "1px solid #d9d9d9" }}>改变库存</Col>
-                <Col span={3} className='padding' style={{ borderLeft: "1px solid #d9d9d9" }}>修改后库存</Col>
+                <Col span={1} className='_padding10'></Col>
+                <Col span={2} className='_padding10' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>主图</Col>
+                <Col span={2} className='_padding10' >规格</Col>
+                <Col span={3} className='_padding10' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>商品编码</Col>
+                <Col span={3} className='_padding10' >条形码</Col>
+                <Col span={2} className='_padding10' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>状态</Col>
+                <Col span={3} className='_padding10'>预警库存</Col>
+                <Col span={2} className='_padding10' style={{ borderLeft: "1px solid #d9d9d9" }}>当前库存</Col>
+                <Col span={3} className='_padding10' style={{ borderLeft: "1px solid #d9d9d9" }}>
+                  <div>改变库存</div>
+                  <div>(格式：+/-数字)</div>
+                </Col>
+                <Col span={3} className='_padding10' style={{ borderLeft: "1px solid #d9d9d9" }}>修改后库存</Col>
               </Row>
+              {
+                this.state.stockData && this.state.stockData.length ? this.state.stockData.map(item =>
+                  <Row style={{ border: "1px solid #d9d9d9", marginTop: "-1px", display: 'flex', alignItems: 'auto' }} key={item.id}>
+                    <Col span={1} className='padding flex-middle flex-center'>{item.id}</Col>
+                    <Col span={2} className='flex-middle flex-center' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>
+                      <img style={{ height: 40, width: 40 }} src={item.imageUrl} />
+                    </Col>
+                    <Col span={2} className='padding flex-center align-center'>{item.specValue || '--'}</Col>
+                    <Col span={3} className='padding flex-middle' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>
+                      {item.productBarCode}
+                    </Col>
+                    <Col span={3} className='padding flex-middle'>
+                      {item.productNumber}
+                    </Col>
+                    <Col span={2} className='padding flex-middle' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>
+                      {item.skuStatus == 0 ?
+                        <div>禁购</div> : <div>正常</div>
+                      }
+                    </Col>
+                    <Col span={3} className='padding flex-middle'>
+                      <InputNumber value={item.alarmQty} style={{ width: 120 }} onChange={(e) => this.stockWarning(e, item.id)} />
+                    </Col>
+                    <Col span={2} className='padding flex-middle' style={{ borderLeft: "1px solid #d9d9d9" }}>
+                      {item.qty}
+                    </Col>
+                    <Col span={3} className='padding flex-middle' style={{ borderLeft: "1px solid #d9d9d9" }}>
+                      <Input style={{ width: 120 }} onChange={(e) => this.changeStock(e, item.id)} />
+                    </Col>
+                    <Col span={3} className='padding flex-middle' style={{ borderLeft: "1px solid #d9d9d9" }}>
+                      {item.skuQty}
+                    </Col>
+                  </Row>
+                ) : null
+              }
 
             </div>
           </div>

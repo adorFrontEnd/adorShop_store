@@ -5,7 +5,7 @@ import { pagination } from '../../utils/pagination';
 import Toast from '../../utils/toast';
 import { SearchForm, SubmitForm } from '../../components/common-form';
 import dateUtil from '../../utils/dateUtil';
-import { searchUserList, exportUserList } from '../../api/user/user';
+import { getStorageList, putStorage, deleteStorage, getSelectList } from '../../api/storeManage/storeManage';
 import { NavLink, Link } from 'react-router-dom';
 import { baseRoute, routerConfig } from '../../config/router.config';
 import { connect } from 'react-redux';
@@ -25,14 +25,32 @@ class Page extends Component {
   }
 
   componentDidMount() {
-
-
+    this.getPageData();
   }
-
-
 
   params = {
     page: 1
+  }
+  getPageData = () => {
+    let _this = this;
+    this._showTableLoading();
+    getStorageList(this.params).then(res => {
+      this._hideTableLoading();
+      let _pagination = pagination(res, (current) => {
+        this.params.page = current
+        _this.getPageData();
+      }, (cur, pageSize) => {
+        this.params.page = 1;
+        this.params.size = pageSize
+        _this.getPageData();
+      })
+      this.setState({
+        tableDataList: res.data,
+        pagination: _pagination
+      })
+    }).catch(() => {
+      this._hideTableLoading();
+    })
   }
 
   /******查询表单操作****************************************************************************************************************** */
@@ -40,60 +58,70 @@ class Page extends Component {
   formItemList = [
     {
       type: "INPUT",
-      field: "inputData",
+      field: "likeName",
       style: { width: 300 },
       placeholder: "仓库名称/仓库编号/备注"
     }]
+
+
   //查询按钮点击事件
   searchClicked = (params) => {
-    let { inputData } = params;
-    inputData = inputData || null;
+    let { likeName } = params;
+    likeName = likeName || null;
     this.params = {
       page: 1,
       ...params,
-      inputData
+      likeName
     }
-    // this.getPageData();
+    this.getPageData();
   }
+
+
   // 重置
   resetClicked = () => {
     this.props.form.resetFields();
   }
-
-  // 打开modal
-  showAuthModal = (data) => {
-    this.setState({
-      newItemModalVisible: true
+  // 添加仓库
+  putStorage = () => {
+    this.props.form.validateFields((err, data) => {
+      if (err) {
+        return;
+      }
+      putStorage({ ...data })
+        .then(() => {
+          Toast('添加成功');
+          this.props.form.resetFields();
+          this.getPageData();
+        })
     })
   }
 
-  // 隐藏modal
-  _hideNewItemModal = () => {
-    this.setState({
-      newItemModalVisible: false
-    })
+  // 删除仓库
+  deleteStorage = (record) => {
+    let { id } = record;
+    deleteStorage({ id })
+      .then(() => {
+        Toast("删除成功！");
+        this.getPageData();
+      })
   }
-
 
   /**************************************************************************************** */
   // 表格相关列
   columns = [
-    { title: "仓库编号", dataIndex: "name", render: data => data || "--" },
-    { title: "仓库名称", dataIndex: "imageUrl", render: data => data || '--' },
-    { title: "备注", dataIndex: "specifications", render: data => data || "--" },
+    { title: "仓库编号", dataIndex: "code", render: data => data || "--" },
+    { title: "仓库名称", dataIndex: "name", render: data => data || '--' },
+    { title: "备注", dataIndex: "remark", render: data => data || "--" },
     {
       title: '操作',
       render: (text, record, index) => (
-        <span onClick={() => this.showEditModalClick()}>删除</span>
+        <span onClick={() => this.deleteStorage(record)}>删除</span>
       )
     }
   ]
-  showEditModalClick = (data) => {
-    this.showAuthModal(data);
-  }
+
 
   _showTableLoading = () => {
-
     this.setState({
       showTableLoading: true
     })
@@ -115,56 +143,54 @@ class Page extends Component {
 
         <div>
           <div className="flex-between align-center margin-bottom20 flex-wrap">
-          <Form layout='inline' style={{marginBottom:'20px'}}>
-            <Form.Item>
-              {
-                getFieldDecorator('number', {
-                  rules: [
-                    { required: true, message: '仓库编号' }
-                  ]
-                })(
-                  <Input placeholder='仓库编号' allowClear />
-                )
-              }
+            <Form layout='inline'
+            >
+              <Form.Item>
+                {
+                  getFieldDecorator('code', {
+                    rules: [
+                      { required: true, message: '仓库编号' }
+                    ]
+                  })(
+                    <Input placeholder='仓库编号' allowClear />
+                  )
+                }
 
-            </Form.Item>
-            <Form.Item>
-              {
-                getFieldDecorator('name', {
-                  rules: [
-                    { required: true, message: '仓库名称' }
-                  ]
-                })(
-                  <Input placeholder='仓库名称' allowClear />
-                )
-              }
+              </Form.Item>
+              <Form.Item>
+                {
+                  getFieldDecorator('name', {
+                    rules: [
+                      { required: true, message: '仓库名称' }
+                    ]
+                  })(
+                    <Input placeholder='仓库名称' allowClear />
+                  )
+                }
 
-            </Form.Item>
-            <Form.Item>
-              {
-                getFieldDecorator('remark', {
-                  rules: [
-                    { required: true, message: '仓库备注' }
-                  ]
-                })(
-                  <Input placeholder='仓库备注' allowClear />
-                )
-              }
+              </Form.Item>
+              <Form.Item>
+                {
+                  getFieldDecorator('remark', {
+                    rules: [
+                      { required: true, message: '仓库备注' }
+                    ]
+                  })(
+                    <Input placeholder='仓库备注' allowClear />
+                  )
+                }
 
-            </Form.Item>
-            <Form.Item>
-              <Button type='primary' onClick={() => { this.saveUnit() }}>添加新仓</Button>
-            </Form.Item>
-          </Form>
-
-
+              </Form.Item>
+              <Form.Item>
+                <Button type='primary' onClick={() => { this.putStorage() }}>添加新仓</Button>
+              </Form.Item>
+            </Form>
             <div >
               <SearchForm
                 searchText='筛选'
                 towRow={false}
                 searchClicked={this.searchClicked}
                 formItemList={this.formItemList}
-
               />
             </div>
           </div>

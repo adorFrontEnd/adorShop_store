@@ -10,6 +10,13 @@ import { connect } from 'react-redux';
 import Toast from '../../utils/toast';
 const _title = "智能词库";
 const LexiconConfigPath = routerConfig["sysConfig.orderConfig.lexiconConfig"].path;
+const _lexiconCategory = {
+  "0": "姓名",
+  "1": "商品",
+  "2": "规格",
+  "3": "数量"
+}
+const _lexiconCategoryArr = Object.keys(_lexiconCategory).map(item => { return { id: item, name: _lexiconCategory[item] } });
 class Page extends Component {
 
   state = {
@@ -52,7 +59,8 @@ class Page extends Component {
       style: { width: 140 },
       defaultOption: { id: null, name: "所有类别" },
       placeholder: '选择类别',
-      initialValue: null
+      initialValue: null,
+      optionList:_lexiconCategoryArr
     },
     {
       type: "INPUT",

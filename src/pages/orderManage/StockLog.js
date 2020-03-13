@@ -80,17 +80,26 @@ class Page extends Component {
   /**************************************************************************************** */
   // 表格相关列
   columns = [
-    { title: "操作人", dataIndex: "name", render: data => data || "--" },
-    { title: "类型", dataIndex: "imageUrl", render: data => data || '--' },
-    { title: "订单编号", dataIndex: "specifications", render: data => data || "--" },
-    { title: "SKU(编号)", dataIndex: "channel", render: data => data || "--" },
-    { title: "变更前", dataIndex: "channel", render: data => data || "--" },
-    { title: "变更后", dataIndex: "channel", render: data => data || "--" },
-    { title: "变更数", dataIndex: "channel", render: data => data || "--" },
-    { title: "变更时间", dataIndex: "channel", render: data => data ? dateUtil.getDateTime(data) : "--" },
+    { title: "操作人", dataIndex: "shopOperName", render: data => data || "--" },
+    { title: "类型", dataIndex: "typeStr", render: data => data || '--' },
+    { title: "订单编号", dataIndex: "orderNo", render: data => data || "--" },
+    {
+      title: "SKU(编号)", dataIndex: "channel",
+      render: (text, record, index) => (
+        <div>
+          <div>{record.productName}</div>
+          <div>{record.barCode}</div>
+          <div>{record.specValue}</div>
+        </div>
+      )
+    },
+    { title: "变更前", dataIndex: "changesAfter", render: data => data || "--" },
+    { title: "变更后", dataIndex: "changesBefore", render: data => data || "--" },
+    { title: "变更数", dataIndex: "changesNumber", render: data => data || "--" },
+    { title: "变更时间", dataIndex: "gmtModified", render: data => data ? dateUtil.getDateTime(data) : "--" },
 
   ]
- 
+
   _showTableLoading = () => {
 
     this.setState({
@@ -103,45 +112,90 @@ class Page extends Component {
       showTableLoading: false
     })
   }
-
+  //查询按钮点击事件
+  searchClicked = () => {
+    let params = this.props.form.getFieldsValue();
+    if (params) {
+      let { startCreateStamp, endCreateStamp, type, inputData } = params;
+      params.startCreateStamp = startCreateStamp ? Date.parse(startCreateStamp) : null;
+      params.endCreateStamp = endCreateStamp ? Date.parse(endCreateStamp) : null;
+      params.type = type != 'null' ? type : null;
+      params.inputData = inputData || null;
+    }
+    let _this = this;
+    this.params = {
+      ...params
+    }
+    this.getPageData();
+  }
+  onSelectChange = selectedRowKeys => {
+    this.setState({ selectedRowKeys });
+  };
+  // 批量删除
+  batchDeleteStatus = () => {
+    let { selectedRowKeys } = this.state;
+    if (!selectedRowKeys) {
+      Toast('请选择要删除的')
+      return;
+    }
+    let ids = selectedRowKeys.join();
+    batchDeleteStatus({ ids })
+      .then(data => {
+        Toast('删除成功')
+        this.getPageData()
+      })
+  }
   /**渲染**********************************************************************************************************************************/
 
   render() {
     const { getFieldDecorator } = this.props.form;
+    const { selectedRowKeys } = this.state
     const rowSelection = {
-      onChange: (selectedRowKeys, selectedRows) => {
-        console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
-      }
+      selectedRowKeys,
+      onChange: this.onSelectChange,
     };
+
+
     return (
       <CommonPage title={_title} description={_description} >
-
         <div className='margin10-0' style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Form layout='inline'>
-            <Form.Item label='时间范围'>
-              {
-                getFieldDecorator('startCreateTimeStamp')(
-                  <RangePicker />
-                )
-              }
-            </Form.Item>
-            <Form.Item>
-              <Button onClick={this.resetSearch} type='primary'>批量删除</Button>
-            </Form.Item>
-
-          </Form>
-          <div className='flex-end' style={{  flex: "1 0 auto", marginBottom: 20 }} >
+          <Button onClick={this.batchDeleteStatus} type='primary'>批量删除</Button>
+          <div className='flex-end' style={{ flex: "1 0 auto", marginBottom: 20 }} >
             <Form layout='inline'>
               <Form.Item>
                 {
-                  getFieldDecorator('operId', {
+                  getFieldDecorator('type', {
                     initialValue: "null"
                   })(
-                    <Select>
+                    <Select style={{width:140}}>
                       <Select.Option value='null'>全部</Select.Option>
                       <Select.Option value='1'>库存管理</Select.Option>
                       <Select.Option value='0'>订货交易</Select.Option>
                     </Select>
+                  )
+                }
+              </Form.Item>
+              <Form.Item label='时间范围'>
+                {
+                  getFieldDecorator('startCreateStamp')(
+                    <DatePicker
+                      showTime
+                      format="YYYY-MM-DD HH:mm:ss"
+                      placeholder="开始时间"
+                    />
+
+                  )
+                }
+              </Form.Item>
+              <Form.Item label='~' colon={false}>
+                {
+                  getFieldDecorator('endCreateStamp')(
+                    <DatePicker
+                      showTime
+                      format="YYYY-MM-DD HH:mm:ss"
+                      placeholder="结束时间"
+                    />
+
                   )
                 }
               </Form.Item>
@@ -151,15 +205,13 @@ class Page extends Component {
                     <Input placeholder='订单编号/SKU编号' />
                   )
                 }
-
               </Form.Item>
               <Form.Item>
-                <Button type='primary' onClick={() => { this.getPageData(true) }}>筛选</Button>
+                <Button type='primary' onClick={() => { this.searchClicked() }}>筛选</Button>
               </Form.Item>
               <Form.Item>
                 <Button onClick={this.resetSearch} type='primary'>重置</Button>
               </Form.Item>
-
             </Form>
 
 

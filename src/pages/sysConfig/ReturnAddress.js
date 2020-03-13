@@ -5,7 +5,7 @@ import { pagination } from '../../utils/pagination';
 import Toast from '../../utils/toast';
 import { SearchForm, SubmitForm } from '../../components/common-form';
 import dateUtil from '../../utils/dateUtil';
-import { searchUserList, exportUserList } from '../../api/user/user';
+import { getReturnAddressList, saverReturnAddress, getAddressDetail, deleteAddress } from '../../api/sysConfig/sysConfig';
 import { NavLink, Link } from 'react-router-dom';
 import { baseRoute, routerConfig } from '../../config/router.config';
 import { connect } from 'react-redux';
@@ -24,15 +24,39 @@ class Page extends Component {
     showTableLoading: false
   }
 
+
+
+
+
   componentDidMount() {
-
-
+    this.getPageData();
   }
 
 
 
   params = {
     page: 1
+  }
+  getPageData = () => {
+    let _this = this;
+    this._showTableLoading();
+    getReturnAddressList(this.params).then(res => {
+      this._hideTableLoading();
+      let _pagination = pagination(res, (current) => {
+        this.params.page = current
+        _this.getPageData();
+      }, (cur, pageSize) => {
+        this.params.page = 1;
+        this.params.size = pageSize
+        _this.getPageData();
+      })
+      this.setState({
+        tableDataList: res.data,
+        pagination: _pagination
+      })
+    }).catch(() => {
+      this._hideTableLoading();
+    })
   }
 
   /******查询表单操作****************************************************************************************************************** */

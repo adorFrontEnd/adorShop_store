@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import CommonPage from '../../components/common-page';
 import { Table, Form, Input, Col, Switch, Row, Button, Modal } from "antd";
-
+import { getPublicConfig, updatePublicConfig } from '../../api/sysConfig/sysConfig';
 import Toast from '../../utils/toast';
 const _title = "公众号";
 
@@ -13,9 +13,34 @@ class Page extends Component {
   }
 
   componentDidMount() {
+    this.getPageData();
   }
 
 
+
+  params = {
+    page: 1
+  }
+  getPageData = () => {
+    getPublicConfig()
+      .then(pageData => {
+        this.setState({
+          pageData
+        })
+        if (!pageData || !pageData.id) {
+          this.props.form.setFieldsValue({ appId: "", secret: "", accessToken: "" });
+          this.setState({
+            status: false
+          })
+          return;
+        }
+        let { appId, secret, status, accessToken } = pageData;
+        this.setState({
+          status: status == '1'
+        })
+        this.props.form.setFieldsValue({ appId, secret, accessToken });
+      })
+  }
   onSyncStatusChange = (status) => {
 
     let title = status ? "开启" : "关闭";
