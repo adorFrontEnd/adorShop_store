@@ -147,7 +147,7 @@ class Page extends Component {
       })
   }
 
-  
+
   // 返回
   goBack = () => {
     window.history.back();
@@ -165,10 +165,12 @@ class Page extends Component {
             确认<br />
             收款
             </Button>
-          <Button type='primary' shape="circle" style={{ width: 80, height: 80 }}className='margin-left20' >
+          <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} className='margin-left20' >
             作废
             </Button>
-          <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} className='margin-left20' onClick={this.goBack}>返回</Button>
+          <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} className='margin-left20' onClick={this.goBack}>
+            返回
+          </Button>
 
         </div>
         <Spin spinning={this.state.showLoading}>
