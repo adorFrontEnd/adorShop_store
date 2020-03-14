@@ -93,7 +93,6 @@ class Page extends Component {
     {
       title: '操作',
       render: (text, record, index) => (
-
         <span>
           <NavLink to={detailPath + `/${record.id}`}>
             查看详情
