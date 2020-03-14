@@ -4,15 +4,15 @@ import baseHttpProvider from '../base/baseHttpProvider';
 
 
 const saveOrUpdateSalesman = (params) => {
-  return baseHttpProvider.postFormApi('api/salesman/putSalesman', params)
+  return baseHttpProvider.postFormApi('api/ord/salesman/putSalesman', params)
 }
 
 const getSalesmanList = (params) => {
-  return baseHttpProvider.postFormApi('api/salesman/list', { page: 1, size: 10, ...params }, { total: true })
+  return baseHttpProvider.postFormApi('api/ord/salesman/list', { page: 1, size: 10, ...params }, { total: true })
 }
 
 const deleteSalesman = (params) => {
-  return baseHttpProvider.getApi('api/salesman/delete', params)
+  return baseHttpProvider.getApi('api/ord/salesman/delete', params)
 }
 
 export {
