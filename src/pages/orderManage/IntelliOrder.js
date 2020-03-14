@@ -43,9 +43,6 @@ class Page extends Component {
     selectIndex:null
   }
 
-  componentDidMount() {
-
-  }
 
   /**x下单 */
   saveDataClicked = () => {

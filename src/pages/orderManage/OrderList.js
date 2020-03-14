@@ -14,7 +14,7 @@ import dateUtil from '../../utils/dateUtil';
 import { OrderStatusEnum } from '../../enum/orderEnum';
 import moment from 'moment';
 
-// const detailPath = routerConfig["transaction.orderDetail"].path;
+const detailPath = routerConfig["orderManage.order.orderDetail"].path;
 
 const _title = "订单列表";
 const tabsList = [0, 3, 4, 5, 7, 2];
@@ -95,9 +95,9 @@ class Page extends Component {
       render: (text, record, index) => (
 
         <span>
-          {/* <NavLink to={detailPath + `?id=${record.id}`}>
+          <NavLink to={detailPath + `/${record.id}`}>
             查看
-          </NavLink> */}
+          </NavLink>
         </span>
       )
     }

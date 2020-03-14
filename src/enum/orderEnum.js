@@ -11,6 +11,13 @@ const OrderStatusEnum = {
   9: "已完成（维权结束）"
 }
 
+const OrderOperTypeEnum = {
+  0: "系统自动生成",
+  1: "后台手动添加",
+  2: "前台会员操作"
+}
+
 export {
-  OrderStatusEnum
+  OrderStatusEnum,
+  OrderOperTypeEnum
 }

@@ -10,79 +10,72 @@ import { NavLink, Link } from 'react-router-dom';
 import { baseRoute, routerConfig } from '../../config/router.config';
 import { connect } from 'react-redux';
 import { changeRoute } from '../../store/actions/route-actions';
-import { smartOrder, getOrderDetail } from '../../api/order/order';
+import { smartOrder, getOrderDetail, addOrderLog } from '../../api/order/order';
 import NumberFilter from '../../utils/filter/number';
 import { getOrderSaveData } from './orderUtils';
+import { OrderStatusEnum, OrderOperTypeEnum } from '../../enum/orderEnum';
 
-import UserSelectModal from '../../components/order/UserSelectModal';
-import SalerSelectModal from '../../components/order/SalerSelectModal';
-import SKUSelectModal from '../../components/order/SKUSelectModal';
-import SingleDistrictSelect from '../../components/areaSelect/SingleDistrictSelect';
-
-const _title = "智能下单";
+const _title = "订单详情";
 const _description = '';
 
 class Page extends Component {
 
   state = {
     showLoading: false,
-    userModalIsVisible: false,
-    salerModalIsVisible: false,
-    skuModalIsVisible: false,
-    areaModalIsVisible: false,
-    selectUser: null,
-    selectSaler: null,
+    orderDetail: null,
 
-    orderRemarkList: [],
+    orderLogList: [],
     orderSKUList: [],
-    orderSKUIds: [],
-    orderBaseInfo: {},
-    selectAreaData: null,
-    remark: null,
-    storageId: 1,
-    selectIndex: null
+    orderInfo: null,
+    remark: null
   }
 
-  componentDidMount() {
-
-  }
-
-  resetPageData = () => {
-
+  componentWillMount() {
+    let id = this.props.match.params.id;
     this.setState({
-      orderSKUList: [],
-      orderSKUIds: [],
-      orderBaseInfo: {},
-      selectAreaData: null,
-      remark: null,
-      storageId: 1,
-      selectIndex: null
+      id
     })
+    this.getDetail(id);
+  }
+
+
+  getDetail = (id) => {
+    this._showPageLoading();
+    getOrderDetail({ id })
+      .then((orderDetail) => {
+
+        this._hidePageLoading();
+        if (!orderDetail || !orderDetail.list || !orderDetail.order) {
+          return;
+        }
+        let { list, order, logList } = orderDetail;
+        let orderInfo = order;
+        let orderLogList = logList;
+        let productTotalAmount = 0;
+        let orderSKUList = list.map(item => {
+          productTotalAmount += item.totalPrice;
+          return { ...item, _id: Date.now() + Math.random() * 100000 }
+        });
+        let orderTotalAmount = productTotalAmount + orderInfo.freightPrice;
+        let orderStatus = order.status || order.status == 0 ? order.status : null;
+        let orderStatusStr = orderStatus || order.status == 0 ? OrderStatusEnum[orderStatus] : null;
+
+        this.setState({
+          orderDetail,
+          orderSKUList,
+          orderLogList,
+          orderInfo,
+          orderStatus,
+          orderStatusStr,
+          productTotalAmount,
+          orderTotalAmount
+        })
+      })
+      .catch(() => {
+        this._hidePageLoading();
+      })
   }
   /*基本信息****************************************************************************************************************/
-
-  selectUserClicked = (selectUser) => {
-    this.setState({
-      selectUser
-    })
-    this._hideUserModal();
-  }
-
-  selectSalerClicked = (selectSaler) => {
-    this.setState({
-      selectSaler
-    })
-    this._hideSalerModal();
-  }
-
-  onOrderInfoChange = (key, e) => {
-
-    let { orderBaseInfo } = this.state;
-    orderBaseInfo[key] = e;
-    this.setState({
-      orderBaseInfo
-    })
-  }
 
   _showPageLoading = () => {
     this.setState({
@@ -101,270 +94,161 @@ class Page extends Component {
   // 表格相关列
   columns = [
     { title: "类型", align: "center", dataIndex: "productType", render: data => "商品" },
-    { title: "商品编码", align: "center", dataIndex: "number", render: data => data || "--" },
-    { title: "商品名称", align: "center", dataIndex: "name", render: data => data || "--" },
+    { title: "商品编码", align: "center", dataIndex: "productNumber", render: data => data || "--" },
+    { title: "商品名称", align: "center", dataIndex: "productName", render: data => data || "--" },
     { title: "商品规格", align: "center", dataIndex: "specValue", render: data => data || "--" },
     { title: "单位", align: "center", dataIndex: "baseUnit", render: data => data || "--" },
-    { title: "单价（元）", align: "center", dataIndex: "unitPrice", render: (text, record, index) => <InputNumber value={text} onChange={(e) => this.onOrderProductChange('unitPrice', index, e)} precision={2} min={0} /> },
-    { title: "数量", align: "center", dataIndex: "buyQty", render: (text, record, index) => <InputNumber value={text} onChange={(e) => this.onOrderProductChange('buyQty', index, e)} precision={0} min={0} /> },
+    { title: "单价（元）", align: "center", dataIndex: "unitPrice", render: data => data ? NumberFilter(data) : "--" },
+    { title: "数量", align: "center", dataIndex: "buyQty", render: data => data || "--" },
     { title: "外部订单", align: "center", dataIndex: "text1", render: data => data || "--" },
     { title: "相关活动", align: "center", dataIndex: "text2", render: data => data || "--" },
     { title: "优惠价格（元）", align: "center", dataIndex: "text3", render: data => data || "--" },
-    { title: "小计（元）", align: "center", dataIndex: "total", render: data => (data || data == 0) ? NumberFilter(data) : "--" },
-    { title: "状态", align: "center", dataIndex: "status", render: data => data || "--" },
+    { title: "小计（元）", align: "center", dataIndex: "totalPrice", render: data => data ? NumberFilter(data) : "--" },
+    { title: "状态", align: "center", dataIndex: "status", render: data => this.state.orderStatusStr || "--" },
     {
       title: '操作', align: "center",
-      render: (text, record, index) => (
-        <span>
-          <a onClick={() => this.editProduct(record, index)}>预测商品</a>
-          <Divider type="vertical" />
-          <Popconfirm
-            placement="topLeft" title='确认要删除吗？'
-            onConfirm={() => { this.deleteTableItem(index) }} >
-            <a size="small" className="color-red">删除</a>
-          </Popconfirm>
-        </span>
-      )
+      render: (text, record, index) => '--'
     }
   ]
 
-  deleteTableItem = (index) => {
-    let { orderSKUList, orderSKUIds } = this.state;
-    orderSKUList.splice(index, 1);
-    orderSKUIds.splice(index, 1);
-    this.setState({
-      orderSKUList,
-      orderSKUIds
-    })
-  }
 
-  // 修改商品表格
-  onOrderProductChange = (action, index, e) => {
-
-    let { orderSKUList } = this.state;
-    switch (action) {
-      case "unitPrice":
-      case "buyQty":
-        orderSKUList[index][action] = e;
-        let { unitPrice, buyQty } = orderSKUList[index];
-        orderSKUList[index]['total'] = parseInt(unitPrice * 100) * buyQty * 0.01;
-        break;
-    }
-
-    this.setState({
-      orderSKUList
-    })
-  }
-
-  addProduct = () => {
-    let selectIndex = null;
-    this.setState({
-      selectIndex
-    })
-    this._showSKUModal();
-  }
-
-  editProduct = (record, index) => {
-    let selectIndex = index;
-    this.setState({
-      selectIndex
-    })
-    this._showSKUModal();
-  }
-
-  selectSKUClicked = (selectSKU) => {
-
-    if (!selectSKU) {
-      return;
-    }
-
-    let { skuData, id } = selectSKU;
-    let { orderSKUList, selectIndex } = this.state;
-    let item = {
-      sellPrdSkuId: id,
-      unitPrice: 0,
-      buyQty: 1,
-      total: 0,
-      _id: Date.now(),
-      ...skuData
-    }
-    if (selectIndex || selectIndex == 0) {
-      let oldItem = orderSKUList[selectIndex];
-      orderSKUList[selectIndex] = {
-        ...oldItem,
-        ...skuData
-      };
-    } else {
-      orderSKUList.push(item);
-    }
-
-    let orderSKUIds = orderSKUList.map(item => item.sellPrdSkuId);
-
-    this.setState({
-      orderSKUList,
-      orderSKUIds
-    })
-    this._hideSKUModal();
-  }
   /*备注*********************************************************************************************************************************/
   // 表格相关列
   remarkColumns = [
-    { title: "操作时间", width: 140, dataIndex: "time", render: data => data || "--" },
-    { title: "操作类型", width: 140, dataIndex: "type", render: data => data || "--" },
-    { title: "相关信息", dataIndex: "info", render: data => data || "--" }
+    { title: "操作时间", width: 160, dataIndex: "gmtCreate", render: data => data ? dateUtil.getDateTime(data) : "--" },
+    { title: "操作类型", width: 140, dataIndex: "operationType", render: data => data || data == 0 ? OrderOperTypeEnum[data] : '--' },
+    { title: "相关信息", dataIndex: "content", render: data => data || "--" }
   ]
 
-  /**选择地区 ***************************************************************************************************************************/
-  showAreaSelectModal = () => {
-    this.setState({
-      areaModalIsVisible: true
-    })
-  }
-
-  _hideAreaSelectModal = () => {
-    this.setState({
-      areaModalIsVisible: false
-    })
-  }
-
-  selectArea = () => {
-    this.showAreaSelectModal()
-  }
-
-  selectAreaSaveClicked = (selectAreaData) => {
-    if (!selectAreaData || !selectAreaData.districtId) {
-      return;
-    }
-
-    this.setState({
-      selectAreaData
-    })
-    this._hideAreaSelectModal()
-  }
 
   onRemarkChange = (remark) => {
+
     this.setState({
       remark
     })
+  }
+
+  addLogClick = () => {
+    let { remark, orderInfo } = this.state;
+    let { orderNo, id } = orderInfo;
+
+    let params = {
+      orderId: id,
+      orderNo,
+      content: remark
+    }
+    addOrderLog(params)
+      .then(() => {
+        Toast("添加成功！");
+        this.setState({
+          remark: null
+        })
+        this.getDetail(id);
+      })
+
   }
   /**渲染**********************************************************************************************************************************/
 
   render() {
     const { getFieldDecorator } = this.props.form;
-    const { selectUser, selectSaler, selectSKU, selectAreaData, orderBaseInfo } = this.state;
-    let selectUserId = (selectUser && selectUser.id) ? selectUser.id : null;
-    let selectSalerId = (selectSaler && selectSaler.id) ? selectSaler.id : null;
+    const { orderInfo, orderStatusStr, productTotalAmount, orderTotalAmount } = this.state;
 
     return (
       <CommonPage title={_title} description={_description} >
         <Spin spinning={this.state.showLoading}>
           <div>
-            <div style={{ position: "fixed", bottom: "10%", right: "5%", zIndex: "999" }}>
-              <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} onClick={this.saveDataClicked}>
-                确认<br />
-              收款
-            </Button>
-            </div>
-
-            <div>
-              <Input.TextArea style={{ minHeight: 120, width: 700 }}></Input.TextArea>
-            </div>
-
-            <div className='margin-top'><Button type='primary'>智能识别</Button></div>
-
-            <div className='margin-top20'>
-              <div className='line-height40 font-18 color333 font-bold'>基本信息</div>
-              <div className='line-height40'>
-                {
-                  selectUser ?
-                    <span>
-                      <span>
-                        {selectUser.name}
-                      </span>
-                      <span className='margin0-10'>{selectUser.phone}</span>
+            {
+              orderInfo ?
+                <div>
+                  <div className='line-height40 font-18 color333 font-bold'>基本信息</div>
+                  <div className='line-height40'>
+                    <span className='margin-right20'>
+                      <span className='font-bold'>用户：</span>{orderInfo.userCustomerName ? orderInfo.userCustomerName : "--"}
+                      <span className='margin-left'>{orderInfo.userContactPhone || ''}</span>
                     </span>
-                    : null
-                }
-                <a onClick={this._showUserModal}>选择会员</a>
-                <span className='margin0-10'>--</span>
-                {
-                  selectSaler ?
-                    <span>
-                      <span>
-                        {selectSaler.name}
-                      </span>
-                      <span className='margin0-10'>{selectSaler.phone}</span>
-                    </span>
-                    : null
-                }
-                <a onClick={this._showSalerModal}>选择业务员（可为空）</a></div>
-            </div>
-            <div className='line-height40' style={{ minWidth: 940 }}>
-              <Row style={{ borderTop: '1px solid #f2f2f2' }}>
-                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>订单号</Col>
-                <Col span={8} className='padding-left'>
-                  <Input value={orderBaseInfo.mark} onChange={(e) => this.onOrderInfoChange("mark", e.target.value)} style={{ width: 140, marginRight: 10 }} placeholder='填写订单标志' />此部分订单号自动生成</Col>
-                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>收货人</Col>
-                <Col span={8} className='padding-left'>
-                  <Input value={orderBaseInfo.contactPerson} onChange={(e) => this.onOrderInfoChange("contactPerson", e.target.value)} style={{ width: 200 }} placeholder='收货人' />
-                </Col>
-              </Row>
-              <Row style={{ borderTop: '1px solid #f2f2f2' }}>
-                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>下单时间</Col>
-                <Col span={8} className='padding-left'></Col>
-                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>联系电话</Col>
-                <Col span={8} className='padding-left'>
-                  <Input value={orderBaseInfo.contactPhone} onChange={(e) => this.onOrderInfoChange("contactPhone", e.target.value)} style={{ width: 200 }} />
-                </Col>
-              </Row>
-              <Row style={{ borderTop: '1px solid #f2f2f2' }}>
-                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>订单状态</Col>
-                <Col span={8} className='padding-left' ></Col>
-                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>省市区</Col>
-                <Col span={8} className='padding-left'>
-                  {
-                    selectAreaData ?
-                      <span>
-                        {`${selectAreaData.proviceName}-${selectAreaData.cityName}-${selectAreaData.districtName}`}
-                      </span>
-                      :
-                      "暂未选择地区"
-                  }
-                  <Button onClick={this.selectArea} type='primary' className='margin-left'>修改</Button>
-                </Col>
-              </Row>
-              <Row style={{ borderTop: '1px solid #f2f2f2' }}>
-                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>支付状态</Col>
-                <Col span={8} className='padding-left' ></Col>
-                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>详细地址</Col>
-                <Col span={8} className='padding-left'>
-                  <Input value={orderBaseInfo.contactAddress} onChange={(e) => this.onOrderInfoChange("contactAddress", e.target.value)} style={{ width: "80%" }} /></Col>
-              </Row>
-              <Row style={{ borderTop: '1px solid #f2f2f2' }}>
-                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>订单总金额</Col>
-                <Col span={8} className='padding-left'></Col>
-                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>运费</Col>
-                <Col span={8} className='padding-left'>
-                  <InputNumber value={orderBaseInfo.fare} precision={2} onChange={(e) => this.onOrderInfoChange("fare", e)} min={0} style={{ width: 140 }} />
-                </Col>
-              </Row>
-              <Row style={{ borderTop: '1px solid #f2f2f2' }}>
-                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>商品总金额</Col>
-                <Col span={8} className='padding-left'></Col>
-                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>累计优惠</Col>
-                <Col span={8} className='padding-left'></Col>
-              </Row>
-              <Row style={{ borderTop: '1px solid #f2f2f2' }}>
-                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>支付方式</Col>
-                <Col span={8} className='padding-left'></Col>
-                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>买家备注</Col>
-                <Col span={8} className='padding-left'></Col>
-              </Row>
-              <Row style={{ borderTop: '1px solid #f2f2f2', borderBottom: '1px solid #f2f2f2' }}>
-                <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>发货仓库</Col>
-                <Col span={20} className='padding-left'></Col>
-              </Row>
-            </div>
+                    <span className='margin-right20'>
+                      <span className='font-bold'>业务员：</span>
+                      {orderInfo.salesman ? orderInfo.salesman : "--"}</span>
+                    <span className='margin-right20'>
+                      <span className='font-bold'>审单员：</span>
+                      {orderInfo.examinerName ? orderInfo.examinerName : "--"}</span>
+                  </div>
+                  <div className='line-height40' style={{ minWidth: 940 }}>
+                    <Row style={{ borderTop: '1px solid #f2f2f2' }}>
+                      <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>订单号</Col>
+                      <Col span={8} className='padding-left'>
+                        {orderInfo.orderNo || '--'}
+                      </Col>
+                      <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>收货人</Col>
+                      <Col span={8} className='padding-left'>
+                        {orderInfo.contactPerson || '--'}
+                      </Col>
+                    </Row>
+                    <Row style={{ borderTop: '1px solid #f2f2f2' }}>
+                      <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>下单时间</Col>
+                      <Col span={8} className='padding-left'>
+                        {orderInfo.gmtCreate ? dateUtil.getDateTime(orderInfo.gmtCreate) : "--"}
+                      </Col>
+                      <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>联系电话</Col>
+                      <Col span={8} className='padding-left'>
+                        {orderInfo.contactPhone || '--'}
+                      </Col>
+                    </Row>
+                    <Row style={{ borderTop: '1px solid #f2f2f2' }}>
+                      <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>订单状态</Col>
+                      <Col span={8} className='padding-left' >
+                        {orderStatusStr || '--'}
+                      </Col>
+                      <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>省市区</Col>
+                      <Col span={8} className='padding-left'>
+                        {orderInfo.contactProvince + "-" + orderInfo.contactCity + "-" + orderInfo.contactArea}
+                      </Col>
+                    </Row>
+                    <Row style={{ borderTop: '1px solid #f2f2f2' }}>
+                      <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>支付状态</Col>
+                      <Col span={8} className='padding-left' ></Col>
+                      <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>详细地址</Col>
+                      <Col span={8} className='padding-left'>
+                        {orderInfo.contactAddress || '--'}
+                      </Col>
+                    </Row>
+                    <Row style={{ borderTop: '1px solid #f2f2f2' }}>
+                      <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>订单总金额</Col>
+                      <Col span={8} className='padding-left'>
+                        ￥{NumberFilter(orderTotalAmount)}
+                      </Col>
+                      <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>运费</Col>
+                      <Col span={8} className='padding-left'>
+                        ￥{NumberFilter(orderInfo.freightPrice)}
+                      </Col>
+                    </Row>
+                    <Row style={{ borderTop: '1px solid #f2f2f2' }}>
+                      <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>商品总金额</Col>
+                      <Col span={8} className='padding-left'> ￥{NumberFilter(productTotalAmount)}</Col>
+                      <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>累计优惠</Col>
+                      <Col span={8} className='padding-left'>--</Col>
+                    </Row>
+                    <Row style={{ borderTop: '1px solid #f2f2f2' }}>
+                      <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>支付方式</Col>
+                      <Col span={8} className='padding-left'></Col>
+                      <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>买家备注</Col>
+                      <Col span={8} className='padding-left'>
+                        {orderInfo.buyerRemark || '--'}
+                      </Col>
+                    </Row>
+                    <Row style={{ borderTop: '1px solid #f2f2f2', borderBottom: '1px solid #f2f2f2' }}>
+                      <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>发货仓库</Col>
+                      <Col span={20} className='padding-left'>
+                        {orderInfo.storageName || '--'}
+                      </Col>
+                    </Row>
+                  </div>
+                </div>
+                :
+                null
+            }
+
+
             <div className='margin-top20'>
               <div className='line-height40 font-18 color333 font-bold'>商品信息</div>
               <div>
@@ -378,8 +262,8 @@ class Page extends Component {
                   dataSource={this.state.orderSKUList}
                 />
               </div>
-              <div><Button onClick={this.addProduct} type='primary' className='normal margin-top'>添加</Button></div>
             </div>
+
             <div className='margin-top20'>
               <div className='line-height40 font-18 color333 font-bold'>优惠券信息</div>
               <div>--</div>
@@ -391,58 +275,27 @@ class Page extends Component {
             <div className='margin-top20 flex-middle'>
               <div className='line-height40 font-18 color333 font-bold'>操作日志</div>
               {/* <Select style={{ width: 100, marginLeft: 10 }}>
-              <Select.Option value={1}>备注</Select.Option>
-              <Select.Option value={2}>备注</Select.Option>
-            </Select>
-            <Input className='margin-left' style={{ width: 200 }} />
-            <Button className='margin-left' type='primary'>添加日志</Button> */}
-              <div><span className='margin0-10'>备注:</span> <Input value={this.state.remark} onChange={(e) => this.onRemarkChange(e.target.value)} style={{ width: 400 }} />
-              </div>
-
-            </div>
-            <div className='margin-top'>
-              <Table
-                style={{ width: 800 }}
-                indentSize={10}
-                rowKey="id"
-                columns={this.remarkColumns}
-                loading={this.state.tableLoading}
-                pagination={false}
-                dataSource={this.state.orderRemarkList}
-              />
+                <Select.Option value={1}>备注</Select.Option>
+                <Select.Option value={2}>备注</Select.Option>
+              </Select> */}
+              <span className='margin-left'>备注：</span>
+              <Input className='margin-left' value={this.state.remark}
+                onChange={(e) => this.onRemarkChange(e.target.value)} style={{ width: 200 }} />
+              <Button onClick={this.addLogClick} className='margin-left' type='primary'>添加日志</Button>
             </div>
           </div>
+          <div className='margin-top'>
+            <Table
+              style={{ width: 800 }}
+              indentSize={10}
+              rowKey="id"
+              columns={this.remarkColumns}
+              loading={this.state.tableLoading}
+              pagination={false}
+              dataSource={this.state.orderLogList}
+            />
+          </div>
         </Spin>
-
-
-
-        <UserSelectModal
-          visible={this.state.userModalIsVisible}
-          onCancel={this._hideUserModal}
-          selectItem={this.selectUserClicked}
-          selectId={selectUserId}
-        />
-
-        <SalerSelectModal
-          visible={this.state.salerModalIsVisible}
-          onCancel={this._hideSalerModal}
-          selectItem={this.selectSalerClicked}
-          selectId={selectSalerId}
-        />
-
-        <SKUSelectModal
-          visible={this.state.skuModalIsVisible}
-          onCancel={this._hideSKUModal}
-          selectItem={this.selectSKUClicked}
-          selectIds={this.state.orderSKUIds}
-        />
-
-        <SingleDistrictSelect
-          checkedAreaData={this.state.selectAreaData}
-          visible={this.state.areaModalIsVisible}
-          hide={this._hideAreaSelectModal}
-          onOk={this.selectAreaSaveClicked}
-        />
       </CommonPage >
     )
   }

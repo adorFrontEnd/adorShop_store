@@ -1,4 +1,7 @@
 const numberFilter = (num, numType) => {
+  if (!num && num != 0) {
+    return;
+  }
   const arrNum = num.toString().split(".");
   if (numType == 'int') {
     return arrNum[0] ? arrNum[0] : "0";

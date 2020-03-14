@@ -328,6 +328,13 @@ const routerConfigArr = [
     icon: "team"
   },
   {
+    route_name: "orderManage.order.orderDetail",
+    path: baseRoute + "/orderManage/orderDetail",
+    loginRequired: true,
+    moduleAuth: false,
+    title: "订单详情"
+  },
+  {
     route_name: "orderManage.order.afterSaleOrder",
     path: baseRoute + "/orderManage/afterSaleOrder",
     loginRequired: true,

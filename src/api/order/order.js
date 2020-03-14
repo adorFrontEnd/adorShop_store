@@ -3,7 +3,7 @@
 import baseHttpProvider from '../base/baseHttpProvider';
 
 const searchPublicSelectMember = (params) => {
-  return baseHttpProvider.postFormApi('api/ord/user/publicSelectMember', { page: 1, size: 10, ...params }, { total: true })
+  return baseHttpProvider.postFormApi('api/usr/user/publicSelectMember', { page: 1, size: 10, ...params }, { total: true })
 }
 
 const searchSalesman = (params) => {
@@ -11,7 +11,7 @@ const searchSalesman = (params) => {
 }
 
 const getPrdSkuList = (params) => {
-  return baseHttpProvider.postFormApi('api/ord/sellPrdSku/getPrdSkuList', { page: 1, size: 10, ...params }, { total: true });
+  return baseHttpProvider.postFormApi('api/prd/sellPrdSku/getPrdSkuList', { page: 1, size: 10, ...params }, { total: true });
 }
 
 const smartOrder = (params) => {
@@ -23,7 +23,11 @@ const getOrderlist = (params) => {
 }
 
 const getOrderDetail = (params) => {
-  return baseHttpProvider.postFormApi('api/ord/order/listDetail', params);
+  return baseHttpProvider.getApi('api/ord/order/listDetail', params);
+}
+
+const addOrderLog = (params) => {
+  return baseHttpProvider.postFormApi('api/ord/order/addLog', params);
 }
 
 
@@ -33,6 +37,7 @@ export {
   getPrdSkuList,
   smartOrder,
   getOrderlist,
-  getOrderDetail
+  getOrderDetail,
+  addOrderLog
 }
 
