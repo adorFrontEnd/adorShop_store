@@ -96,7 +96,7 @@ class Page extends Component {
 
         <span>
           <NavLink to={detailPath + `/${record.id}`}>
-            查看
+            查看详情
           </NavLink>
         </span>
       )

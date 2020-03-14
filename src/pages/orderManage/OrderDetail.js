@@ -145,7 +145,12 @@ class Page extends Component {
         })
         this.getDetail(id);
       })
+  }
 
+  
+  // 返回
+  goBack = () => {
+    window.history.back();
   }
   /**渲染**********************************************************************************************************************************/
 
@@ -155,6 +160,17 @@ class Page extends Component {
 
     return (
       <CommonPage title={_title} description={_description} >
+        <div className='flex' style={{ position: "fixed", bottom: "10%", right: "5%", zIndex: "999" }}>
+          <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} onClick={this.saveDataClicked}>
+            确认<br />
+            收款
+            </Button>
+          <Button type='primary' shape="circle" style={{ width: 80, height: 80 }}className='margin-left20' >
+            作废
+            </Button>
+          <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} className='margin-left20' onClick={this.goBack}>返回</Button>
+
+        </div>
         <Spin spinning={this.state.showLoading}>
           <div>
             {
