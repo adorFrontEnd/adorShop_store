@@ -3,13 +3,13 @@ import baseHttpProvider from '../base/baseHttpProvider';
 
 // 计量单位配置
 const getUnitConfigList = (params) => {
-  return baseHttpProvider.postFormApi('api/product/unit/config/getList', { page: 1, size: 10, ...params }, { total: true })
+  return baseHttpProvider.postFormApi('api/prd/unit/config/getList', { page: 1, size: 10, ...params }, { total: true })
 }
 const saveUnitOrUpdate = (params) => {
-  return baseHttpProvider.postFormApi('api/product/unit/config/save', params)
+  return baseHttpProvider.postFormApi('api/prd/unit/config/save', params)
 }
 const deleteUnit = (params) => {
-  return baseHttpProvider.getApi('api/product/unit/config/delete', params)
+  return baseHttpProvider.getApi('api/prd/unit/config/delete', params)
 }
 // 退货地址
 const getReturnAddressList = (params) => {

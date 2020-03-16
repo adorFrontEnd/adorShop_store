@@ -25,7 +25,8 @@ class Page extends Component {
   state = {
     status: false,
     pageData: null,
-    changedClassifySort: {}
+    changedstockWarning: {},
+    changedstock: {},
   }
 
   componentDidMount() {
@@ -150,12 +151,13 @@ class Page extends Component {
     })
   }
   saveClicked = () => {
-    let order = this.formatSortSaveData(this.state.changedClassifySort)
-    console.log(order)
+    this.formatSortSaveData()
+    let { stockWarning, stock } = this.state;
+    // console.log(stockWarning, stock)
+
   }
   // 修改库存预警
   stockWarning = (value, id) => {
-
     let { stockData } = this.state;
     if (!stockData) {
       return;
@@ -163,29 +165,37 @@ class Page extends Component {
     let index = this.findClassifyIndexById(id, stockData);
     if (index || index == 0) {
       stockData[index]['alarmQty'] = value;
-      let changedClassifySort = this.state.changedClassifySort;
-      changedClassifySort['alarmQty'] = value;
-      changedClassifySort['id'] = id;
+      let changedstockWarning = this.state.changedstockWarning;
+      changedstockWarning[id] = value;
       this.setState({
-        changedClassifySort,
-        stockData
+        changedstockWarning
       })
 
     }
   }
   //格式化保存分类的数据
-  formatSortSaveData = (changedClassifySort) => {
-    if (!changedClassifySort || !Object.keys(changedClassifySort).length) {
-      return;
+  formatSortSaveData = () => {
+    let { changedstockWarning, changeStock } = this.state
+    let stockWarning
+    let stock
+    if (changedstockWarning) {
+      stockWarning = Object.keys(changedstockWarning).map(k => {
+        return {
+          id: k,
+          alarmQty: changedstockWarning[k],
+        }
+      });
     }
-    let result = Object.keys(changedClassifySort).map(k => {
-      return {
-        alarmQty: changedClassifySort['alarmQty'],
-        changeQty: changedClassifySort['changeQty'],
-        id: changedClassifySort['id']
-      }
-    });
-    return result;
+    if (changeStock) {
+      stock = Object.keys(changeStock).map(k => {
+        return {
+          id: k,
+          changeQty: changeStock[k],
+        }
+      });
+    }
+console.log(stockWarning, stock )
+    this.setState({ stockWarning, stock })
   }
   // 查找分类在数组的索引
   findClassifyIndexById = (id, arr) => {
@@ -206,10 +216,10 @@ class Page extends Component {
     let index = this.findClassifyIndexById(id, stockData);
     if (index || index == 0) {
       stockData[index]['changeQty'] = e.target.value;
-      let changedClassifySort = this.state.changedClassifySort;
-      changedClassifySort['changeQty'] = e.target.value;
+      let changedstock = this.state.changedstock;
+      changedstock[id] = e.target.value;
       this.setState({
-        changedClassifySort
+        changedstock
       })
 
     }
@@ -298,10 +308,10 @@ class Page extends Component {
                       {item.qty}
                     </Col>
                     <Col span={3} className='padding flex-middle' style={{ borderLeft: "1px solid #d9d9d9" }}>
-                      <Input style={{ width: 120 }} onChange={(e) => this.changeStock(e, item.id)} />
+                      <Input style={{ width: 120 }} onChange={(e) => this.changeStock(e, item.id)} disabled={item.skuStatus == 0} />
                     </Col>
                     <Col span={3} className='padding flex-middle' style={{ borderLeft: "1px solid #d9d9d9" }}>
-                      {item.skuQty}
+                      {item.qty}
                     </Col>
                   </Row>
                 ) : null
