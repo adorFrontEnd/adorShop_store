@@ -10,7 +10,7 @@ import { NavLink, Link } from 'react-router-dom';
 import { baseRoute, routerConfig } from '../../config/router.config';
 import { connect } from 'react-redux';
 import { changeRoute } from '../../store/actions/route-actions';
-import { smartOrder, getOrderDetail, addOrderLog } from '../../api/order/order';
+import { smartOrder, getOrderDetail, addOrderLog, confirmOrder, reviewOrder } from '../../api/order/order';
 import NumberFilter from '../../utils/filter/number';
 import { getOrderSaveData } from './orderUtils';
 import { OrderStatusEnum, OrderOperTypeEnum } from '../../enum/orderEnum';
@@ -22,12 +22,14 @@ class Page extends Component {
 
   state = {
     showLoading: false,
+    deliveryModalIsVisible:false,
     orderDetail: null,
 
     orderLogList: [],
     orderSKUList: [],
     orderInfo: null,
-    remark: null
+    remark: null,
+    orderStatus: null
   }
 
   componentWillMount() {
@@ -152,27 +154,108 @@ class Page extends Component {
   goBack = () => {
     window.history.back();
   }
+
+  cancelOrderClick = () => {
+
+    let { id } = this.state;
+    let status = 2;
+    confirmOrder({ id, status })
+      .then(() => {
+        Toast('作废成功！');
+        this.getDetail(id);
+        return;
+      })
+  }
+
+  confirmOrderClick = () => {
+
+    let { id } = this.state;
+    let status = 3;
+    confirmOrder({ id, status })
+      .then(() => {
+        Toast('确认收款成功！');
+        this.getDetail(id);
+        return;
+      })
+  }
+
+  reviewPassClick = () => {
+    let { id } = this.state;
+    let status = 4;
+    confirmOrder({ id, status })
+      .then(() => {
+        Toast('通过审核！');
+        this.getDetail(id);
+        return;
+      })
+  }
+
+
+  reviewFailClick = () => {
+    let { id } = this.state;
+    let status = 2;
+    confirmOrder({ id, status })
+      .then(() => {
+        Toast('拒绝审核！');
+        this.getDetail(id);
+        return;
+      })
+  }
+
+  showConfirmDeliveryModal = () => {
+    this.setState({
+      deliveryModalIsVisible: true
+    })
+  }
+
   /**渲染**********************************************************************************************************************************/
 
   render() {
     const { getFieldDecorator } = this.props.form;
-    const { orderInfo, orderStatusStr, productTotalAmount, orderTotalAmount } = this.state;
+    const { orderInfo, orderStatus, orderStatusStr, productTotalAmount, orderTotalAmount } = this.state;
 
     return (
       <CommonPage title={_title} description={_description} >
         <div className='flex' style={{ position: "fixed", bottom: "10%", right: "5%", zIndex: "999" }}>
-          <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} onClick={this.saveDataClicked}>
-            确认<br />
-            收款
-            </Button>
-          <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} className='margin-left20' >
-            作废
-            </Button>
+          {
+            orderStatus == 0 ?
+              <div className='flex'>
+                <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} onClick={this.confirmOrderClick}>
+                  确认<br />
+                收款
+               </Button>
+                <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} className='margin-left20' onClick={this.cancelOrderClick}>
+                  作废
+              </Button>
+              </div>
+
+              : null
+          }
+          {
+            orderStatus == 3 ?
+              <div className='flex'>
+                <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} onClick={this.reviewPassClick}>
+                  通过
+                </Button>
+                <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} className='margin-left20' onClick={this.reviewFailClick}>
+                  拒绝
+                </Button>
+              </div> : null
+
+          }
+          {
+            orderStatus == 4 ?
+              <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} onClick={this.showConfirmDeliveryModal}>
+                确认<br />
+                发货
+                </Button>
+              : null
+          }
           <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} className='margin-left20' onClick={this.goBack}>
             返回
           </Button>
-
         </div>
+
         <Spin spinning={this.state.showLoading}>
           <div>
             {
@@ -248,7 +331,7 @@ class Page extends Component {
                     </Row>
                     <Row style={{ borderTop: '1px solid #f2f2f2' }}>
                       <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>支付方式</Col>
-                      <Col span={8} className='padding-left'></Col>
+                      <Col span={8} className='padding-left'>--</Col>
                       <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>买家备注</Col>
                       <Col span={8} className='padding-left'>
                         {orderInfo.buyerRemark || '--'}

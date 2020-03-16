@@ -30,6 +30,18 @@ const addOrderLog = (params) => {
   return baseHttpProvider.postFormApi('api/ord/order/addLog', params);
 }
 
+const confirmOrder = (params) => {
+  return baseHttpProvider.getApi('api/ord/order/confirm', params);
+}
+
+const reviewOrder= (params) => {
+  return baseHttpProvider.getApi('api/ord/order/reviewOrder', params);
+}
+
+const confirmDelivery= (params) => {
+  return baseHttpProvider.getApi('api/ord/order/confirmDelivery', params);
+}
+ 
 
 export {
   searchPublicSelectMember,
@@ -38,6 +50,9 @@ export {
   smartOrder,
   getOrderlist,
   getOrderDetail,
-  addOrderLog
+  addOrderLog,
+  confirmOrder,
+  reviewOrder,
+  confirmDelivery
 }
 
