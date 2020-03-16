@@ -143,6 +143,7 @@ class Page extends Component {
       .then((data) => {
         this.setState({ stockData: data })
       })
+
   }
   // 关闭modal
   _hideNewItemModal = () => {
@@ -151,11 +152,38 @@ class Page extends Component {
     })
   }
   saveClicked = () => {
-    this.formatSortSaveData()
-    let { stockWarning, stock } = this.state;
-    // console.log(stockWarning, stock)
-
+    let stockStrList = this.formatParams(this.state.stockData);
+    // stockStrList.map(item=>{
+    //   if(item.changeQty &&item.changeQty[0]!=='-' && item.changeQty[0]!=='+'){
+    //     Toast('改变库存格式不正确，正确格式为：+/-数字');
+    //     return;
+    //   }
+    // })
+    stockStrList = JSON.stringify(stockStrList);
+    updateStock({ stockStrList })
+      .then(data => {
+        Toast('修改成功');
+        this.setState({
+          newItemModalVisible: false
+        })
+        this.getPageData();
+      })
   }
+  // 格式化参数
+  formatParams = (stockData) => {
+    if (!stockData || !stockData.length) {
+      return []
+    }
+    let result = stockData.map(item => {
+      let { id, alarmQty, changeQty } = item;
+
+      return {
+        id, alarmQty, changeQty
+      }
+    })
+    return result;
+  }
+
   // 修改库存预警
   stockWarning = (value, id) => {
     let { stockData } = this.state;
@@ -165,37 +193,30 @@ class Page extends Component {
     let index = this.findClassifyIndexById(id, stockData);
     if (index || index == 0) {
       stockData[index]['alarmQty'] = value;
-      let changedstockWarning = this.state.changedstockWarning;
-      changedstockWarning[id] = value;
       this.setState({
-        changedstockWarning
+        stockData
       })
-
     }
   }
-  //格式化保存分类的数据
-  formatSortSaveData = () => {
-    let { changedstockWarning, changeStock } = this.state
-    let stockWarning
-    let stock
-    if (changedstockWarning) {
-      stockWarning = Object.keys(changedstockWarning).map(k => {
-        return {
-          id: k,
-          alarmQty: changedstockWarning[k],
-        }
-      });
+
+  // 修改库存
+  changeStock = (e, id) => {
+    let { stockData } = this.state;
+    if (!stockData) {
+      return;
     }
-    if (changeStock) {
-      stock = Object.keys(changeStock).map(k => {
-        return {
-          id: k,
-          changeQty: changeStock[k],
-        }
-      });
+    if (e.target.value[0] !== '-' && e.target.value[0] !== '+') {
+      Toast('改变库存格式不正确，正确格式为：+/-数字');
+      return;
     }
-console.log(stockWarning, stock )
-    this.setState({ stockWarning, stock })
+    let index = this.findClassifyIndexById(id, stockData);
+    if (index || index == 0) {
+      stockData[index]['changeQty'] = e.target.value;
+      stockData[index]['changeAfter'] = parseInt(e.target.value) + parseInt(stockData[index]['qty']);
+      this.setState({
+        stockData
+      })
+    }
   }
   // 查找分类在数组的索引
   findClassifyIndexById = (id, arr) => {
@@ -207,26 +228,7 @@ console.log(stockWarning, stock )
     });
     return index >= 0 ? index : null;
   }
-  // 修改库存
-  changeStock = (e, id) => {
-    let { stockData } = this.state;
-    if (!stockData) {
-      return;
-    }
-    let index = this.findClassifyIndexById(id, stockData);
-    if (index || index == 0) {
-      stockData[index]['changeQty'] = e.target.value;
-      let changedstock = this.state.changedstock;
-      changedstock[id] = e.target.value;
-      this.setState({
-        changedstock
-      })
-
-    }
-  }
-
   render() {
-
     const { getFieldDecorator } = this.props.form;
 
     return (
@@ -302,7 +304,7 @@ console.log(stockWarning, stock )
                       }
                     </Col>
                     <Col span={3} className='padding flex-middle'>
-                      <InputNumber value={item.alarmQty} style={{ width: 120 }} onChange={(e) => this.stockWarning(e, item.id)} />
+                      <InputNumber value={item.alarmQty} style={{ width: 120 }} onChange={(e) => this.stockWarning(e, item.id)} disabled={item.skuStatus == 0} />
                     </Col>
                     <Col span={2} className='padding flex-middle' style={{ borderLeft: "1px solid #d9d9d9" }}>
                       {item.qty}
@@ -311,7 +313,7 @@ console.log(stockWarning, stock )
                       <Input style={{ width: 120 }} onChange={(e) => this.changeStock(e, item.id)} disabled={item.skuStatus == 0} />
                     </Col>
                     <Col span={3} className='padding flex-middle' style={{ borderLeft: "1px solid #d9d9d9" }}>
-                      {item.qty}
+                      {item.changeAfter ? item.changeAfter : item.qty}
                     </Col>
                   </Row>
                 ) : null
