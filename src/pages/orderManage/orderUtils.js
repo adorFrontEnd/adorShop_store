@@ -16,7 +16,13 @@ const getOrderSaveData = (orderData) => {
     Toast("请选择省市区！");
     return;
   }
- 
+
+  if (!storageId) {
+    Toast("请选择发货仓库！");
+    return;
+  }
+
+
   let _skuData = validateSKU(orderSKUList);
   if (!_skuData) {
     return;
@@ -28,9 +34,9 @@ const getOrderSaveData = (orderData) => {
     storageId,
     remark,
     userId: selectUser.id,
-    contactProvince:proviceName,
-    contactCity:cityName,
-    contactArea:districtName
+    contactProvince: proviceName,
+    contactCity: cityName,
+    contactArea: districtName
   }
 
   if (selectSaler && selectSaler.id) {

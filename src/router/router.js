@@ -40,7 +40,7 @@ const StoreManage = asyncComponent(() => import("../pages/StoreManage/StoreManag
 const PerformanceCheck = asyncComponent(() => import("../pages/fundsManage/PerformanceCheck"));
 
 
-const OrderProduct = asyncComponent(() => import("../pages/orderManage/OrderProduct"));
+const OrderProduct = asyncComponent(() => import("../pages/orderManage/OrderProductList"));
 const CommentManage = asyncComponent(() => import("../pages/orderManage/CommentManage"));
 const OrderList = asyncComponent(() => import("../pages/orderManage/OrderList"));
 const AfterSaleOrder = asyncComponent(() => import("../pages/orderManage/AfterSaleOrder"));

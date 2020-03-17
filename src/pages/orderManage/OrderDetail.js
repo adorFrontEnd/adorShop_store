@@ -10,10 +10,11 @@ import { NavLink, Link } from 'react-router-dom';
 import { baseRoute, routerConfig } from '../../config/router.config';
 import { connect } from 'react-redux';
 import { changeRoute } from '../../store/actions/route-actions';
-import { smartOrder, getOrderDetail, addOrderLog, confirmOrder, reviewOrder } from '../../api/order/order';
+import { smartOrder, getOrderDetail, addOrderLog, confirmOrder, reviewOrder, confirmDelivery, confirmReceipt } from '../../api/order/order';
 import NumberFilter from '../../utils/filter/number';
 import { getOrderSaveData } from './orderUtils';
 import { OrderStatusEnum, OrderOperTypeEnum } from '../../enum/orderEnum';
+import OrderDeliveryModal from '../../components/order/OrderDeliveryModal';
 
 const _title = "订单详情";
 const _description = '';
@@ -22,7 +23,7 @@ class Page extends Component {
 
   state = {
     showLoading: false,
-    deliveryModalIsVisible:false,
+    deliveryModalIsVisible: false,
     orderDetail: null,
 
     orderLogList: [],
@@ -112,7 +113,6 @@ class Page extends Component {
       render: (text, record, index) => '--'
     }
   ]
-
 
   /*备注*********************************************************************************************************************************/
   // 表格相关列
@@ -208,6 +208,30 @@ class Page extends Component {
     })
   }
 
+  hideDeliveryModal = () => {
+    this.setState({
+      deliveryModalIsVisible: false
+    })
+  }
+
+  saveOrderDeliveryClicked = (deliveryData) => {
+    let id = this.state.id;
+    let data = JSON.stringify(deliveryData);
+    confirmDelivery({ id, data })
+      .then(() => {
+        Toast('保存成功！');
+        this.getDetail(id);
+      })
+  }
+
+  confirmReceipt = () => {    
+    let id = this.state.id;  
+    confirmReceipt({ id})
+      .then(() => {
+        Toast('确认收货成功！');
+        this.getDetail(id);
+      })
+  }
   /**渲染**********************************************************************************************************************************/
 
   render() {
@@ -248,6 +272,14 @@ class Page extends Component {
               <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} onClick={this.showConfirmDeliveryModal}>
                 确认<br />
                 发货
+                </Button>
+              : null
+          }
+           {
+            orderStatus == 5 ?
+              <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} onClick={this.confirmReceipt}>
+                确认<br />
+                收货
                 </Button>
               : null
           }
@@ -397,6 +429,15 @@ class Page extends Component {
             />
           </div>
         </Spin>
+        {
+          orderStatus == 4 ?
+            <OrderDeliveryModal
+              visible={this.state.deliveryModalIsVisible}
+              orderId={this.state.id}
+              onOk={this.saveOrderDeliveryClicked}
+              onCancel={this.hideDeliveryModal}
+            /> : null
+        }
       </CommonPage >
     )
   }
