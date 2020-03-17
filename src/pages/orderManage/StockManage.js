@@ -138,7 +138,7 @@ class Page extends Component {
   showStockModal = (data) => {
     this.setState({ newItemModalVisible: true });
     let selectOper = data || null;
-    this.setState({id:data.id})
+    this.setState({ id: data.id })
     let { id } = data;
     getDetail({ id })
       .then((data) => {
@@ -146,12 +146,12 @@ class Page extends Component {
       })
 
   }
-  refreshStockData=()=>{
-    let {id}=this.state
+  refreshStockData = () => {
+    let { id } = this.state
     getDetail({ id })
-    .then((data) => {
-      this.setState({ stockData: data })
-    })
+      .then((data) => {
+        this.setState({ stockData: data })
+      })
   }
   // 关闭modal
   _hideNewItemModal = () => {
@@ -238,7 +238,6 @@ class Page extends Component {
   }
   render() {
     const { getFieldDecorator } = this.props.form;
-
     return (
       <CommonPage title={_title} >
         <div style={{ marginBottom: '30px' }} className='flex-between'>
@@ -319,7 +318,7 @@ class Page extends Component {
                       {item.qty}
                     </Col>
                     <Col span={3} className='padding flex-middle' style={{ borderLeft: "1px solid #d9d9d9" }}>
-                      <Input style={{ width: 120 }} onChange={(e) => this.changeStock(e, item.id)} disabled={item.skuStatus == 0} />
+                      <Input style={{ width: 120 }} onChange={(e) => this.changeStock(e, item.id)} disabled={item.skuStatus == 0} value={item.changeQty}/>
                     </Col>
                     <Col span={3} className='padding flex-middle' style={{ borderLeft: "1px solid #d9d9d9" }}>
                       {item.changeAfter ? item.changeAfter : item.qty}
@@ -334,7 +333,6 @@ class Page extends Component {
       </CommonPage>
     )
   }
-
 }
 const mapStateToProps = state => state;
 const mapDispatchToProps = (dispatch) => {
