@@ -48,7 +48,7 @@ const confirmDelivery= (params) => {
 }
 
 const confirmReceipt= (params) => {
-  return baseHttpProvider.postFormApi('api/ord/order/confirmReceipt', params);
+  return baseHttpProvider.getApi('api/ord/order/confirmReceipt', params);
 }
 
 
