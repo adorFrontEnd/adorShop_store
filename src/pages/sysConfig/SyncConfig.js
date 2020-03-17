@@ -1,35 +1,77 @@
 import React, { Component } from "react";
 import CommonPage from '../../components/common-page';
 import { Table, Form, Input, Col, Switch, Row, Button, Modal } from "antd";
-
+import { getHousekeeperConfig, updateHousekeeperConfig} from '../../api/sysConfig/sysConfig'
 import Toast from '../../utils/toast';
 const _title = "网店管家";
 
 class Page extends Component {
 
   state = {
-    status: false,
+    swichStatus: false,
     pageData: null
   }
 
   componentDidMount() {
+    this.getPageData()
+  }
+  getPageData = () => {
+    getHousekeeperConfig()
+      .then(pageData => {
+        if (pageData.status == 0) {
+          this.setState({ swichStatus: false })
+        } else {
+          this.setState({ swichStatus: true })
+        }
+        this.setState({
+          pageData
+        })
+        if (!pageData || !pageData.id) {
+          this.props.form.setFieldsValue({ appId: "", appSecret: "", tokenStr: "" });
+          this.setState({
+            status: false
+          })
+          return;
+        }
+        let { appId, appSecret, status, tokenStr } = pageData;
+        this.setState({
+          status: status == '1'
+        })
+        this.props.form.setFieldsValue({ appId, appSecret, tokenStr });
+      })
   }
 
-
-  onSyncStatusChange = (status) => {
-
-    let title = status ? "开启" : "关闭";
-    Toast(`${title}同步网店管家成功！`);
-
+  onSyncStatusChange = (swichStatus) => {
+    // let title = status ? "开启" : "关闭";
+    // Toast(`${title}同步网店管家成功！`);
+if(swichStatus){
+  this.getPageData()
+}
     this.setState({
-      status
+      swichStatus
     })
   }
-
+  saveClick = (swichStatus) => {
+    let title = swichStatus ? "开启" : "关闭";
+    let status=swichStatus?1:0
+    let pageData = this.state.pageData;
+    this.props.form.validateFields((err, params) => {
+      if (err) {
+        return;
+      }
+      let { appId, appSecret, tokenStr } = params;
+      this.setState({
+        swichStatus
+      })
+      updateHousekeeperConfig({ id:pageData.id, ...params,status })
+        .then((data) => {
+          Toast(`${title}同步网店管家成功！`);
+          this.getPageData()
+        })
+    })
+  }
   render() {
-
     const { getFieldDecorator } = this.props.form;
-
     return (
       <CommonPage title={_title} >
         <>
@@ -37,21 +79,21 @@ class Page extends Component {
             <div className='font-20 line-height40 font-bold'>网店管家</div>
             <div className='line-height40'>
               <span className='margin-right20'>网店管家同步</span>
-              <Switch checked={this.state.status} onChange={this.onSyncStatusChange} />
+              <Switch checked={this.state.swichStatus} onChange={this.onSyncStatusChange} />
             </div>
             {
-              this.state.status ?
+              this.state.swichStatus ?
                 <Form style={{ width: 500 }} className='common-form'>
                   <Form.Item
-                    field="AppID"
-                    label="AppID"
+                    field="appId"
+                    label="appappIdID"
                     labelCol={{ span: 6 }}
                     wrapperCol={{ span: 16 }}
                   >
                     {
-                      getFieldDecorator('AppID', {
+                      getFieldDecorator('appId', {
                         rules: [
-                          { required: true, message: '请设置AppID!' }
+                          { required: true, message: '请设置appID!' }
                         ],
                         initialValue: null
                       })(
@@ -60,15 +102,15 @@ class Page extends Component {
                     }
                   </Form.Item>
                   <Form.Item
-                    field="AppSecret"
-                    label="AppSecret"
+                    field="appSecret"
+                    label="appSecret"
                     labelCol={{ span: 6 }}
                     wrapperCol={{ span: 16 }}
                   >
                     {
-                      getFieldDecorator('AppSecret', {
+                      getFieldDecorator('appSecret', {
                         rules: [
-                          { required: true, message: '请设置AppSecret!' }
+                          { required: true, message: '请设置appSecret!' }
                         ],
                         initialValue: null
                       })(
@@ -77,15 +119,15 @@ class Page extends Component {
                     }
                   </Form.Item>
                   <Form.Item
-                    field="Token"
-                    label="Token"
+                    field="tokenStr"
+                    label="tokenStr"
                     labelCol={{ span: 6 }}
                     wrapperCol={{ span: 16 }}
                   >
                     {
-                      getFieldDecorator('Token', {
+                      getFieldDecorator('tokenStr', {
                         rules: [
-                          { required: true, message: '请设置Token!' }
+                          { required: true, message: '请设置token!' }
                         ],
                         initialValue: null
                       })(
@@ -96,7 +138,7 @@ class Page extends Component {
 
                   <Row className='line-height40'>
                     <Col offset={6}>
-                      <Button onClick={this.saveConfirmClicked} type='primary' className='normal'>保存</Button>
+                      <Button onClick={this.saveClick} type='primary' className='normal'>保存</Button>
                     </Col>
 
                   </Row>

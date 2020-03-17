@@ -138,12 +138,20 @@ class Page extends Component {
   showStockModal = (data) => {
     this.setState({ newItemModalVisible: true });
     let selectOper = data || null;
+    this.setState({id:data.id})
     let { id } = data;
     getDetail({ id })
       .then((data) => {
         this.setState({ stockData: data })
       })
 
+  }
+  refreshStockData=()=>{
+    let {id}=this.state
+    getDetail({ id })
+    .then((data) => {
+      this.setState({ stockData: data })
+    })
   }
   // 关闭modal
   _hideNewItemModal = () => {
@@ -234,7 +242,8 @@ class Page extends Component {
     return (
       <CommonPage title={_title} >
         <div style={{ marginBottom: '30px' }} className='flex-between'>
-          <Button type='primary'>同步网店管家库存</Button>
+          {/* <Button type='primary'>同步网店管家库存</Button> */}
+          <div></div>
           <div style={{ minWidth: 700 }}>
             <SearchForm
               width={700}
@@ -265,7 +274,7 @@ class Page extends Component {
         >
           <div style={{ minHeight: 300, padding: "10px" }}>
             <div style={{ display: 'flex' }}>
-              <Button type='primary'>刷新</Button>
+              <Button type='primary' onClick={this.refreshStockData}>刷新</Button>
               <div style={{ marginLeft: '10px', color: '#FF9530', lineHeight: '32px' }}>刷新当前实际库存</div>
             </div>
             <div>

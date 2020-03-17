@@ -11,19 +11,7 @@ const saveUnitOrUpdate = (params) => {
 const deleteUnit = (params) => {
   return baseHttpProvider.getApi('api/prd/unit/config/delete', params)
 }
-// 退货地址
-const getReturnAddressList = (params) => {
-  return baseHttpProvider.postFormApi('api/returnAddress/list', { page: 1, size: 10, ...params }, { total: true })
-}
-const saverReturnAddress = (params) => {
-  return baseHttpProvider.postFormApi('api/returnAddress/createAndUpdate', params)
-}
-const getAddressDetail = (params) => {
-  return baseHttpProvider.getApi('api/returnAddress/getDetail', params)
-}
-const deleteAddress = (params) => {
-  return baseHttpProvider.getApi('api/returnAddress/delete', params)
-}
+
 // 公众号
 const getPublicConfig = (params) => {
   return baseHttpProvider.getApi('api/syncPublicConfig/getData', params)
@@ -33,17 +21,20 @@ const updatePublicConfig = (params) => {
 }
 // 网店管家
 const getHousekeeperConfig = (params) => {
-  return baseHttpProvider.getApi('api/housekeeperConfig/getData', params)
+  return baseHttpProvider.getApi('api/sys/housekeeperConfig/getData', params)
 }
 const updateHousekeeperConfig = (params) => {
-  return baseHttpProvider.getApi('api/housekeeperConfig/updateConfig', params)
+  return baseHttpProvider.postFormApi('api/sys/housekeeperConfig/updateConfig', params)
+}
+// 审核配置
+const getAuditConfig = (params) => {
+  return baseHttpProvider.getApi('api/sys/auditConfig/getData', params)
+}
+const updateConfig = (params) => {
+  return baseHttpProvider.postFormApi('api/sys/auditConfig/updateConfig', params)
 }
 export {
   getUnitConfigList,
   saveUnitOrUpdate,
-  deleteUnit,
-  getReturnAddressList,
-  saverReturnAddress,
-  getAddressDetail,
-  deleteAddress, getPublicConfig, updatePublicConfig, getHousekeeperConfig, updateHousekeeperConfig
+  deleteUnit, getPublicConfig, updatePublicConfig, getHousekeeperConfig, updateHousekeeperConfig,getAuditConfig,updateConfig
 }
