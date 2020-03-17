@@ -38,10 +38,21 @@ const reviewOrder= (params) => {
   return baseHttpProvider.getApi('api/ord/order/reviewOrder', params);
 }
 
-const confirmDelivery= (params) => {
-  return baseHttpProvider.getApi('api/ord/order/confirmDelivery', params);
+
+const getOrderShippingData= (params) => {
+  return baseHttpProvider.getApi('api/ord/order/shippingData', params);
 }
- 
+
+const confirmDelivery= (params) => {
+  return baseHttpProvider.postFormApi('api/ord/order/confirmDelivery', params);
+}
+
+const confirmReceipt= (params) => {
+  return baseHttpProvider.postFormApi('api/ord/order/confirmReceipt', params);
+}
+
+
+
 
 export {
   searchPublicSelectMember,
@@ -53,6 +64,8 @@ export {
   addOrderLog,
   confirmOrder,
   reviewOrder,
-  confirmDelivery
+  confirmDelivery,
+  getOrderShippingData,
+  confirmReceipt
 }
 

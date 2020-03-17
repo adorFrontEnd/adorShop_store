@@ -10,10 +10,11 @@ import { NavLink, Link } from 'react-router-dom';
 import { baseRoute, routerConfig } from '../../config/router.config';
 import { connect } from 'react-redux';
 import { changeRoute } from '../../store/actions/route-actions';
-import { smartOrder, getOrderDetail, addOrderLog, confirmOrder, reviewOrder } from '../../api/order/order';
+import { smartOrder, getOrderDetail, addOrderLog, confirmOrder, reviewOrder, confirmDelivery } from '../../api/order/order';
 import NumberFilter from '../../utils/filter/number';
 import { getOrderSaveData } from './orderUtils';
 import { OrderStatusEnum, OrderOperTypeEnum } from '../../enum/orderEnum';
+import OrderDeliveryModal from '../../components/order/OrderDeliveryModal';
 
 const _title = "订单详情";
 const _description = '';
@@ -22,7 +23,7 @@ class Page extends Component {
 
   state = {
     showLoading: false,
-    deliveryModalIsVisible:false,
+    deliveryModalIsVisible: false,
     orderDetail: null,
 
     orderLogList: [],
@@ -206,6 +207,22 @@ class Page extends Component {
     this.setState({
       deliveryModalIsVisible: true
     })
+  }
+
+  hideDeliveryModal = () => {
+    this.setState({
+      deliveryModalIsVisible: false
+    })
+  }
+
+  saveOrderDeliveryClicked = (deliveryData) => {
+    let id = this.state.id;
+    let data = JSON.stringify(deliveryData);
+    confirmDelivery({ id, data })
+      .then(() => {
+        Toast('保存成功！');
+        this.getDetail(id);
+      })
   }
 
   /**渲染**********************************************************************************************************************************/
@@ -397,6 +414,15 @@ class Page extends Component {
             />
           </div>
         </Spin>
+        {
+          orderStatus == 4 ?
+            <OrderDeliveryModal
+              visible={this.state.deliveryModalIsVisible}
+              orderId={this.state.id}
+              onOk={this.saveOrderDeliveryClicked}
+              onCancel={this.hideDeliveryModal}
+            /> : null
+        }
       </CommonPage >
     )
   }

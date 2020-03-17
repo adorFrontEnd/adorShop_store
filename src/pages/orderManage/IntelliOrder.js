@@ -13,6 +13,7 @@ import { changeRoute } from '../../store/actions/route-actions';
 import { smartOrder } from '../../api/order/order';
 import NumberFilter from '../../utils/filter/number';
 import { getOrderSaveData } from './orderUtils';
+import { getSelectList } from '../../api/storeManage/storeManage';
 
 import UserSelectModal from '../../components/order/UserSelectModal';
 import SalerSelectModal from '../../components/order/SalerSelectModal';
@@ -31,18 +32,21 @@ class Page extends Component {
     skuModalIsVisible: false,
     areaModalIsVisible: false,
     selectUser: null,
-    selectSaler: null,   
-
+    selectSaler: null,
+    storageList: [],
     orderRemarkList: [],
     orderSKUList: [],
     orderSKUIds: [],
     orderBaseInfo: {},
     selectAreaData: null,
     remark: null,
-    storageId: 1,
-    selectIndex:null
+    storageId: null,
+    selectIndex: null
   }
 
+  componentDidMount() {
+    this.getStoreSelectList();
+  }
 
   /**x下单 */
   saveDataClicked = () => {
@@ -73,9 +77,9 @@ class Page extends Component {
       selectAreaData: null,
       remark: null,
       storageId: 1,
-      selectIndex:null
-    })   
-  } 
+      selectIndex: null
+    })
+  }
   /*基本信息****************************************************************************************************************/
 
   selectUserClicked = (selectUser) => {
@@ -113,6 +117,21 @@ class Page extends Component {
     })
   }
 
+  //仓库
+  getStoreSelectList = () => {
+    getSelectList()
+      .then(storageList => {
+        this.setState({
+          storageList
+        })
+      })
+  }
+
+  onStorageChange = (storageId) => {
+    this.setState({
+      storageId
+    })
+  }
   /*修改商品****************************************************************************************************************/
 
   // 表格相关列
@@ -264,11 +283,12 @@ class Page extends Component {
       remark
     })
   }
+
   /**渲染**********************************************************************************************************************************/
 
   render() {
     const { getFieldDecorator } = this.props.form;
-    const { selectUser, selectSaler, selectSKU, selectAreaData, orderBaseInfo } = this.state;
+    const { selectUser, selectSaler, selectSKU, selectAreaData, orderBaseInfo, storageList } = this.state;
     let selectUserId = (selectUser && selectUser.id) ? selectUser.id : null;
     let selectSalerId = (selectSaler && selectSaler.id) ? selectSaler.id : null;
 
@@ -379,7 +399,17 @@ class Page extends Component {
               </Row>
               <Row style={{ borderTop: '1px solid #f2f2f2', borderBottom: '1px solid #f2f2f2' }}>
                 <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>发货仓库</Col>
-                <Col span={20} className='padding-left'></Col>
+                <Col span={20} className='padding-left'>
+                  <Select value={this.state.storageId} onChange={this.onStorageChange} style={{width:200}}>
+                    <Select.Option value={null}>请选择仓库</Select.Option>
+                    {
+                      storageList && storageList.length ?
+                        storageList.map(item =>
+                          <Select.Option value={item.id} key={item.id}>{item.name}</Select.Option>
+                        ) : null
+                    }
+                  </Select>
+                </Col>
               </Row>
             </div>
             <div className='margin-top20'>
