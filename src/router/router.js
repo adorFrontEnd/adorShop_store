@@ -52,6 +52,8 @@ const PerformanceConfig = asyncComponent(() => import("../pages/orderManage/Perf
 const PerformanceStatc = asyncComponent(() => import("../pages/orderManage/PerformanceStatc"));
 const PerformanceEdit = asyncComponent(() => import("../pages/orderManage/PerformanceEdit"));
 const OrderDetail = asyncComponent(() => import("../pages/orderManage/OrderDetail"));
+const OrderProductEdit = asyncComponent(() => import("../pages/orderManage/OrderProductEdit"));
+
 
 export default class GlobalRouter extends React.Component {
 
@@ -113,6 +115,7 @@ export default class GlobalRouter extends React.Component {
                   <PrivateRoute path={routerConfig["orderManage.stockManage.stockLog"].path} component={StockLog} />
                   <PrivateRoute path={routerConfig["orderManage.stockManage.stockManage"].path} component={StockManage} />
                   <PrivateRoute path={routerConfig["orderManage.order.orderDetail"].path + '/:id'} component={OrderDetail} />
+                  <PrivateRoute path={routerConfig["orderManage.orderProduct.orderProductEdit"].path + '/:sellPrdId' + '/:tplPrdId'} component={OrderProductEdit} />
 
                 </Switch>
               </Admin>

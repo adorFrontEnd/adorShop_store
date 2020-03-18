@@ -48,8 +48,13 @@ const confirmDelivery= (params) => {
 }
 
 const confirmReceipt= (params) => {
-  return baseHttpProvider.getApi('api/ord/order/confirmReceipt', params);
+  return baseHttpProvider.postFormApi('api/ord/order/confirmReceipt', params);
 }
+
+const deleteDeliveryRecord= (params) => {
+  return baseHttpProvider.getApi('api/ord/order/deleteDeliveryRecord', params);
+}
+
 
 
 
@@ -66,6 +71,7 @@ export {
   reviewOrder,
   confirmDelivery,
   getOrderShippingData,
-  confirmReceipt
+  confirmReceipt,
+  deleteDeliveryRecord
 }
 

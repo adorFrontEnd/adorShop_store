@@ -5,12 +5,12 @@ import { pagination } from '../../utils/pagination';
 import Toast from '../../utils/toast';
 import { SearchForm, SubmitForm } from '../../components/common-form';
 import dateUtil from '../../utils/dateUtil';
-import { searchUserList, exportUserList } from '../../api/user/user';
+import { searchSellProductList } from '../../api/product/orderProduct';
 import { NavLink, Link } from 'react-router-dom';
 import { baseRoute, routerConfig } from '../../config/router.config';
 import { connect } from 'react-redux';
 import { changeRoute } from '../../store/actions/route-actions';
-
+import ProductTemplateSelectModal from '../../components/product/ProductTemplateSelectModal';
 
 const _title = "商品列表";
 const _description = "";
@@ -29,22 +29,14 @@ class Page extends Component {
   state = {
     tableDataList: null,
     showTableLoading: false,
-    exportUserListUrl: null
+    productModalIsVisible: false,
+    selectProductItem: null
   }
 
   componentDidMount() {
+    this.getPageData()
     this.props.changeRoute({ path: 'product.productInfo.productList', title: '商品列表', parentTitle: '商品信息' });
 
-  }
-
-  goIntegralRecord = () => {
-    let title = '积分记录';
-    this.props.changeRoute({ path: 'marketManage.integralRecord', title, parentTitle: '市场营销' });
-  }
-
-  goGiftRecord = () => {
-    let title = '兑奖记录';
-    this.props.changeRoute({ path: 'marketManage.giftRecord', title, parentTitle: '市场营销' });
   }
 
   params = {
@@ -91,7 +83,7 @@ class Page extends Component {
   getPageData = () => {
     let _this = this;
     this._showTableLoading();
-    searchUserList(this.params).then(res => {
+    searchSellProductList(this.params).then(res => {
       this._hideTableLoading();
 
       let _pagination = pagination(res, (current) => {
@@ -119,7 +111,7 @@ class Page extends Component {
     { title: "商品图", dataIndex: "imageUrl", render: data => data ? (<img src={data} style={{ height: 40, width: 40 }} />) : "--" },
     { title: "包装规格", dataIndex: "specifications", render: data => data || "--" },
     { title: "可用渠道", dataIndex: "channel", render: data => data || "--" },
-    { title: "单位", dataIndex: "unit", render: data => data || "--" },
+    { title: "单位", dataIndex: "baseUnit", render: data => data || "--" },
     { title: "新增时间", dataIndex: "gmtCreate", render: data => data ? dateUtil.getDateTime(data) : "--" },
     {
       title: '操作',
@@ -155,24 +147,37 @@ class Page extends Component {
     this.props.changeRoute({ path: 'product.productInfo.productEdit', title: '商品编辑', parentTitle: '商品管理' });
   }
 
+  _showProductModal = () => {
+    this.setState({
+      productModalIsVisible: true
+    })
+  }
+  _hideProductModal = () => {
+    this.setState({
+      productModalIsVisible: false
+    })
+  }
+  selectProduct = (selectProductItem) => {   
+    this._hideProductModal();
+  }
   /**渲染**********************************************************************************************************************************/
 
   render() {
     const { getFieldDecorator } = this.props.form;
-
+    const { selectProductItem } = this.state;
     return (
       <CommonPage title={_title} description={_description} >
 
         <div>
-          <div className="flex-between align-center margin-bottom20 flex-wrap">
-            <div style={{ minWidth: 330 }}>
-              <NavLink to={productEditPath + "/0"}><Button type='primary' onClick={() => this.goEdit('0')}>添加商品</Button></NavLink>         
+          <div className="flex-between align-center margin-bottom flex-wrap">
+            <div style={{ minWidth: 330 }} className='margin-bottom20'>
+              <Button type='primary' onClick={() => this._showProductModal()}>添加商品</Button>
               <Button type='primary' className='margin0-10'>批量删除</Button>
               <Button type='primary' >批量上架</Button>
               <Button type='primary' className='margin0-10'>批量下架</Button>
               <Button type='primary' className='normal'>导出</Button>
             </div>
-            <div style={{ minWidth: 700 }}>
+            <div style={{ minWidth: 700 }} className='margin-bottom20'>
               <SearchForm
                 width={700}
                 searchText='筛选'
@@ -193,6 +198,11 @@ class Page extends Component {
           />
         </div>
 
+        <ProductTemplateSelectModal
+          visible={this.state.productModalIsVisible}
+          onCancel={this._hideProductModal}
+          selectItem={this.selectProduct}
+        />
 
       </CommonPage >
     )

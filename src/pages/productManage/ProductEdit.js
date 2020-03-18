@@ -136,10 +136,11 @@ class Page extends Component {
      console.log(params);
       this._showDetailLoading();
       saveOrUpdateProduct({ ...params, id })
-      .then(() => {
+      .then(() => {      
         Toast('保存成功！');
         this._hideDetailLoading();
-        // this.getDetail(this.state.id);
+        this.goBack();    
+
       })
       .catch(() => {
         this._hideDetailLoading();
@@ -287,15 +288,15 @@ render() {
               getFieldDecorator('baseUnit', {
                 initialValue: null,
                 rules: [
-                  { required: true, message: '请输入计量单位!' }
+                  { required: true, message: '输入计量单位!' }
                 ]
               })(
                 <AutoComplete
                   allowClear
                   onChange={this.onUnitChange}
-                  style={{ width: 120 }}
+                  style={{ width: 130 }}
                   dataSource={unitList}
-                  placeholder="请输入计量单位"
+                  placeholder="输入计量单位"
                   filterOption={(inputValue, option) =>
                     option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
                   }
@@ -309,11 +310,11 @@ render() {
                   <span style={{ margin: "0 10px" }}>1</span>
                   <AutoComplete
                     allowClear
-                    style={{ width: 120 }}
+                    style={{ width: 130 }}
                     value={this.state.containerUnitName}
                     onChange={this.onContainerUnitChange}
                     dataSource={unitList}
-                    placeholder="请输入计量单位"
+                    placeholder="输入计量单位"
                     filterOption={(inputValue, option) =>
                       option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
                     }

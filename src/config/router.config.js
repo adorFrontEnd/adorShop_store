@@ -305,6 +305,14 @@ const routerConfigArr = [
     icon: "profile"
   },
   {
+    route_name: "orderManage.orderProduct.orderProductEdit",
+    path: baseRoute + "/orderManage/orderProductEdit",
+    loginRequired: true,
+    moduleAuth: false,
+    title: "商品详情",
+    icon: "profile"
+  },
+  {
     route_name: "orderManage.orderProduct.commentManage",
     path: baseRoute + "/orderManage/commentManage",
     loginRequired: true,

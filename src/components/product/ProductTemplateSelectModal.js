@@ -3,8 +3,11 @@ import React, { Component } from 'react';
 import { SearchForm } from '../common-form';
 import Toast from '../../utils/toast';
 import { pagination } from '../../utils/pagination';
-import { getPrdSkuList } from '../../api/order/order';
+import { searchProductList } from '../../api/product/product';
+import { NavLink, Link } from 'react-router-dom';
+import { baseRoute, routerConfig } from '../../config/router.config';
 
+const OrderEdit = routerConfig["orderManage.orderProduct.orderProductEdit"].path;
 const FormItem = Form.Item;
 const Option = Select.Option;
 const RadioGroup = Radio.Group;
@@ -26,12 +29,12 @@ class SKUModal extends Component {
   //查询按钮点击事件
   searchClicked = (params) => {
 
-    let { likeName } = params;
-    likeName = likeName || null;
+    let { inputData } = params;
+    inputData = inputData || null;
     this.params = {
       page: 1,
       ...params,
-      likeName
+      inputData
     }
     this.getPageData();
   }
@@ -41,7 +44,7 @@ class SKUModal extends Component {
     let _this = this;
     this._showTableLoading();
 
-    getPrdSkuList(this.params).then(res => {
+    searchProductList(this.params).then(res => {
       this._hideTableLoading();
       let _pagination = pagination(res, (current) => {
         this.params.page = current
@@ -75,10 +78,7 @@ class SKUModal extends Component {
 
   renderAction = (text, record, index) => {
 
-    let isSelect = false;
-    if (this.props.selectIds && this.props.selectIds.length > 0) {
-      isSelect = this.props.selectIds.indexOf(record.sellPrdSkuId) != -1;
-    }
+    let isSelect = this.props.selectId == record.id;
 
     return (
       <span>
@@ -86,7 +86,9 @@ class SKUModal extends Component {
           isSelect ?
             <span className='theme-color'>已选择</span>
             :
-            <Button onClick={() => this.selectItem(record, index)} type='primary'>选择</Button>
+            <NavLink to={OrderEdit + "/0/" + record.id} >
+              <Button onClick={() => this.selectItem(record, index)} type='primary'>选择</Button>
+            </NavLink>
         }
       </span>
     )
@@ -95,22 +97,34 @@ class SKUModal extends Component {
 
   // 表格相关列
   columns = [
-    { title: "商品编号", dataIndex: "number", render: data => data || "--" },
-    { title: "商品主图", dataIndex: "imageUrl", render: data => data ? <img src={data} style={{ height: 40, width: 40 }} /> : '--' },
+    { title: "商品主图", dataIndex: "imageUrl", render: data => this.getImgUrl(data) },
     { title: "商品名称", dataIndex: "name", render: data => data || "--" },
-    { title: "商品分类", dataIndex: "prdCategory", render: data => data || "--" },
-    { title: "商品规格", dataIndex: "specValue", render: data => data || "--" },
+    { title: "商品分类", dataIndex: "categoryNames", render: data => data || "--" },
+    { title: "包装规格", dataIndex: "specifications", render: data => data || "--" },
     {
       title: '单选商品',
       render: (text, record, index) => this.renderAction(text, record, index)
     }
   ]
 
+  getImgUrl = (data) => {
+    if (!data) {
+      return '--';
+    }
+    let urlArr = data.split('|');
+    if (!urlArr || !urlArr.length || !urlArr[0]) {
+      return '--'
+    }
+    return (
+      <img src={urlArr[0]} style={{ height: 40, width: 40 }} />
+    )
+  }
+
   selectItem = (record, index) => {
-    let { sellPrdSkuId } = record;
+    let { id } = record;
     let params = {
-      skuData: record,
-      id: sellPrdSkuId
+      product: record,
+      id
     }
     this.props.selectItem(params, index);
   }
@@ -123,8 +137,8 @@ class SKUModal extends Component {
     return (
       <Modal
         maskClosable={false}
-        width={700}
-        title="预测商品SKU选择"
+        width={800}
+        title="商品选择"
         visible={this.props.visible}
         onCancel={this.onCancel}
         footer={null}
@@ -132,14 +146,14 @@ class SKUModal extends Component {
         <div>
           <div>
             <SearchForm
-              width={600}
+              width={500}
               towRow={false}
               searchClicked={this.searchClicked}
               searchText='搜索'
               formItemList={[
                 {
                   type: "INPUT",
-                  field: "likeName",
+                  field: "inputData",
                   style: { width: 300 },
                   placeholder: "商品名称/商品编号/商品分类"
                 }
@@ -149,7 +163,7 @@ class SKUModal extends Component {
           <div>
             <Table
               indentSize={10}
-              rowKey="sellPrdSkuId"
+              rowKey="id"
               columns={this.columns}
               loading={this.state.tableLoading}
               pagination={this.state.pagination}
@@ -162,4 +176,4 @@ class SKUModal extends Component {
     )
   }
 }
-export default SKUModal
+export default Form.create()(SKUModal)

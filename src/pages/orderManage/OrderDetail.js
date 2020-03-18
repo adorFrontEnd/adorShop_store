@@ -3,18 +3,16 @@ import CommonPage from '../../components/common-page';
 import { Table, Form, Input, Select, Col, Row, Icon, Button, Divider, Spin, Popconfirm, Radio, Modal, Checkbox, InputNumber, Upload } from "antd";
 import { pagination } from '../../utils/pagination';
 import Toast from '../../utils/toast';
-import { SearchForm, SubmitForm } from '../../components/common-form';
 import dateUtil from '../../utils/dateUtil';
-import { searchUserList, exportUserList } from '../../api/user/user';
 import { NavLink, Link } from 'react-router-dom';
 import { baseRoute, routerConfig } from '../../config/router.config';
 import { connect } from 'react-redux';
 import { changeRoute } from '../../store/actions/route-actions';
-import { smartOrder, getOrderDetail, addOrderLog, confirmOrder, reviewOrder, confirmDelivery, confirmReceipt } from '../../api/order/order';
+import { getOrderDetail, addOrderLog, confirmOrder, reviewOrder, confirmDelivery, confirmReceipt } from '../../api/order/order';
 import NumberFilter from '../../utils/filter/number';
-import { getOrderSaveData } from './orderUtils';
 import { OrderStatusEnum, OrderOperTypeEnum } from '../../enum/orderEnum';
 import OrderDeliveryModal from '../../components/order/OrderDeliveryModal';
+import OrderShipDataList from '../../components/order/OrderShipDataList';
 
 const _title = "订单详情";
 const _description = '';
@@ -28,6 +26,7 @@ class Page extends Component {
 
     orderLogList: [],
     orderSKUList: [],
+    logisticsList: null,
     orderInfo: null,
     remark: null,
     orderStatus: null
@@ -51,7 +50,7 @@ class Page extends Component {
         if (!orderDetail || !orderDetail.list || !orderDetail.order) {
           return;
         }
-        let { list, order, logList } = orderDetail;
+        let { list, order, logList, logisticsList } = orderDetail;
         let orderInfo = order;
         let orderLogList = logList;
         let productTotalAmount = 0;
@@ -71,7 +70,8 @@ class Page extends Component {
           orderStatus,
           orderStatusStr,
           productTotalAmount,
-          orderTotalAmount
+          orderTotalAmount,
+          logisticsList
         })
       })
       .catch(() => {
@@ -221,12 +221,13 @@ class Page extends Component {
       .then(() => {
         Toast('保存成功！');
         this.getDetail(id);
+        this.hideDeliveryModal();
       })
   }
 
-  confirmReceipt = () => {    
-    let id = this.state.id;  
-    confirmReceipt({ id})
+  confirmReceipt = () => {
+    let id = this.state.id;
+    confirmReceipt({ id })
       .then(() => {
         Toast('确认收货成功！');
         this.getDetail(id);
@@ -236,7 +237,7 @@ class Page extends Component {
 
   render() {
     const { getFieldDecorator } = this.props.form;
-    const { orderInfo, orderStatus, orderStatusStr, productTotalAmount, orderTotalAmount } = this.state;
+    const { orderInfo, orderStatus, logisticsList, orderStatusStr, productTotalAmount, orderTotalAmount } = this.state;
 
     return (
       <CommonPage title={_title} description={_description} >
@@ -275,7 +276,7 @@ class Page extends Component {
                 </Button>
               : null
           }
-           {
+          {
             orderStatus == 5 ?
               <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} onClick={this.confirmReceipt}>
                 确认<br />
@@ -301,10 +302,10 @@ class Page extends Component {
                     </span>
                     <span className='margin-right20'>
                       <span className='font-bold'>业务员：</span>
-                      {orderInfo.salesman ? orderInfo.salesman : "--"}</span>
+                      {orderInfo.salesmanName || "--"}</span>
                     <span className='margin-right20'>
                       <span className='font-bold'>审单员：</span>
-                      {orderInfo.examinerName ? orderInfo.examinerName : "--"}</span>
+                      {orderInfo.examinerName || "--"}</span>
                   </div>
                   <div className='line-height40' style={{ minWidth: 940 }}>
                     <Row style={{ borderTop: '1px solid #f2f2f2' }}>
@@ -403,7 +404,11 @@ class Page extends Component {
             </div>
             <div className='margin-top20'>
               <div className='line-height40 font-18 color333 font-bold'>包裹信息</div>
-              <div>发货后生成包裹信息</div>
+              <div>
+                <OrderShipDataList
+                  data={logisticsList}
+                />
+              </div>
             </div>
             <div className='margin-top20 flex-middle'>
               <div className='line-height40 font-18 color333 font-bold'>操作日志</div>

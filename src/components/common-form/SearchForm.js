@@ -127,6 +127,7 @@ class SearchForm extends Component {
                 })(
                   <Input
                     {...props}
+                    allowClear
                     onChange={this.onChange}
                     style={style}
                     addonAfter={addonAfter}
