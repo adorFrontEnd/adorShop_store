@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import { SearchForm } from '../common-form';
 import Toast from '../../utils/toast';
 import dateUtil from '../../utils/dateUtil';
+import ExpressRealtimeData from './ExpressRealtimeData';
 
 class OrderShipDataList extends Component {
 
@@ -54,7 +55,12 @@ class OrderShipDataList extends Component {
                       </div>
                       <div className='margin-left20'>
                         物流情况
-                    </div>
+                      </div>
+                      <div className='padding0-10'>
+                        <ExpressRealtimeData
+                          data={item.logisticsNumber}
+                        />
+                      </div>
                     </div>
                   </Tabs.TabPane>
                 ))

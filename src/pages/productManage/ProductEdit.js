@@ -49,7 +49,7 @@ class Page extends Component {
     freightList: [],
     unitList: [],
     freightType: 0,
-    unifiedFreight: null,
+    freightPrice: null,
     freightTemplateId: null,
     isSpecChange: false
   }
@@ -94,6 +94,7 @@ class Page extends Component {
   revertProductDetail = (productDetail) => {
 
     let { formData, stateData, specData } = getParseDetailData(productDetail);
+ 
     this.setState(stateData);
     this.setState({
       specData,
@@ -121,10 +122,10 @@ class Page extends Component {
       }
 
       let { productDetail, isContainerUnit, containerUnitName, baseUnitQty,
-        categoryIds, categoryNames, specData, imageUrl, videoFile, details, freightType, unifiedFreight, freightTemplateId } = this.state;
+        categoryIds, categoryNames, specData, imageUrl, videoFile, details, freightType, freightPrice, freightTemplateId } = this.state;
       let stateData = {
         isContainerUnit, containerUnitName, baseUnitQty,
-        categoryIds, categoryNames, specData, imageUrl, videoFile, details, freightType, unifiedFreight, freightTemplateId
+        categoryIds, categoryNames, specData, imageUrl, videoFile, details, freightType, freightPrice, freightTemplateId
       };
       let id = productDetail && productDetail.id ? productDetail.id : null;
       let isEdit = !!id;
@@ -234,10 +235,10 @@ onFreightTypeChange = (e) => {
   })
 }
 
-onUnifiedFreightChange = (unifiedFreight) => {
+onfreightPriceChange = (freightPrice) => {
 
   this.setState({
-    unifiedFreight
+    freightPrice
   })
 }
 
@@ -436,8 +437,8 @@ render() {
                   <span>统一运费</span>
                   <InputNumber
                     precision={2}
-                    value={this.state.unifiedFreight}
-                    onChange={this.onUnifiedFreightChange}
+                    value={this.state.freightPrice}
+                    onChange={this.onfreightPriceChange}
                     style={{ width: 140, marginLeft: 10, marginRight: 10 }}
                     min={0}
                     placeholder='填写运费价格'

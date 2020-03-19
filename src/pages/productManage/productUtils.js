@@ -4,7 +4,7 @@ import Toast from '../../utils/toast';
 const getSaveData = (formData, stateData, isEdit) => {
   let { name, channel, baseUnit, specifications } = formData;
   let { unitListMap, isContainerUnit, containerUnitName, baseUnitQty,
-    categoryIds, categoryNames, specData, imageUrl, videoFile, details, freightType, unifiedFreight, freightTemplateId } = stateData;
+    categoryIds, categoryNames, specData, imageUrl, videoFile, details, freightType, freightPrice, freightTemplateId } = stateData;
 
   //单位
   if (!baseUnit) {
@@ -28,7 +28,7 @@ const getSaveData = (formData, stateData, isEdit) => {
   }
 
   if (freightType == 0) {
-    if (!unifiedFreight && unifiedFreight != 0) {
+    if (!freightPrice && freightPrice != 0) {
       Toast("请填写运费价格！");
       return;
     }
@@ -83,7 +83,7 @@ const getSaveData = (formData, stateData, isEdit) => {
     videoUrl,
     details,
     freightType,
-    unifiedFreight,
+    freightPrice,
     freightTemplateId,
     ...specDataObj,
   };
@@ -96,7 +96,7 @@ const getParseDetailData = (productDetail) => {
   if (!productDetail) {
     return
   }
-  let { baseUnit, categoryIds, categoryNames, channel, containerUnit, details, freightType, freightTemplateId,
+  let { baseUnit, categoryIds, categoryNames, channel, containerUnit, details, freightType, freightPrice, freightTemplateId,
     imageUrl, isContainerUnit, isOpenSpec, name, paramList, specifications, videoUrl } = productDetail;
 
   channel = _parseChannelValue(channel);
@@ -110,10 +110,10 @@ const getParseDetailData = (productDetail) => {
     name, channel, baseUnit, specifications
   }
   let stateData = {
-    baseUnit, categoryIds, containerUnit, details, containerUnit, freightType, categoryNames,
-    imageUrl, isContainerUnit, isOpenSpec, paramList, videoFile, freightTemplateId
+    baseUnit, categoryIds, containerUnit, details, containerUnit, freightType, freightPrice, categoryNames,
+    imageUrl, isContainerUnit, isOpenSpec, paramList, videoFile, freightTemplateId:freightTemplateId || null
   }
-  let specData = _parseSpecData({ isOpenSpec, paramList });
+  let specData = parseSpecData({ isOpenSpec, paramList });
 
   if (isContainerUnit) {
     let { containerUnitName, baseUnitQty } = containerUnit;
@@ -155,7 +155,7 @@ const _parseChannelValue = (channel) => {
   return result;
 }
 
-const _parseSpecData = (specData) => {
+const parseSpecData = (specData) => {
   let { isOpenSpec, paramList } = specData;
   let isMultiSpec = !!isOpenSpec;
   let singleSpecData = [];
@@ -209,7 +209,7 @@ const _getSpecData = (specData, isEdit) => {
     }
   }
 
-  
+
   let multiData = _getMultiSpecData(multiSpecData, multiSpecClasses, isEdit);
   paramGroupStrList = multiData.paramGroupStrList;
 
@@ -287,5 +287,6 @@ const validateSingleSpecData = (singleSpecData) => {
 
 export {
   getSaveData,
-  getParseDetailData
+  getParseDetailData,
+  parseSpecData
 }

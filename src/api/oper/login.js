@@ -26,7 +26,7 @@ const forgetPassword = (params) => {
 
 const changePassword = (params) => {
 
-  return baseHttpProvider.postFormApi('api/oper/updatePassword', params)
+  return baseHttpProvider.postFormApi('api/sys/oper/updatePassword', params)
 }
 
 export {

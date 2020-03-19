@@ -31,7 +31,11 @@ const sendSms = (params) => {
 }
 
 const getAllCityList = (params) => {
-  return baseHttpProvider.getApi('api/city/getAllCityList', params);
+  return baseHttpProvider.getApi('api/sys/city/getAllCityList', params);
+}
+
+const getExpressFromkdniao = (params)=>{
+  return baseHttpProvider.POST_TotalData('http://api.kdniao.com/Ebusiness/EbusinessOrderHandle.aspx', params);  
 }
 
 export {
@@ -39,5 +43,6 @@ export {
   getUpdatePictureUrl,
   getImageCaptcha,
   sendSms,
-  getAllCityList
+  getAllCityList,
+  getExpressFromkdniao
 }

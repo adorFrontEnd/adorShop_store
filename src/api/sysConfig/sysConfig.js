@@ -14,10 +14,10 @@ const deleteUnit = (params) => {
 
 // 公众号
 const getPublicConfig = (params) => {
-  return baseHttpProvider.getApi('api/syncPublicConfig/getData', params)
+  return baseHttpProvider.getApi('api/sys/syncPublicConfig/getData', params)
 }
 const updatePublicConfig = (params) => {
-  return baseHttpProvider.getApi('api/syncPublicConfig/updateConfig', params)
+  return baseHttpProvider.getApi('api/sys/syncPublicConfig/updateConfig', params)
 }
 // 网店管家
 const getHousekeeperConfig = (params) => {

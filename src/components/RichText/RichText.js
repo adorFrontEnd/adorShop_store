@@ -14,7 +14,7 @@ export default class RichText extends Component {
   }
   /**富文本 ********************************************************************************************************************/
   onRichTextChange = (richText) => {
-    this.props.onTextChange(richText)
+    this.props.onTextChange && this.props.onTextChange(richText)
   }
 
   modules = {
@@ -64,15 +64,32 @@ export default class RichText extends Component {
       <div>
         <div>{this.props.addonBefore}</div>
         <ReactQuill
+          readOnly={this.props.readOnly}
           ref='reactQuillRef'
           theme={'snow'}
           onChange={this.onRichTextChange}
           value={this.props.textValue || ''}
-          modules={this.modules}
+          modules={this.props.readOnly ? {
+            toolbar: {
+              container: [],
+              handlers: {
+                image: this.imageHandler.bind(this)
+              }
+            },
+            clipboard: {
+              // toggle to add extra line breaks when pasting HTML:
+              matchVisual: false,
+            }
+          } : this.modules}
           formats={this.formats}
           placeholder='编辑详情(图片)...'
         />
-        <div className='line-height18 color-red' style={{ textAlign: "left" }}>长度不能超过16000px</div>
+        {
+          !this.props.readOnly ?
+            <div className='line-height18 color-red' style={{ textAlign: "left" }}>长度不能超过16000px</div>
+            :
+            null
+        }
         <div>{this.props.children}</div>
         <PicturesWallModal visible={this.state.uploadModalVisible} onCancel={this.hideUploadModal} onOk={this.onUploadModalOk}></PicturesWallModal>
       </div>

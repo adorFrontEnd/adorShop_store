@@ -5,15 +5,15 @@ import CommonPage from '../../components/common-page';
 import { SearchForm } from '../../components/common-form';
 import dateUtil from '../../utils/dateUtil';
 import RelativeCategoryModal from "../../components/category/RelativeCategoryModal";
-import SpecEdit from '../productManage/SpecEdit';
-import ProductPictureWall from '../../components/upload/ProductPictureWall';
-import UploadVideo from '../../components/upload/UploadVideo';
-import RichText from '../../components/RichText/RichText';
+import OrderProductSpecEdit from './OrderProductSpecEdit';
 import { searchFreightList } from '../../api/product/freight';
 import { getUnitConfigList } from '../../api/sysConfig/sysConfig';
 import { saveOrUpdateProduct, getProductDetail } from '../../api/product/product';
 import { getSellProductDetail } from '../../api/product/orderProduct';
-import { getSaveData, getParseDetailData } from '../productManage/productUtils';
+import { getSaveData, getParseDetailData, parseSpecData } from '../productManage/productUtils';
+import ReactPlayer from 'react-player';
+import RichText from '../../components/RichText/RichText';
+
 
 const _description = "";
 const _statusEnum = {
@@ -27,32 +27,10 @@ class Page extends Component {
   state = {
     id: 0,
     productDetail: {},
-    showLoading: false,
-
-    baseUnit: "",
-    baseUnitQty: null,
-    containerUnitName: "",
-    isContainerUnit: false,
-
-    areaModalIsVisible: false,
-    selectAreaData: null,
-
-    cModalIsVisible: false,
-    categoryNames: null,
-    categoryIds: [],
-
     specData: null,
-
     imageUrl: [],
-    videoFile: null,
-    details: null,
-
-    freightList: [],
-    unitList: [],
-    freightType: 0,
-    unifiedFreight: null,
-    freightTemplateId: null,
-    isSpecChange: false
+    freightMap: {},
+    isSpecChange:false
   }
 
   componentWillMount() {
@@ -72,7 +50,6 @@ class Page extends Component {
 
   componentDidMount() {
     this.searchFreightList();
-    this.getUnitConfigList();
   }
 
 
@@ -81,15 +58,30 @@ class Page extends Component {
     tplPrdId = tplPrdId || this.state.tplPrdId;
 
     let _getDetail = sellPrdId == 0 ? getProductDetail : getSellProductDetail;
-    let id =  sellPrdId == 0 ? tplPrdId : sellPrdId;
+    let id = sellPrdId == 0 ? tplPrdId : sellPrdId;
 
     this._showDetailLoading();
     _getDetail({ id })
       .then(productDetail => {
         this._hideDetailLoading();
-        this.revertProductDetail(productDetail);
+
+        let { baseUnit, containerUnit, isContainerUnit, imageUrl, isOpenSpec, paramList } = productDetail;
+        let totalUnitStr = isContainerUnit ? this.getTotalUnitStr(baseUnit, containerUnit) : baseUnit;
+        imageUrl = imageUrl.split('|');
+        let specData = parseSpecData({ isOpenSpec, paramList })
+     
         this.setState({
-          productDetail
+          productDetail,
+          totalUnitStr,
+          imageUrl          
+        })
+        this.setState({
+          specData,
+          isSpecChange: true
+        }, () => {
+          this.setState({
+            isSpecChange: false
+          })
         })
       })
       .catch(() => {
@@ -97,109 +89,18 @@ class Page extends Component {
       })
   }
 
-  revertProductDetail = (productDetail) => {
-
-    let { formData, stateData, specData } = getParseDetailData(productDetail);
-    this.setState(stateData);
-    this.setState({
-      specData,
-      isSpecChange: true
-    }, () => {
-      this.setState({
-        isSpecChange: false
-      })
-    })
-    this.props.form.setFieldsValue(formData);
-  }
-
-
-
   // 返回
   goBack = () => {
     window.history.back();
   }
 
-  saveDataClicked = () => {
-
-    this.props.form.validateFields((err, data) => {
-      if (err) {
-        return;
-      }
-
-      let { productDetail, isContainerUnit, containerUnitName, baseUnitQty,
-        categoryIds, categoryNames, specData, imageUrl, videoFile, details, freightType, unifiedFreight, freightTemplateId } = this.state;
-      let stateData = {
-        isContainerUnit, containerUnitName, baseUnitQty,
-        categoryIds, categoryNames, specData, imageUrl, videoFile, details, freightType, unifiedFreight, freightTemplateId
-      };
-      let id = productDetail && productDetail.id ? productDetail.id : null;
-      let isEdit = !!id;
-      let params = getSaveData(data, stateData, isEdit);
-
-      if (!params) {
-        return;
-      }
-      console.log(params);
-      this._showDetailLoading();
-      saveOrUpdateProduct({ ...params, id })
-        .then(() => {
-          Toast('保存成功！');
-          this._hideDetailLoading();
-          this.goBack();
-
-        })
-        .catch(() => {
-          this._hideDetailLoading();
-        })
-    })
-  }
-
-
-
-  /**基础信息 ********************************************************************************************************************/
-
-  /**单位更改 **************/
-  onUnitChange = (e) => {
-    let baseUnit = e;
-    this.setState({
-      baseUnit
-    })
-  }
-
-  onContainerUnitChange = (e) => {
-    let containerUnitName = e;
-    this.setState({
-      containerUnitName
-    })
-  }
-
-  onHasPackageUnitChange = (e) => {
-    let isContainerUnit = e.target.checked;
-    this.setState({
-      isContainerUnit
-    })
-  }
-
-  onBaseUnitQtyChange = (e) => {
-    let baseUnitQty = e;
-    this.setState({
-      baseUnitQty
-    })
-  }
-
-  /**选择分类 ***********/
-
-  showCModal = () => {
-    this.setState({ cModalIsVisible: true })
-  }
-
-  cModalSaveClick = (params) => {
-    let { categoryIds, category } = params;
-    this.setState({ cModalIsVisible: false, categoryNames: category, categoryIds });
-  }
-
-  hideCModal = () => {
-    this.setState({ cModalIsVisible: false })
+  getTotalUnitStr = (baseUnit, containerUnit) => {
+    if (!containerUnit) {
+      return baseUnit
+    }
+    containerUnit = JSON.parse(containerUnit);
+    let { containerUnitName, baseUnitQty } = containerUnit;
+    return `${baseUnit}，1${containerUnitName} = ${baseUnitQty}${baseUnit}`;
   }
 
   /**规格信息**********************************************************************************************************/
@@ -209,55 +110,13 @@ class Page extends Component {
       specData
     })
   }
+  // paramList: [{ id: 16, gmtCreate: 1584414199000, gmtModified: 1584414199000, shopId: 18, productId: 25, … }]
 
-  /**商品图及详情*********************************************************************************************************/
-
-  /**上传图片，视频**************/
-  uploadPicture = (imageUrl) => {
-    imageUrl = imageUrl || [];
-    this.setState({
-      imageUrl
-    })
-  }
-
-  uploadVideo = (videoFile) => {
-    this.setState({
-      videoFile
-    })
-  }
-
-  /**富文本 **************/
-  onTextChange = (details) => {
-    this.setState({
-      details
-    })
-  }
-
-  onFreightTypeChange = (e) => {
-    let freightType = e.target.value;
-    this.setState({
-      freightType
-    })
-  }
-
-  onUnifiedFreightChange = (unifiedFreight) => {
-
-    this.setState({
-      unifiedFreight
-    })
-  }
-
-  onManagementIdChange = (e) => {
-    let freightTemplateId = e;
-    this.setState({
-      freightTemplateId
-    })
-  }
   /***渲染**********************************************************************************************************/
 
   render() {
     const { getFieldDecorator } = this.props.form;
-    let { labelList, selectAreaData, unitList, showLoading } = this.state;
+    let { productDetail, totalUnitStr, imageUrl, freightMap, labelList, unitList, showLoading } = this.state;
 
     return (
       <CommonPage title={this.state._title} description={_description} >
@@ -266,218 +125,98 @@ class Page extends Component {
           <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} className='yellow-btn margin-left20' onClick={this.goBack}>返回</Button>
         </div>
         <Spin spinning={showLoading}>
-          <Form className='common-form'>
-            <div style={{ background: "#f2f2f2", borderLeft: "6px solid #ff8716" }} className='color333 padding border-radius font-16 margin-bottom'>基础信息</div>
-            <Form.Item
-              style={{ width: 700 }}
-              labelCol={{ span: 6 }}
-              wrapperCol={{ span: 8 }}
-              label='商品名称：'
-              field='name'>
-              {
-                getFieldDecorator('name', {
-                  rules: [
-                    { required: true, message: '请输入商品名称!' }
-                  ]
-                })(
-                  <Input minLength={0} maxLength={20} />
-                )
-              }
-            </Form.Item>
-            <Form.Item
-              style={{ width: 700 }}
-              labelCol={{ span: 6 }}
-              wrapperCol={{ span: 18 }}
-              label='计量单位：'
-              field='baseUnit'>
-              {
-                getFieldDecorator('baseUnit', {
-                  initialValue: null,
-                  rules: [
-                    { required: true, message: '输入计量单位!' }
-                  ]
-                })(
-                  <AutoComplete
-                    allowClear
-                    onChange={this.onUnitChange}
-                    style={{ width: 130 }}
-                    dataSource={unitList}
-                    placeholder="输入计量单位"
-                    filterOption={(inputValue, option) =>
-                      option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
-                    }
-                  />
-                )
-              }
-              <Checkbox style={{ marginLeft: 10 }} checked={this.state.isContainerUnit} onChange={this.onHasPackageUnitChange}>容器单位</Checkbox>
-              {
-                this.state.isContainerUnit ?
-                  <span>
-                    <span style={{ margin: "0 10px" }}>1</span>
-                    <AutoComplete
-                      allowClear
-                      style={{ width: 130 }}
-                      value={this.state.containerUnitName}
-                      onChange={this.onContainerUnitChange}
-                      dataSource={unitList}
-                      placeholder="输入计量单位"
-                      filterOption={(inputValue, option) =>
-                        option.props.children.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
-                      }
-                    />
-                    <span style={{ margin: "0 10px" }}>=</span>
-                    <InputNumber min={0} value={this.state.baseUnitQty} onChange={this.onBaseUnitQtyChange} />
-                    <span>{this.state.baseUnit}</span>
-                  </span>
-                  : null
-              }
-            </Form.Item>
-            <Form.Item
-              style={{ width: 700 }}
-              labelCol={{ span: 6 }}
-              wrapperCol={{ span: 8 }}
-              label='包装规格'
-              field='specifications'>
-              {
-                getFieldDecorator('specifications', {
-                  rules: [
-                    { required: true, message: '请输入包装规格!' }
-                  ]
-                })(
-                  <Input minLength={0} maxLength={30} />
-                )
-              }
-            </Form.Item>
-            <Row className='line-height40' style={{ width: 700 }}>
-              <Col span={6} className='label-required text-right'>商品分类：</Col>
-              <Col span={16}>
-                <span><Button type='primary' onClick={this.showCModal}>选择分类</Button></span>
-                <span className='margin-left'>
-                  {
-                    this.state.categoryNames ?
-                      <span>
-                        {this.state.categoryNames}
-                      </span>
-                      :
-                      "暂未选择商品分类"
-                  }
-                </span>
-              </Col>
-            </Row>
 
-            <Form.Item
-              style={{ width: 700 }}
-              labelCol={{ span: 6 }}
-              wrapperCol={{ span: 16 }}
-              label='可购渠道：'
-              field='channel'>
-              {
-                getFieldDecorator('channel', {
-                  rules: [
-                    { required: true, message: '可购渠道至少选择一项!' }
-                  ]
-                })(
-                  <Checkbox.Group>
-                    <Checkbox disabled={true} value={1}>直购</Checkbox>
-                    <Checkbox value={2}>订货</Checkbox>
-                    <Checkbox disabled={true} value={4}>云市场</Checkbox>
-                  </Checkbox.Group>
-                )
-              }
-              <span className='margin-left color-red'>可购渠道至少选择一项</span>
-            </Form.Item>
-            <div style={{ background: "#f2f2f2", borderLeft: "6px solid #ff8716" }} className='color333 padding border-radius font-16 margin-bottom'>规格信息</div>
-            <div>
-              <SpecEdit
-                shouldChange={this.state.isSpecChange}
-                specData={this.state.specData}
-                onChange={this.onSpecDataChange}
-              />
-            </div>
+          <div style={{ background: "#f2f2f2", borderLeft: "6px solid #ff8716" }} className='color333 padding border-radius font-16 margin-bottom'>基础信息</div>
+          <Row className='line-height40' style={{ width: 700 }}>
+            <Col span={6} className='text-right'>商品名称：</Col>
+            <Col span={16}>{productDetail.name} </Col>
+          </Row>
+          <Row className='line-height40' style={{ width: 700 }}>
+            <Col span={6} className='text-right'>计量单位：</Col>
+            <Col span={16}>{totalUnitStr}</Col>
+          </Row>
+          <Row className='line-height40' style={{ width: 700 }}>
+            <Col span={6} className='text-right'>包装规格：</Col>
+            <Col span={16}>{productDetail.specifications}</Col>
+          </Row>
+          <Row className='line-height40' style={{ width: 700 }}>
+            <Col span={6} className='text-right'>商品分类：</Col>
+            <Col span={16}>{productDetail.categoryNames}</Col>
+          </Row>
+          <div style={{ background: "#f2f2f2", borderLeft: "6px solid #ff8716" }} className='color333 padding border-radius font-16 margin-bottom'>规格信息</div>
+          <div>
+            <OrderProductSpecEdit
+              shouldChange={this.state.isSpecChange}
+              specData={this.state.specData}
+              onChange={this.onSpecDataChange}
+            />
+          </div>
+          <div style={{ background: "#f2f2f2", borderLeft: "6px solid #ff8716" }} className='color333 padding border-radius font-16 margin-bottom'>商品图及详情</div>
+          <Row className='line-height40' style={{ width: 700 }}>
+            <Col span={6} className='text-right'>商品图片：</Col>
+            <Col span={18}>
+              <div className='flex flex-wrap margin-top'>
+                {
+                  imageUrl && imageUrl.length ?
+                    imageUrl.map((item, index) =>
+                      <div key={index} className='margin-right'>
+                        <img style={{ width: 100, height: 100 }}
+                          className='border-radius'
+                          src={item}
+                        />
+                        <div className='text-center'>
+                          {index == 0 ? "主图" : `轮播${index}`}
+                        </div>
+                      </div>
 
-
-            <div style={{ background: "#f2f2f2", borderLeft: "6px solid #ff8716" }} className='color333 padding border-radius font-16 margin-bottom'>商品图及详情</div>
-            <Row className='line-height40' style={{ width: 700 }}>
-              <Col span={6} className='label-required text-right'>商品图片：</Col>
-              <Col span={18}>
-                <div className='color-red'>
-                  第一个为主图，其余为商品的轮播图，最多上传15张<br />
-                当SKU不存在轮播图时展示商品默认轮播图
+                    )
+                    : null
+                }
               </div>
-                <ProductPictureWall
-                  uploadCallback={this.uploadPicture}
-                  pictureList={this.state.imageUrl || []}
-                  limitFileLength={15}
-                  folder='product'
-                  allowType={['1', '2']}
-                />
-              </Col>
-            </Row>
-            <Row className='line-height40' style={{ width: 700 }}>
-              <Col span={6} className='text-right'>商品视频：</Col>
-              <Col span={18}>
-                <UploadVideo
-                  folder='video'
-                  videoFile={this.state.videoFile}
-                  uploadCallback={this.uploadVideo}
-                />
-              </Col>
-            </Row>
-            <Row className='line-height40' style={{ width: 700 }}>
-              <Col span={6} className='label-required text-right'>商品详情：</Col>
-              <Col span={18}>
-                <RichText
-                  textValue={this.state.details}
-                  onTextChange={this.onTextChange}
-                />
-              </Col>
-            </Row>
+            </Col>
+          </Row>
+          {
+            productDetail.videoUrl ?
+              <Row className='line-height40' style={{ width: 700 }}>
+                <Col span={6} className='text-right'>商品视频：</Col>
+                <Col span={18}>
+                  <div style={{ width: 160 }} className='margin-top'>
+                    <div style={{ border: "1px solid #bfbfbf", height: 160, width: 160 }} className='flex-middle flex-center border-radius'>
+                      <ReactPlayer url={productDetail.videoUrl} width="150px" height="150px" controls />
+                    </div>
+                  </div>
+                </Col>
+              </Row> : null
+          }
 
-            <div style={{ background: "#f2f2f2", borderLeft: "6px solid #ff8716" }} className='color333 padding border-radius font-16 margin-bottom'>其它信息</div>
-            <Row className='line-height30 margin-bottom20' style={{ width: 700 }}>
-              <Col span={6} className='label-required text-right'>快递运费：</Col>
-              <Col span={18}>
-                <Radio.Group value={this.state.freightType} onChange={this.onFreightTypeChange}>
-                  <Radio value={0} style={{ display: 'block', height: '40px', lineHeight: '30px' }}>
-                    <span>统一运费</span>
-                    <InputNumber
-                      precision={2}
-                      value={this.state.unifiedFreight}
-                      onChange={this.onUnifiedFreightChange}
-                      style={{ width: 140, marginLeft: 10, marginRight: 10 }}
-                      min={0}
-                      placeholder='填写运费价格'
-                    />元
-                </Radio>
-                  <Radio value={1} style={{ display: 'block', height: '40px', lineHeight: '30px' }}>
-                    <span>运费模板</span>
-                    <Select value={this.state.freightTemplateId} onChange={this.onManagementIdChange} style={{ width: 140, marginLeft: 10 }}>
-                      <Select.Option value={null}>请选择</Select.Option>
-                      {
-                        this.state.freightList && this.state.freightList.length ?
-                          this.state.freightList.map(item =>
-                            <Select.Option key={item.id} value={item.id}>{item.name}</Select.Option>
-                          )
-                          : null
-                      }
+          <Row className='line-height40' style={{ width: 700 }}>
+            <Col span={6} className='text-right'>商品详情：</Col>
+            <Col span={18} className='margin-top margin-bottom'>
+              <RichText
+                readOnly={true}
+                textValue={productDetail.details}
+              />
+            </Col>
+          </Row>
 
-                    </Select>
-                  </Radio>
-                </Radio.Group>
-              </Col>
-            </Row>
-          </Form>
+          <div style={{ background: "#f2f2f2", borderLeft: "6px solid #ff8716" }} className='color333 padding border-radius font-16 margin-bottom'>其它信息</div>
+          <Row className='line-height30 margin-bottom20' style={{ width: 700 }}>
+            <Col span={6} className='text-right'>快递运费：</Col>
+            <Col span={18}>
+              {
+                productDetail.freightType == 0 ?
+                  <div>
+                    <span>统一运费：</span><span>{productDetail.freightPrice}元</span>
+                  </div>
+                  :
+                  <div>
+                    <span>运费模板：</span><span>{freightMap[productDetail.freightTemplateId]}</span>
+                  </div>
+              }
+            </Col>
+          </Row>
         </Spin>
 
-
-        <RelativeCategoryModal
-          showList={true}
-          maxLength={5}
-          categoryIds={this.state.categoryIds}
-          onOk={this.cModalSaveClick}
-          onCancel={this.hideCModal}
-          visible={this.state.cModalIsVisible}
-        />
       </CommonPage >)
   }
 
@@ -485,23 +224,16 @@ class Page extends Component {
     searchFreightList({ page: 1, size: 100 })
       .then((res) => {
         let freightList = res.data;
+        let freightMap = {};
+        freightList.forEach(element => {
+          let { id, name } = element;
+          freightMap[id] = name;
+        });
         this.setState({
-          freightList
+          freightMap
         })
       })
   }
-
-  getUnitConfigList = () => {
-    getUnitConfigList({ page: 1, size: 100 })
-      .then((res) => {
-        let arr = res.data;
-        let unitList = arr.map(item => item.name);
-        this.setState({
-          unitList
-        })
-      })
-  }
-
 
   _showDetailLoading = () => {
     this.setState({
