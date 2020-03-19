@@ -5,6 +5,7 @@ import { NavLink, Link } from 'react-router-dom';
 import Toast from '../../utils/toast';
 import { relative } from "path";
 import Flatted from "flatted";
+import './index.less'
 const _title = "词库配置";
 const _lexiconCategory = {
   "0": "姓名",
@@ -13,8 +14,8 @@ const _lexiconCategory = {
   "3": "数量"
 }
 const _lexiconCategoryArr = Object.keys(_lexiconCategory).map(item => { return { id: item, name: _lexiconCategory[item] } });
-class Page extends Component {
 
+class Page extends Component {
   state = {
     status: false,
     pageData: null
@@ -48,12 +49,12 @@ class Page extends Component {
   modalColumns = [
     { title: "商品名称", dataIndex: "name", render: data => data || "--" },
     { title: "商品图", dataIndex: "image", render: data => <span><img style={{ height: 40, width: 40 }} src={data} /></span> },
-    { title: "包装规格", dataIndex: "spec", render: data => data || "--" },
     { title: "商品分类", dataIndex: "catogery", render: data => data || "--" },
+    { title: "包装规格", dataIndex: "spec", render: data => data || "--" },
     {
       title: '操作',
       render: (text, record, index) => (
-        <Button onClick={() => this.deleteUnit(record)} type='primary'>选择</Button>
+        <Button onClick={() => this.chooseProduct(record)} type='primary'>选择</Button>
       )
     }
   ]
@@ -82,7 +83,14 @@ class Page extends Component {
       newItemModalVisible: false
     })
   }
-
+  saveDataClicked = () => {
+    this.props.form.validateFields((err, data) => {
+      if (err) {
+        return;
+      }
+      window.history.back();
+    })
+  }
 
   // 返回
   goEditBack = () => {
@@ -98,10 +106,10 @@ class Page extends Component {
         <div style={{ width: 600 }}>
           <Form className='common-form'>
             <Form.Item
-              labelCol={{ span: 4}}
+              labelCol={{ span: 4 }}
               wrapperCol={{ span: 10 }}
               label='关键词'
-              field='shopName'
+              field='spec'
             >
               {
                 getFieldDecorator('name', {
@@ -124,11 +132,11 @@ class Page extends Component {
                 getFieldDecorator('gradeId', {
                   initialValue: null,
                   rules: [
-                    { required: true, message: '请选择!' }
+                    { required: true, message: '请选择类别' }
                   ]
                 })(
-                  <Select  onChange={this.handleChange}>
-                    <Select.Option value={null} >请选择</Select.Option>
+                  <Select onChange={this.handleChange}>
+                    <Select.Option value={null} >请选择类别</Select.Option>
                     {
                       _lexiconCategoryArr ?
                         _lexiconCategoryArr.map(item =>
@@ -146,12 +154,12 @@ class Page extends Component {
                   labelCol={{ span: 4 }}
                   wrapperCol={{ span: 10 }}
                   label='数量范围'
-                  field='id'>
+                  field='num'>
                   {
-                    getFieldDecorator('id', {
+                    getFieldDecorator('num', {
                       initialValue: null,
                       rules: [
-                        { required: true, message: '请选择!' }
+                        { required: true, message: '请输入数量范围' }
                       ]
                     })(
                       <div>
@@ -167,7 +175,7 @@ class Page extends Component {
         {
           this.state.isShowGoods ?
             <div>
-              <Button type='primary' style={{ margin:'20px 0' }} onClick={this.showAuthModal}>添加商品</Button>
+              <Button type='primary' style={{ margin: '20px 0' }} onClick={this.showAuthModal}>添加商品</Button>
               <Table
                 indentSize={10}
                 rowKey="id"
@@ -193,9 +201,7 @@ class Page extends Component {
           <div style={{ display: 'flex', position: 'relative' }}>
             <div style={{ width: '70%', padding: '24px', borderRight: '1px solid #f2f2f2' }}>
               <div style={{ display: 'flex', marginBottom: '20px' }}>
-                <Input allowClear style={{ width: "240px" }} onChange={this.onKeywordsChange} placeholder='商品名称/商品编号/商品分类'
-
-                />
+                <Input allowClear style={{ width: "240px" }} onChange={this.onKeywordsChange} placeholder='商品名称/商品编号/商品分类'/>
                 <Button type='primary' onClick={this.onsearchClick} style={{ margin: '0 10px' }}>搜索</Button>
                 <Button type='primary' onClick={this.resetClicked}>重置</Button>
               </div>
@@ -205,7 +211,7 @@ class Page extends Component {
                 columns={this.modalColumns}
                 loading={this.state.showTableLoading}
                 pagination={this.state.pagination}
-                dataSource={this.state.tableDataList}
+                dataSource={this.state.modalTableDataList}
               />
             </div>
             <div style={{ padding: '10px', width: '30%' }} >
