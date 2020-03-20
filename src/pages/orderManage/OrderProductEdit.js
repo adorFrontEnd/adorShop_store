@@ -2,26 +2,15 @@ import React, { Component } from "react";
 import { Col, Row, Checkbox, Card, Modal, Select, Spin, Form, Button, Input, AutoComplete, Table, Radio, InputNumber } from 'antd';
 import Toast from '../../utils/toast';
 import CommonPage from '../../components/common-page';
-import { SearchForm } from '../../components/common-form';
-import dateUtil from '../../utils/dateUtil';
-import RelativeCategoryModal from "../../components/category/RelativeCategoryModal";
-import OrderProductSpecEdit from './OrderProductSpecEdit';
+import OrderProductSingleSpecEdit from './OrderProductSingleSpecEdit';
 import { searchFreightList } from '../../api/product/freight';
-import { getUnitConfigList } from '../../api/sysConfig/sysConfig';
-import { saveOrUpdateProduct, getProductDetail } from '../../api/product/product';
-import { getSellProductDetail } from '../../api/product/orderProduct';
-import { getSaveData, getParseDetailData, parseSpecData } from '../productManage/productUtils';
+import { getProductDetail } from '../../api/product/product';
+import { getSellProductDetail, saveOrUpdateSellProduct } from '../../api/product/orderProduct';
+import { getSaveData, parseSpecData } from '../productManage/productUtils';
 import ReactPlayer from 'react-player';
 import RichText from '../../components/RichText/RichText';
 
-
 const _description = "";
-const _statusEnum = {
-  "0": "正常",
-  "2": "待审核",
-  "3": "未通过",
-  "4": "已停用"
-}
 
 class Page extends Component {
   state = {
@@ -31,7 +20,8 @@ class Page extends Component {
     imageUrl: [],
     freightMap: {},
     isSpecChange: false,
-    specData:{}
+    specData: {},
+    isOpenSpec: null
   }
 
   componentWillMount() {
@@ -53,12 +43,11 @@ class Page extends Component {
     this.searchFreightList();
   }
 
-
   getDetail = (sellPrdId, tplPrdId) => {
     sellPrdId = sellPrdId || this.state.sellPrdId;
     tplPrdId = tplPrdId || this.state.tplPrdId;
-
-    let _getDetail = sellPrdId == 0 ? getProductDetail : getSellProductDetail;
+    let isTplProduct = sellPrdId == 0;
+    let _getDetail = isTplProduct ? getProductDetail : getSellProductDetail;
     let id = sellPrdId == 0 ? tplPrdId : sellPrdId;
 
     this._showDetailLoading();
@@ -66,28 +55,57 @@ class Page extends Component {
       .then(productDetail => {
         this._hideDetailLoading();
 
-        let { baseUnit, containerUnit, isContainerUnit, imageUrl, isOpenSpec, paramList } = productDetail;
-        let totalUnitStr = isContainerUnit ? this.getTotalUnitStr(baseUnit, containerUnit) : baseUnit;
-        imageUrl = imageUrl.split('|');
-        let revertSpecData = parseSpecData({ isOpenSpec, paramList })
+        if (isTplProduct) {
+          this.revertTplProductDetail(productDetail);
+          return;
+        }
+        this.revertSellProductDetail(productDetail);
 
-        this.setState({
-          productDetail,
-          totalUnitStr,
-          imageUrl
-        })
-        this.setState({
-          revertSpecData,
-          isSpecChange: true
-        }, () => {
-          this.setState({
-            isSpecChange: false
-          })
-        })
       })
       .catch(() => {
         this._hideDetailLoading();
       })
+  }
+
+  //回滚新建商品时商品模板数据
+  revertTplProductDetail = (productDetail) => {
+    let { baseUnit, containerUnit, isContainerUnit, imageUrl, isOpenSpec, paramList } = productDetail;
+    let totalUnitStr = isContainerUnit ? this.getTotalUnitStr(baseUnit, containerUnit) : baseUnit;
+    imageUrl = imageUrl.split('|');
+    let revertSpecData = parseSpecData({ isOpenSpec, paramList })
+
+    this.setState({
+      productDetail,
+      totalUnitStr,
+      imageUrl,
+      isOpenSpec,
+      isTplProduct: true
+    })
+    this.setState({
+      revertSpecData,
+      isSpecChange: true
+    }, () => {
+      this.setState({
+        isSpecChange: false
+      })
+    })
+  }
+
+  //回滚编辑商品时订货商品数据
+  revertSellProductDetail = (sellProductDetail) => {
+    let { product } = sellProductDetail;
+    let productDetail = { ...product };
+    let { id, isOpenSpec, isContainerUnit, baseUnit, containerUnit, imageUrl } = product;
+    let totalUnitStr = isContainerUnit ? this.getTotalUnitStr(baseUnit, containerUnit) : baseUnit;
+    imageUrl = imageUrl.split('|');
+    this.setState({
+      productDetail,
+      tplPrdId: id,
+      totalUnitStr,
+      isOpenSpec,
+      imageUrl,
+      isTplProduct: false
+    })
   }
 
   // 返回
@@ -105,16 +123,22 @@ class Page extends Component {
   }
 
   /**规格信息**********************************************************************************************************/
-  onSpecDataChange = (specData) => {
-    this.setState({
-      specData
-    })
-  }
+
 
   saveDataClicked = () => {
-    // let { specData } = this.state;    
-    console.log(this.ref.orderProductSpec)
-    
+    let { sellProductSkuStrList, userPriceStrList } = this.refs.orderProductSpec.getSingleSpecData();
+    let params = {
+      sellProductSkuStrList: JSON.stringify(sellProductSkuStrList),
+      userPriceStrList: JSON.stringify(userPriceStrList),
+      channel: 2,
+      productId: this.state.tplPrdId,
+      onsaleStatus: 0
+    }
+
+    saveOrUpdateSellProduct(params)
+      .then(() => {
+        Toast("编辑订货商品成功！");
+      })
   }
 
   /***渲染**********************************************************************************************************/
@@ -150,12 +174,17 @@ class Page extends Component {
           </Row>
           <div style={{ background: "#f2f2f2", borderLeft: "6px solid #ff8716" }} className='color333 padding border-radius font-16 margin-bottom'>规格信息</div>
           <div>
-            <OrderProductSpecEdit
-              ref='orderProductSpec'
-              shouldChange={this.state.isSpecChange}
-              specData={this.state.revertSpecData}
-              onChange={this.onSpecDataChange}
-            />
+            {
+              this.state.isOpenSpec ?
+                null :
+                <OrderProductSingleSpecEdit
+                  productId={Number(this.state.tplPrdId)}
+                  ref='orderProductSpec'
+                  shouldChange={this.state.isSpecChange}
+                  specData={this.state.revertSpecData}
+                />
+            }
+
           </div>
           <div style={{ background: "#f2f2f2", borderLeft: "6px solid #ff8716" }} className='color333 padding border-radius font-16 margin-bottom'>商品图及详情</div>
           <Row className='line-height40' style={{ width: 700 }}>

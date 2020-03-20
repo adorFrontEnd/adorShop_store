@@ -5,7 +5,7 @@ import { pagination } from '../../utils/pagination';
 import Toast from '../../utils/toast';
 import { SearchForm, SubmitForm } from '../../components/common-form';
 import dateUtil from '../../utils/dateUtil';
-import { searchSellProductList } from '../../api/product/orderProduct';
+import { searchSellProductList, updateOnsaleStatus, deleteSellProduct } from '../../api/product/orderProduct';
 import { NavLink, Link } from 'react-router-dom';
 import { baseRoute, routerConfig } from '../../config/router.config';
 import { connect } from 'react-redux';
@@ -14,15 +14,14 @@ import ProductTemplateSelectModal from '../../components/product/ProductTemplate
 
 const _title = "商品列表";
 const _description = "";
-const integralRecordPath = routerConfig["user.userManage.userList"].path;
-const giftRecordPath = routerConfig["user.userManage.userList"].path;
-const productEditPath = routerConfig["productManage.productInfo.productEdit"].path;
+const orderProductDetailPath = routerConfig["orderManage.orderProduct.orderProductEdit"].path;
 const _channelEnum = {
   "0": "直购",
   "1": "订货",
   "2": "云市场"
 }
 const _channelEnumArr = Object.keys(_channelEnum).map(item => { return { id: item, name: _channelEnum[item] } });
+
 
 class Page extends Component {
 
@@ -110,24 +109,58 @@ class Page extends Component {
     { title: "商品名称", dataIndex: "name", render: data => data || "--" },
     { title: "商品图", dataIndex: "imageUrl", render: data => data ? (<img src={data} style={{ height: 40, width: 40 }} />) : "--" },
     { title: "包装规格", dataIndex: "specifications", render: data => data || "--" },
-    { title: "可用渠道", dataIndex: "channel", render: data => data || "--" },
+    { title: "库存状态", dataIndex: "stockStatusStr", render: data => data ? <span className='theme-color'>{data}</span> : "--" },
+    { title: "销量", dataIndex: "soldQty", render: data => data || data == 0 ? data : "--" },
     { title: "单位", dataIndex: "baseUnit", render: data => data || "--" },
-    { title: "新增时间", dataIndex: "gmtCreate", render: data => data ? dateUtil.getDateTime(data) : "--" },
+    { title: "添加时间", dataIndex: "gmtCreate", render: data => data ? dateUtil.getDateTime(data) : "--" },
+    { title: "状态", dataIndex: "onsaleStatus", render: data => data == 1 ? <span className='color-green'>已上架</span> : <span className='theme-color'>已下架</span> },
     {
       title: '操作',
       render: (text, record, index) => (
         <span>
-          <span onClick={() => { this.goIntegralRecord(record.id) }}><NavLink to={integralRecordPath + "/" + record.id}>编辑</NavLink></span>
+          {
+            record.onsaleStatus == 1 ?
+              <a onClick={() => this.updateOnsaleStatus(record, 0)}>下架</a> :
+              <a onClick={() => this.updateOnsaleStatus(record, 1)}>上架</a>
+          }
+          <Divider type="vertical" />
+          <span onClick={() => { this.goEdit(record.id) }}><NavLink to={orderProductDetailPath + "/" + record.id + "/0"}>编辑</NavLink></span>
           <Divider type="vertical" />
           <Popconfirm
             placement="topLeft" title='确认要删除吗？'
-            onConfirm={() => { this.deleteTableItem(record) }} >
+            onConfirm={() => { this.deleteSellProduct(record) }} >
             <a size="small" className="color-red">删除</a>
           </Popconfirm>
         </span>
       )
     }
   ]
+
+  goEdit = (id) => {
+    let title = id == '0' ? '新建商品' : "编辑商品"
+    this.props.changeRoute({ path: 'orderManage.orderProduct.orderProductEdit', title: '商品编辑', parentTitle: '订货商品' });
+  }
+
+
+  updateOnsaleStatus = (record, onsaleStatus) => {
+    let { id } = record;
+    updateOnsaleStatus({ id, onsaleStatus })
+      .then(() => {
+        let title = (onsaleStatus == 1 ? "上架" : "下架") + "成功！";
+        Toast(title);
+        this.getPageData();
+      })
+  }
+
+  deleteSellProduct = (record) => {
+    let { id } = record;
+    deleteSellProduct({ id })
+      .then(() => {
+
+        Toast("删除成功！");
+        this.getPageData();
+      })
+  }
 
   _showTableLoading = () => {
 
@@ -157,7 +190,7 @@ class Page extends Component {
       productModalIsVisible: false
     })
   }
-  selectProduct = (selectProductItem) => {   
+  selectProduct = (selectProductItem) => {
     this._hideProductModal();
   }
   /**渲染**********************************************************************************************************************************/
