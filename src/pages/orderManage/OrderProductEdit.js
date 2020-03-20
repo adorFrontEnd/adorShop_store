@@ -27,10 +27,11 @@ class Page extends Component {
   state = {
     id: 0,
     productDetail: {},
-    specData: null,
+    revertSpecData: {},
     imageUrl: [],
     freightMap: {},
-    isSpecChange:false
+    isSpecChange: false,
+    specData:{}
   }
 
   componentWillMount() {
@@ -68,15 +69,15 @@ class Page extends Component {
         let { baseUnit, containerUnit, isContainerUnit, imageUrl, isOpenSpec, paramList } = productDetail;
         let totalUnitStr = isContainerUnit ? this.getTotalUnitStr(baseUnit, containerUnit) : baseUnit;
         imageUrl = imageUrl.split('|');
-        let specData = parseSpecData({ isOpenSpec, paramList })
-     
+        let revertSpecData = parseSpecData({ isOpenSpec, paramList })
+
         this.setState({
           productDetail,
           totalUnitStr,
-          imageUrl          
+          imageUrl
         })
         this.setState({
-          specData,
+          revertSpecData,
           isSpecChange: true
         }, () => {
           this.setState({
@@ -105,12 +106,16 @@ class Page extends Component {
 
   /**规格信息**********************************************************************************************************/
   onSpecDataChange = (specData) => {
-
     this.setState({
       specData
     })
   }
-  // paramList: [{ id: 16, gmtCreate: 1584414199000, gmtModified: 1584414199000, shopId: 18, productId: 25, … }]
+
+  saveDataClicked = () => {
+    // let { specData } = this.state;    
+    console.log(this.ref.orderProductSpec)
+    
+  }
 
   /***渲染**********************************************************************************************************/
 
@@ -146,8 +151,9 @@ class Page extends Component {
           <div style={{ background: "#f2f2f2", borderLeft: "6px solid #ff8716" }} className='color333 padding border-radius font-16 margin-bottom'>规格信息</div>
           <div>
             <OrderProductSpecEdit
+              ref='orderProductSpec'
               shouldChange={this.state.isSpecChange}
-              specData={this.state.specData}
+              specData={this.state.revertSpecData}
               onChange={this.onSpecDataChange}
             />
           </div>

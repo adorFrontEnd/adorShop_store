@@ -461,13 +461,11 @@ class Page extends Component {
           </div>
         </Spin>
 
-
-
         <UserSelectModal
           visible={this.state.userModalIsVisible}
           onCancel={this._hideUserModal}
           selectItem={this.selectUserClicked}
-          selectId={selectUserId}
+          selectIds={[selectUserId]}
         />
 
         <SalerSelectModal

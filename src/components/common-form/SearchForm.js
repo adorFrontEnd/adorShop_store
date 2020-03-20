@@ -238,7 +238,7 @@ class SearchForm extends Component {
               : null
           }
           {
-            this.props.searchClicked ?
+            this.props.searchClicked && !this.props.hideResetButton ?
               <Button style={{ width: 100 }} onClick={this.resetClicked}>{this.props.resetText || "重置"}</Button>
               : null
           }

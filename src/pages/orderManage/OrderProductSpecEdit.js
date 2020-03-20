@@ -1,26 +1,38 @@
 import React, { Component } from "react";
-import { Col, Row, Checkbox, Modal, Select, Table, Spin, Icon, Form, Button, Badge, Input, Radio, InputNumber, Popconfirm } from 'antd';
+import { Col, Row, Checkbox, Modal, Select, Switch, Table, Spin, Icon, Form, Button, Badge, Input, Radio, InputNumber, Popconfirm } from 'antd';
 import Toast from '../../utils/toast';
 import PictureWall from '../../components/upload/PictureWall';
 import ProductShowPictureWall from '../../components/upload/ProductShowPictureWall';
 import { _getSpecDataBySpecClasses } from '../productManage/specUtils';
 import GradeSelectModal from '../../components/order/GradeSelectModal';
+import UserSelectModal from '../../components/order/UserSelectModal';
+import { SearchForm } from '../../components/common-form';
+import { getGradeList } from '../../api/user/grade';
 
 class Page extends Component {
 
   state = {
     isMultiSpec: false,
     singleSpecData: {},
+    singleUserData: [],
+
     multiSpecClasses: [],
     multiSpecData: [],
     uploadModalIsVisible: false,
     selectProductUrls: [],
     selectSpecIndex: 0,
     gradeModalIsVisible: false,
-    selectGradeIds: []
+    userModalIsVisible: false,
+    selectGradeIds: [],
+    selectUserIds: [],
+    gradeList: [],
+    gradeIdMap: {},
+    userIsFilered: false,
+    filteredSingleUserData: []
   }
 
   componentDidMount() {
+    this.getGradeList();
     this.onSpecDataRevert(this.props.specData);
   }
 
@@ -36,7 +48,23 @@ class Page extends Component {
     })
   }
 
+  getGradeList = () => {
 
+    if (this.state.gradeList && this.state.gradeList.length) {
+      return;
+    }
+    getGradeList({ page: 1, size: 100 }).then(gradeList => {
+
+      let gradeIdMap = {};
+      gradeList.forEach(({ id, name }) => {
+        gradeIdMap[id] = name
+      })
+      this.setState({
+        gradeList,
+        gradeIdMap
+      })
+    })
+  }
   //规格数据回滚
   onSpecDataRevert = (data) => {
 
@@ -83,17 +111,6 @@ class Page extends Component {
     })
   }
 
-  muiltiChecked = (e) => {
-    let isMultiSpec = e.target.checked;
-    let { singleSpecData, multiSpecData, multiSpecClasses } = this.state;
-    if (isMultiSpec) {
-      this.initMultiData()
-    }
-    this.setState({
-      isMultiSpec
-    })
-    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses);
-  }
 
   initMultiData = () => {
 
@@ -196,7 +213,12 @@ class Page extends Component {
     }
   }
 
-
+  getSpecData = () => {
+    let { isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses } = this.state;
+    return {
+      isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses
+    }
+  }
 
   //修改规格详细数据
   onMultiSpecDataChange = (index, key, e) => {
@@ -226,30 +248,6 @@ class Page extends Component {
     this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses);
   }
 
-  //修改规格详细数据
-  onSingleSpecDataChange = (key, e) => {
-    let { isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses } = this.state;
-
-    switch (key) {
-      case 'number':
-      case 'barCode':
-        let val = e.target.value;
-        singleSpecData[key] = val;
-        break;
-
-      case 'marketPrice':
-      case 'costPrice':
-      case 'weight':
-        singleSpecData[key] = e;
-        break;
-    }
-
-    this.setState({
-      singleSpecData
-    })
-    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses);
-  }
-
 
   //上传图片的modal
   showUploadModal = (isMultiSpec, selectSpecIndex) => {
@@ -269,39 +267,16 @@ class Page extends Component {
     this._showUploadModal();
   }
 
-
-  uploadPicture = (picList) => {
-    let selectProductUrls = picList || [];
-    this.setState({
-      selectProductUrls
-    })
-  }
-
-  onSavePitureModal = () => {
-    let { selectProductUrls, selectSpecIndex, isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses } = this.state;
-    if (!isMultiSpec) {
-      singleSpecData['imageUrl'] = selectProductUrls;
-      this.setState({
-        singleSpecData
-      })
-    } else {
-      multiSpecData[selectSpecIndex]['imageUrl'] = selectProductUrls;
-      this.setState({
-        multiSpecData
-      })
-    }
-    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses)
-    this.hideUploadModal();
-  }
+  /**规格等级价编辑 ****************************************************************************************/
 
   singleSpecColumns = [
     { title: "", align: "center", dataIndex: "text2", width: 50, render: (text, data, index) => <span>{index + 1}</span> },
     {
-      title: "主图", align: "center", width: 100, dataIndex: "imageUrl", render: data => (
+      title: "主图", align: "center", width: 80, dataIndex: "imageUrl", render: data => (
         <div className='flex-middle flex-center' style={{ cursor: "pointer" }} onClick={() => this.showUploadModal()}>
           {
             data && data.length ?
-              <div className='padding'>
+              <div>
                 <Badge count={data.length}>
                   <img src={data[0]} style={{ height: 50, width: 50 }} />
                 </Badge>
@@ -317,16 +292,16 @@ class Page extends Component {
     { title: "规格", align: "center", width: 50, dataIndex: "specValue", render: data => data || "--" },
     { title: "商品编码", align: "center", dataIndex: "number", render: data => data || "--" },
     { title: "条形码", align: "center", dataIndex: "barCode", render: data => data || "--" },
-    { title: "划线价（元）", align: "center", width: 120, dataIndex: "marketPrice", render: data => data || "--" },
-    { title: "成本价（元）", align: "center", width: 120, dataIndex: "costPrice", render: data => data || "--" },
-    { title: "重量（kg）", align: "center", width: 120, dataIndex: "weight", render: data => data || "--" },
+    { title: "划线价（元）", align: "center", width: 110, dataIndex: "marketPrice", render: data => data || "--" },
+    { title: "成本价（元）", align: "center", width: 110, dataIndex: "costPrice", render: data => data || "--" },
+    { title: "重量（kg）", align: "center", width: 110, dataIndex: "weight", render: data => data || "--" },
     {
-      title: data => < a onClick={this.showUserGrade} > <Icon type='plus' /> 添加客户级别</a >, align: "center", width: 120,
+      title: data => < a onClick={this.showUserGradeModal} > <Icon type='plus' /> 添加客户级别</a >, width: 120, align: "center",
       dataIndex: "text1", render: data => '--'
     }
   ]
 
-  showUserGrade = () => {
+  showUserGradeModal = () => {
     this.setState({
       gradeModalIsVisible: true
     })
@@ -340,56 +315,357 @@ class Page extends Component {
 
   onSelectGrade = (data) => {
     let { gradeData, id } = data;
-    this.addSelect({ gradeData, id });
+    this.addGradeColumn({ gradeData, id });
   }
 
-  addSelect = ({ gradeData }) => {
+  addGradeColumn = ({ gradeData }) => {
 
     let { name, id } = gradeData;
     let length = this.singleSpecColumns.length;
     let item = {
-      align: "center", width: 120, dataIndex: `grade${id}`,
-      title: data => (<a onClick={this.showUserGrade} >
-        <Icon type='plus' />{name}</a>
+      align: "center", width: 250, dataIndex: `grade_${id}`,
+      title: () => (<a>
+        <Popconfirm
+          placement="topLeft" title='确认要删除吗？'
+          onConfirm={() => { this.deleteGrade(`grade_${id}`, id) }} >
+          <Icon title="删除" type='delete' className='margin-right font-20' />
+        </Popconfirm>
+        {name}</a >
       ),
-      render: data => '--'
+      render: (data, record, index) => (
+        <div className='flex-between'>
+          <div>
+            <div className='flex-between'>
+              <span>售价</span>
+              <InputNumber
+                onChange={(e) => this.onGradeDataChange('price', `grade_${id}`, e, index)}
+                value={record[`grade_${id}`].price}
+                disabled={record[`grade_${id}`].status != 1}
+                precision={2} min={0} />
+            </div>
+            <div className='flex-between'>
+              <span>平级推荐奖</span>
+              <InputNumber
+                onChange={(e) => this.onGradeDataChange('recommendPrice', `grade_${id}`, e, index)}
+                value={record[`grade_${id}`].recommendPrice} disabled={record[`grade_${id}`].status != 1}
+                precision={2} min={0} />
+            </div>
+            <div className='flex-between'>
+              <span>起订量</span>
+              <InputNumber
+                onChange={(e) => this.onGradeDataChange('minBuyQty', `grade_${id}`, e, index)}
+                value={record[`grade_${id}`].minBuyQty} disabled={record[`grade_${id}`].status != 1}
+                precision={0} min={0} />
+            </div>
+            <div className='flex-between'>
+              <span style={{ marginRight: 5 }}>业绩计算取价</span>
+              <InputNumber
+                onChange={(e) => this.onGradeDataChange('performancePrice', `grade_${id}`, e, index)}
+                value={record[`grade_${id}`].performancePrice} disabled={record[`grade_${id}`].status != 1}
+                precision={2} min={0} />
+            </div>
+          </div>
+          <div>
+            {
+              record[`grade_${id}`].status == 1 ?
+                <Button onClick={() => this.onGradeDataChange('disable', `grade_${id}`, index)} type="danger" style={{ height: "100%", width: 40, textAlign: "center" }}>
+                  禁<br />订
+                </Button>
+                :
+                <Button onClick={() => this.onGradeDataChange('enable', `grade_${id}`, index)} type="primary" style={{ height: "100%", width: 40, textAlign: "center" }}>
+                  恢<br />复
+                </Button>
+            }
+
+          </div>
+        </div>
+      )
     }
+
     this.singleSpecColumns.splice(length - 1, 0, item);
-    let { selectGradeIds } = this.state;
+    let { selectGradeIds, singleSpecData } = this.state;
+    singleSpecData[`grade_${id}`] = {
+      //售价
+      price: 0,
+      //平级推荐奖
+      recommendPrice: 0,
+      //起订量
+      minBuyQty: 0,
+      //业绩计算取价
+      performancePrice: 0,
+      //状态
+      status: 1
+    };
     selectGradeIds.push(id);
     this.setState({
-      selectGradeIds
+      selectGradeIds,
+      singleSpecData
+    })
+    let { isMultiSpec, singleUserData } = this.state;
+    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, singleUserData);
+  }
+
+  deleteGrade = (key, id) => {
+    let { selectGradeIds, singleSpecData, isMultiSpec, singleUserData } = this.state;
+    let idIndex = selectGradeIds.indexOf(id);
+    let columnIndex = 0;
+    this.singleSpecColumns.forEach((item, index) => {
+      if (item.dataIndex == `grade_${id}`) {
+        columnIndex = index;
+      }
+    })
+    this.singleSpecColumns.splice(columnIndex, 1);
+    selectGradeIds.splice(idIndex, 1);
+    singleSpecData[`grade_${id}`] = null;
+    this.setState({
+      selectGradeIds,
+      singleSpecData
+    })
+
+    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, singleUserData);
+  }
+
+  onGradeDataChange = (action, gradeIdKey, e) => {
+    let { singleSpecData, isMultiSpec, singleUserData } = this.state;
+    if (action == 'disable' || action == 'enable') {
+      singleSpecData[gradeIdKey]['status'] = action == 'enable' ? 1 : 0;
+    } else {
+      singleSpecData[gradeIdKey][action] = e;
+    }
+    this.setState({
+      singleSpecData
+    })
+
+    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, singleUserData);
+  }
+
+  /**会员等级价编辑 *************************************************************************************************************/
+  singleSpecUserColumns = [
+    {
+      title: "", align: "center", dataIndex: "text2", width: 100,
+      render: (text, record, index) =>
+        <Popconfirm
+          placement="topLeft" title='确认要删除吗？'
+          onConfirm={() => this.onUserDataChange(record, 'delete')} >
+          <a><Icon title="删除" type='delete' className='margin-right theme-color font-20' />删除</a>
+        </Popconfirm>
+    },
+    { title: "会员名称", align: "center", width: 100, dataIndex: "name", render: data => data || '--' },
+    { title: "会员手机号", align: "center", width: 100, dataIndex: "phone", render: data => data || "--" },
+    { title: "会员等级", align: "center", dataIndex: "gradeName", render: data => data || "--" },
+    {
+      title: "是否可购买", align: "center", dataIndex: "status",
+      render: (data, record, index) => (
+        <Switch
+          checked={data == 1}
+          onChange={(e) => this.onUserDataChange(record, 'status', e)}
+        />
+      )
+    },
+    {
+      title: "相关信息", align: "center", width: 380, render: (data, record, index) =>
+        <div className='flex-middle'>
+          <span className='margin0-10'>价格</span>
+          <InputNumber value={record['price']} precision={2} min={0} onChange={(e) => this.onUserDataChange(record, 'price', e)} />
+          <span className='margin0-10'>起订量</span>
+          <InputNumber value={record['minBuyQty']} precision={0} min={0} onChange={(e) => this.onUserDataChange(record, 'minBuyQty', e)} />
+        </div>
+    }
+  ]
+
+  onSelectUser = (data) => {
+
+    let { name, phone, gradeName, id } = data;
+    let { selectUserIds, singleUserData, singleSpecData } = this.state;
+    selectUserIds.push(id);
+    singleUserData.push({
+      name,
+      phone,
+      gradeName,
+      productSkuId: singleSpecData.id,
+      userId: id,
+      status: 1,
+      //售价
+      price: 0,
+      //起订量
+      minBuyQty: 0
+    });
+    this.setState({
+      selectUserIds,
+      singleUserData
+    })
+    // let { isMultiSpec } = this.state;
+    // this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, singleUserData);
+  }
+
+  showUserModal = () => {
+    this.setState({
+      userModalIsVisible: true
     })
   }
 
+  _hideUserModal = () => {
+    this.setState({
+      userModalIsVisible: false
+    })
+  }
 
+  filterUserClicked = (params) => {
+    let { likeName, gradeId } = params;
+    let { singleUserData, gradeIdMap } = this.state;
+    likeName = likeName && likeName.trim();
+    if (!gradeId && !likeName) {
+      this.setState({
+        userIsFilered: false
+      })
+      return
+    }
+
+    let filteredSingleUserData = [];
+
+    if (gradeId) {
+      let gradeName = gradeIdMap[gradeId];
+      filteredSingleUserData = singleUserData.filter(item => item.gradeName == gradeName);
+    } else {
+      filteredSingleUserData = singleUserData;
+    }
+
+    if (likeName) {
+      filteredSingleUserData = filteredSingleUserData.filter(item => {
+        let reg = new RegExp(likeName, "ig");
+        return reg.test(item.phone) || reg.test(item.name)
+      });
+    }
+
+    this.setState({
+      filteredSingleUserData,
+      userIsFilered: true
+    })
+
+  }
+
+  setAllToFirstUser = () => {
+    let { singleUserData } = this.state;
+    let { price } = singleUserData[0];
+    singleUserData = singleUserData.map(item => {
+      return {
+        ...item,
+        price
+      }
+    })
+    this.setState({
+      singleUserData
+    })
+    // let { isMultiSpec,singleSpecData } = this.state;
+    // this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, singleUserData);
+  }
+
+  onUserDataChange = (record, action, e) => {
+
+    let { singleUserData } = this.state;
+    let { userId } = record;
+    let index = 0;
+    singleUserData.forEach((item, i) => {
+      if (item.userId == userId) {
+        index = i;
+      }
+    })
+
+    switch (action) {
+      case "delete":
+        singleUserData.splice(index, 1);
+        break;
+
+      case "price":
+      case "minBuyQty":
+        singleUserData[index][action] = e;
+        break;
+
+      case 'status':
+        singleUserData[index][action] = e ? 1 : 0;
+        break;
+    }
+
+
+    this.setState({
+      singleUserData
+    })
+    // let { isMultiSpec,singleSpecData } = this.state;
+    // this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, singleUserData);
+  }
 
   /***渲染**********************************************************************************************************/
 
   render() {
     const { getFieldDecorator } = this.props.form;
-    const { specValues, multiSpecClasses, multiSpecData, singleSpecData } = this.state;
+    const { specValues, multiSpecClasses, multiSpecData, singleSpecData, singleUserData, userIsFilered, filteredSingleUserData } = this.state;
     const singleDataSource = singleSpecData && singleSpecData.id ? [singleSpecData] : null
+    const singleUserDataSource = userIsFilered ? filteredSingleUserData : singleUserData;
 
     return (
       <div className='padding'>
-        {/* <div style={{ background: "#f2f2f2" }} className='color333 padding border-radius font-16'>
-          <Checkbox checked={this.state.isMultiSpec} onChange={this.muiltiChecked}>多规格</Checkbox>
-        </div> */}
+
         <div style={{ minHeight: 300 }}>
           {
             !this.state.isMultiSpec ?
               <div>
-                <Table
-                  indentSize={10}
-                  rowKey='id'
-                  bordered={true}
-                  columns={this.singleSpecColumns}
-                  loading={this.state.tableLoading}
-                  pagination={false}
-                  dataSource={singleDataSource}
-                />
+                <div>
+                  <Table
+                    indentSize={10}
+                    rowKey='id'
+                    bordered={true}
+                    columns={this.singleSpecColumns}
+                    loading={this.state.tableLoading}
+                    pagination={false}
+                    dataSource={singleDataSource}
+                    scroll={{ x: 'max-content' }}
+                  />
+                </div>
+                <div className='margin20-0'>
+                  <div className='flex-middle padding' style={{ backgroundColor: "#f2f2f2" }}>
+                    <div>会员价：</div>
+                    <SearchForm
+                      width={520}
+                      towRow={false}
+                      searchClicked={this.filterUserClicked}
+                      searchText='筛选'
+                      formItemList={[
+                        {
+                          type: 'SELECT',
+                          field: "gradeId",
+                          style: { width: 120 },
+                          optionList: [{ id: null, name: "请选择" }, ...this.state.gradeList]
+                        },
+                        {
+                          type: "INPUT",
+                          field: "likeName",
+                          style: { width: 140 },
+                          placeholder: "客户名/手机号"
+                        }
+                      ]}
+                    />
+                    <div className='margin-left20'>
+                      {
+                        singleUserDataSource && singleUserDataSource.length > 1 ?
+                          <Button type='primary' onClick={this.setAllToFirstUser}>
+                            批量设为第一个会员的价格
+                      </Button> : null
+                      }
+                    </div>
+                  </div>
+                  <Table
+                    indentSize={10}
+                    rowKey='userId'
+                    bordered={true}
+                    columns={this.singleSpecUserColumns}
+                    loading={this.state.tableLoading}
+                    pagination={false}
+                    dataSource={singleUserDataSource}
+                  />
+                </div>
+                <Button type='primary' className='normal' onClick={this.showUserModal}>添加</Button>
               </div>
+
               :
               <div>
                 <Row style={{ border: "1px solid #d9d9d9" }}>
@@ -515,12 +791,7 @@ class Page extends Component {
               </div>
           }
         </div>
-        <div className='color-red line-height24 padding-top'>
-          注意：<br />
-          1、可够渠道中勾选了直购，则可编辑直购价格；<br />
-          2、可够渠道中勾选了订货，则可编辑分销订货价格；<br />
-          3、可够渠道中勾选了云市场，则可编辑云市场结算价格。<br />
-        </div>
+
         <Modal
           visible={this.state.uploadModalIsVisible}
           onCancel={this.hideUploadModal}
@@ -539,6 +810,14 @@ class Page extends Component {
           selectItem={this.onSelectGrade}
           selectIds={this.state.selectGradeIds}
         />
+
+        <UserSelectModal
+          visible={this.state.userModalIsVisible}
+          onCancel={this._hideUserModal}
+          selectItem={this.onSelectUser}
+          selectIds={this.state.selectUserIds}
+        />
+
       </div >
     )
   }

@@ -1,6 +1,6 @@
 import { Upload, Radio, InputNumber, Form, Col, Input, Row, Modal, Button, Select, Table } from 'antd';
 import React, { Component } from 'react';
-import { SearchForm } from '../../components/common-form';
+import { SearchForm, SubmitForm } from '../../components/common-form';
 import Toast from '../../utils/toast';
 import { pagination } from '../../utils/pagination';
 import { searchPublicSelectMember } from '../../api/order/order';
@@ -79,7 +79,7 @@ class UserModal extends Component {
     return (
       <span>
         {
-          record.id == this.props.selectId ?
+          this.props.selectIds && this.props.selectIds.length && this.props.selectIds.indexOf(record.id) != -1 ?
             <span className='theme-color'>已选择</span>
             :
             <Button onClick={() => this.selectItem(record, index)} type='primary'>选择</Button>
@@ -99,10 +99,11 @@ class UserModal extends Component {
   ]
 
   selectItem = (record, index) => {
-    let { customerName, accountNumber, id } = record;
+    let { customerName, accountNumber, gradeName, id } = record;
     let params = {
       name: customerName,
       phone: accountNumber,
+      gradeName,
       id
     }
     this.props.selectItem(params, index);
@@ -139,7 +140,7 @@ class UserModal extends Component {
               ]}
             />
           </div>
-          <div>
+          <div>           
             <Table
               indentSize={10}
               rowKey="id"
