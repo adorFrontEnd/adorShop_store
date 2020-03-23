@@ -20,12 +20,42 @@ const deleteSellProduct = (params) => {
   return baseHttpProvider.getApi('api/prd/sellProduct/delete', params);
 }
 
+const deleteOrderProductUserPrice = (params) => {
+  return baseHttpProvider.getApi('api/prd/sellProduct/deleteUserPrice', params);
+}
+
+const deleteUserGradePrice = (params) => {
+  return baseHttpProvider.getApi('api/prd/sellProduct/deleteUserGradePrice', params);
+}
+
+const batchOnsaleStatus = (params) => {
+  return baseHttpProvider.getApi('api/prd/sellProduct/batchOnsaleStatus', params);
+}
+
+const batchDelete = (params) => {
+  return baseHttpProvider.getApi('api/prd/sellProduct/batchDelete', params);
+}
+
+const exportOrderProduct = (params) => {
+
+  params = baseHttpProvider.filterAllNullKeyInParams(params)
+  let result = baseHttpProvider.getReqObj('api/prd/sellProduct/export', params)
+  if (result.url) {
+    window.open(result.url, '_blank');
+  }
+}
+
 
 export {
   searchSellProductList,
   getSellProductDetail,
   saveOrUpdateSellProduct,
   updateOnsaleStatus,
-  deleteSellProduct
+  deleteSellProduct,
+  deleteOrderProductUserPrice,
+  deleteUserGradePrice,
+  batchOnsaleStatus,
+  batchDelete,
+  exportOrderProduct
 }
 

@@ -14,24 +14,23 @@ const _description = "";
 
 class Page extends Component {
   state = {
-    id: 0,
+
     productDetail: {},
     specData: {},
     imageUrl: [],
     freightMap: {},
     isSpecChange: false,
-    isOpenSpec: null
+    isOpenSpec: null,
+    sellPrdId: null
   }
 
   componentWillMount() {
     let sellPrdId = this.props.match.params.sellPrdId;
     let tplPrdId = this.props.match.params.tplPrdId;
     let isEdit = sellPrdId != 0;
-    let id = sellPrdId == 0 ? tplPrdId : sellPrdId;
     this.setState({
-      sellPrdId,
+      sellPrdId: sellPrdId && sellPrdId != 0 ? sellPrdId : null,
       tplPrdId,
-      id,
       _title: isEdit ? "编辑商品" : "创建商品",
       showLoading: false
     })
@@ -47,13 +46,12 @@ class Page extends Component {
     tplPrdId = tplPrdId || this.state.tplPrdId;
     let isTplProduct = sellPrdId == 0;
     let _getDetail = isTplProduct ? getProductDetail : getSellProductDetail;
-    let id = sellPrdId == 0 ? tplPrdId : sellPrdId;
+    let prdId = sellPrdId == 0 ? tplPrdId : sellPrdId;
 
     this._showDetailLoading();
-    _getDetail({ id })
+    _getDetail({ id: prdId })
       .then(productDetail => {
         this._hideDetailLoading();
-
         if (isTplProduct) {
           this.revertTplProductDetail(productDetail);
           return;
@@ -110,7 +108,7 @@ class Page extends Component {
       singleSpecData,
       userPriceList
     }
-    
+
     this.setState({
       productDetail: product,
       specData,
@@ -143,23 +141,32 @@ class Page extends Component {
 
   /**规格信息**********************************************************************************************************/
 
-
   saveDataClicked = () => {
     let { sellProductSkuStrList, userPriceStrList } = this.refs.orderProductSpec.getSingleSpecData();
+
     let params = {
+      id: this.state.sellPrdId,
       sellProductSkuStrList: JSON.stringify(sellProductSkuStrList),
       userPriceStrList: JSON.stringify(userPriceStrList),
       channel: 2,
       productId: this.state.tplPrdId,
       onsaleStatus: 0
     }
-
+    this._showDetailLoading();
     saveOrUpdateSellProduct(params)
       .then(() => {
         Toast("编辑订货商品成功！");
+        this._hideDetailLoading();
+        this.goBack();
+      })
+      .catch(()=>{
+        this._hideDetailLoading();
       })
   }
 
+  refreshPageData = () => {
+    this.getDetail()
+  }
   /***渲染**********************************************************************************************************/
 
   render() {
@@ -197,7 +204,9 @@ class Page extends Component {
               this.state.isOpenSpec ?
                 null :
                 <OrderProductSingleSpecEdit
+                  refresh={this.refreshPageData}
                   productId={Number(this.state.tplPrdId)}
+                  sellProductId={this.state.sellPrdId && this.state.sellPrdId != 0 ? Number(this.state.sellPrdId) : null}
                   ref='orderProductSpec'
                   shouldChange={this.state.isSpecChange}
                   specData={this.state.specData}

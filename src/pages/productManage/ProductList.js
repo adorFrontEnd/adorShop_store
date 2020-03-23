@@ -49,7 +49,7 @@ class Page extends Component {
   formItemList = [
     {
       type: "SELECT",
-      field: "status",
+      field: "channel",
       style: { width: 140 },
       defaultOption: { id: null, name: "全部" },
       placeholder: '选择渠道',

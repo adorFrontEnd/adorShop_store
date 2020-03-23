@@ -5,7 +5,7 @@ import { pagination } from '../../utils/pagination';
 import Toast from '../../utils/toast';
 import { SearchForm, SubmitForm } from '../../components/common-form';
 import dateUtil from '../../utils/dateUtil';
-import { searchSellProductList, updateOnsaleStatus, deleteSellProduct } from '../../api/product/orderProduct';
+import { searchSellProductList, exportOrderProduct, updateOnsaleStatus, batchDelete, deleteSellProduct, batchOnsaleStatus } from '../../api/product/orderProduct';
 import { NavLink, Link } from 'react-router-dom';
 import { baseRoute, routerConfig } from '../../config/router.config';
 import { connect } from 'react-redux';
@@ -29,7 +29,8 @@ class Page extends Component {
     tableDataList: null,
     showTableLoading: false,
     productModalIsVisible: false,
-    selectProductItem: null
+    selectProductItem: null,
+    selectIds: null
   }
 
   componentDidMount() {
@@ -49,10 +50,27 @@ class Page extends Component {
       type: "SELECT",
       field: "status",
       style: { width: 140 },
-      defaultOption: { id: null, name: "全部" },
-      placeholder: '选择渠道',
+      placeholder: '选择状态',
       initialValue: null,
-      optionList: _channelEnumArr
+      optionList: [
+        { id: null, name: "全部" },
+        { id: 1, name: "已上架" },
+        { id: 0, name: "已下架" }
+      ]
+    },
+    // 0有货  1部分有货 2全部缺货
+    {
+      type: "SELECT",
+      field: "storeStatus",
+      style: { width: 140 },
+      placeholder: '选择状态',
+      initialValue: null,
+      optionList: [
+        { id: null, name: "全部" },
+        { id: 0, name: "有货" },
+        { id: 1, name: "部分有货" },
+        { id: 2, name: "全部缺货" }
+      ]
     },
     {
       type: "INPUT",
@@ -193,6 +211,46 @@ class Page extends Component {
   selectProduct = (selectProductItem) => {
     this._hideProductModal();
   }
+
+  onTableRowSelection = (selectedRowKeys, selectedRows) => {
+    let selectIds = selectedRowKeys;
+    this.setState({
+      selectIds
+    })
+  }
+
+  batchOnsaleStatusClick = (action, value) => {
+    let { selectIds } = this.state;
+    if (!selectIds || !selectIds.length) {
+      Toast("请选择订货商品！");
+      return;
+    }
+    let ids = selectIds.join();
+    switch (action) {
+      case "status":
+        let status = value;
+        batchOnsaleStatus({ ids, onsaleStatus: status })
+          .then(() => {
+            let title = status == 1 ? "批量上架成功！" : "批量下架成功！";
+            Toast(title);
+            this.getPageData();
+          })
+        break;
+
+      case "delete":
+        batchDelete({ ids })
+          .then(() => {
+            Toast("删除成功！");
+            this.getPageData();
+          })
+        break;
+
+    }
+  }
+
+  exportOrderProduct = () => {
+    exportOrderProduct(this.params)
+  }
   /**渲染**********************************************************************************************************************************/
 
   render() {
@@ -204,15 +262,15 @@ class Page extends Component {
         <div>
           <div className="flex-between align-center margin-bottom flex-wrap">
             <div style={{ minWidth: 330 }} className='margin-bottom20'>
-              <Button type='primary' onClick={() => this._showProductModal()}>添加商品</Button>
-              <Button type='primary' className='margin0-10'>批量删除</Button>
-              <Button type='primary' >批量上架</Button>
-              <Button type='primary' className='margin0-10'>批量下架</Button>
-              <Button type='primary' className='normal'>导出</Button>
+              <Button type='primary' onClick={() => this._showProductModal()} >添加商品</Button>
+              <Button type='primary' className='margin0-10' onClick={() => this.batchOnsaleStatusClick("delete")} >批量删除</Button>
+              <Button type='primary' onClick={() => this.batchOnsaleStatusClick("status", 1)} >批量上架</Button>
+              < Button type='primary' className='margin0-10' onClick={() => this.batchOnsaleStatusClick("status", 0)}>批量下架</Button>
+              <Button type='primary' className='normal' onClick={this.exportOrderProduct}>导出</Button>
             </div>
-            <div style={{ minWidth: 700 }} className='margin-bottom20'>
+            <div style={{ minWidth: 850 }} className='margin-bottom20'>
               <SearchForm
-                width={700}
+                width={850}
                 searchText='筛选'
                 towRow={false}
                 searchClicked={this.searchClicked}
@@ -228,6 +286,9 @@ class Page extends Component {
             loading={this.state.showTableLoading}
             pagination={this.state.pagination}
             dataSource={this.state.tableDataList}
+            rowSelection={{
+              onChange: this.onTableRowSelection
+            }}
           />
         </div>
 

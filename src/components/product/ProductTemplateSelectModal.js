@@ -83,8 +83,8 @@ class SKUModal extends Component {
     return (
       <span>
         {
-          isSelect ?
-            <span className='theme-color'>已选择</span>
+          isSelect || record.isUse == 1 ?
+            <span className='theme-color'>已添加</span>
             :
             <NavLink to={OrderEdit + "/0/" + record.id} >
               <Button onClick={() => this.selectItem(record, index)} type='primary'>选择</Button>

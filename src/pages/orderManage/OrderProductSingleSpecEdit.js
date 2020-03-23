@@ -8,6 +8,8 @@ import GradeSelectModal from '../../components/order/GradeSelectModal';
 import UserSelectModal from '../../components/order/UserSelectModal';
 import { SearchForm } from '../../components/common-form';
 import { getGradeList } from '../../api/user/grade';
+import { deleteOrderProductUserPrice, deleteUserGradePrice } from '../../api/product/orderProduct';
+
 
 class Page extends Component {
 
@@ -45,50 +47,97 @@ class Page extends Component {
   /**获取规格数据 ****************************************************************************************/
   getSingleSpecData = () => {
     let { singleSpecData, userPriceList } = this.state;
-    let sellProductSkuStrList = this.getSellProductSkuStrList(singleSpecData);
-    let userPriceStrList = this.getUserPriceStrList(userPriceList, singleSpecData.productSkuId);
+    let sellProductSkuId = singleSpecData && singleSpecData.id;
+    let sellProductSkuStrList = this.getSellProductSkuStrList(singleSpecData, sellProductSkuId);
+    let userPriceStrList = this.getUserPriceStrList(userPriceList, singleSpecData.productSkuId, sellProductSkuId);
     return {
       singleSpecData, userPriceList, sellProductSkuStrList, userPriceStrList
     }
   }
 
-  getSellProductSkuStrList = (singleSpecData) => {
-    let { productSkuId, number, costPrice } = singleSpecData;
+  getSellProductSkuStrList = (singleSpecData, sellProductSkuId) => {
+    let { productSkuId, number, costPrice, id } = singleSpecData;
 
     let productNumber = number;
-    let userGradePriceStrList = this.getGradePriceList(singleSpecData, productSkuId, productNumber);
-    let sellProductSkuStrList = [{
+    let userGradePriceStrList = this.getGradePriceList(singleSpecData, productSkuId, productNumber, sellProductSkuId);
+
+    let sellProductSku = {
       productId: this.props.productId,
       costPrice,
       productNumber,
       onsaleStatus: 1,
       status: 1,
-      productSkuId,
-      userGradePriceStrList: JSON.stringify(userGradePriceStrList)
-    }]
+      productSkuId
+    }
+
+    if (userGradePriceStrList && userGradePriceStrList.length > 0) {
+      sellProductSku.userGradePriceStrList = JSON.stringify(userGradePriceStrList)
+    }
+
+    if (id) {
+      sellProductSku.id = id;
+      sellProductSku.isChange = 1;
+    }
+
+    if (this.props.sellProductId) {
+      sellProductSku.isChange = 1;
+      sellProductSku.sellProductId = this.props.sellProductId;
+    }
+
+    let sellProductSkuStrList = [sellProductSku]
     return sellProductSkuStrList
   }
 
-  getGradePriceList = (singleSpecData, productSkuId, productNumber) => {
+  getGradePriceList = (singleSpecData, productSkuId, productNumber, sellProductSkuId) => {
     let keys = Object.keys(singleSpecData).filter(item => item.substr(0, 6) == 'grade_' && singleSpecData[item]);
     let gradePriceList = keys.map(gradeKey => {
       let gradeId = gradeKey.substr(6);
-      let { price, performancePrice, recommendPrice, minBuyQty, status } = singleSpecData[gradeKey];
+      let { price, performancePrice, recommendPrice, minBuyQty, status, id } = singleSpecData[gradeKey];
       let data = {
         productSkuId, productNumber, gradeId: Number(gradeId), price, performancePrice, recommendPrice, minBuyQty, status
       }
+      if (id) {
+        data.id = id;
+        data.isChange = 1;
+      }
+
+      if (this.props.sellProductId) {
+        data.isChange = 1;
+        data.sellProductId = this.props.sellProductId;
+      }
+
+      if (sellProductSkuId) {
+        data.sellProductSkuId = sellProductSkuId;
+      }
+
       return data
     })
     return gradePriceList
   }
 
-  getUserPriceStrList = (userPriceList, productSkuId) => {
+  getUserPriceStrList = (userPriceList, productSkuId, sellProductSkuId) => {
 
     let userPriceStrList = userPriceList.map(item => {
-      let { userId, price, minBuyQty, status } = item;
-      return {
+      let { userId, price, minBuyQty, status, id } = item;
+      let result = {
         userId, price, minBuyQty, status, productSkuId
       }
+
+      if (id) {
+        result.id = id;
+        result.isChange = 1;
+      }
+
+      if (this.props.sellProductId) {
+        result.isChange = 1;
+        result.sellProductId = this.props.sellProductId;
+      }
+
+      if (sellProductSkuId) {
+        result.sellProductSkuId = sellProductSkuId;
+      }
+
+      return result;
     })
     return userPriceStrList
   }
@@ -100,14 +149,15 @@ class Page extends Component {
     if (!data || !Object.keys(data).length) {
       this._initSpecData();
     } else {
-
+      this.initSingleSpecColumns();
       let { singleSpecData, selectGradeIds } = this.parseSingleSpecData(data.singleSpecData);
       let { userPriceList, selectUserIds } = this.parseUserPriceList(data.userPriceList);
       this.setState({
         singleSpecData,
         userPriceList,
         singleSpecData,
-        selectGradeIds
+        selectGradeIds,
+        selectUserIds
       })
 
     }
@@ -148,8 +198,6 @@ class Page extends Component {
   }
 
   parseUserPriceList = (rawUserPriceList) => {
-
-
     let userPriceList = [];
     let selectUserIds = [];
 
@@ -159,9 +207,17 @@ class Page extends Component {
       }
     }
     selectUserIds = rawUserPriceList.map(item => item.userId);
+    userPriceList = rawUserPriceList.map(item => {
+      let { accountNumber, customerName, ...other } = item;
+      return {
+        ...other,
+        name: customerName,
+        phone: accountNumber
+      }
+    })
 
     return {
-      rawUserPriceList, selectUserIds
+      userPriceList, selectUserIds
     }
 
   }
@@ -184,9 +240,7 @@ class Page extends Component {
       selectProductUrls: []
     }
     this.setState(data);
-
   }
-
 
   //上传图片的modal
   showUploadModal = () => {
@@ -283,6 +337,204 @@ class Page extends Component {
     let { isMultiSpec, userPriceList } = this.state;
   }
 
+  deleteGrade = (key, id) => {
+    let { selectGradeIds, singleSpecData, isMultiSpec, userPriceList } = this.state;
+    let idIndex = selectGradeIds.indexOf(id);
+    let columnIndex = 0;
+    this.singleSpecColumns.forEach((item, index) => {
+      if (item.dataIndex == `grade_${id}`) {
+        columnIndex = index;
+      }
+    })
+    let record = singleSpecData[`grade_${id}`];
+    if (!record.id) {
+      this.singleSpecColumns.splice(columnIndex, 1);
+      selectGradeIds.splice(idIndex, 1);
+      singleSpecData[`grade_${id}`] = null;
+      this.setState({
+        selectGradeIds,
+        singleSpecData
+      })
+      return;
+    }
+
+    deleteUserGradePrice({ sellProductId: this.props.sellProductId, gradeId: id })
+      .then(() => {
+        Toast('删除成功！');
+        this.props.refresh && this.props.refresh();
+      })
+
+  }
+
+  onGradeDataChange = (action, gradeIdKey, e) => {
+    let { singleSpecData, isMultiSpec, userPriceList } = this.state;
+    if (action == 'disable' || action == 'enable') {
+      singleSpecData[gradeIdKey]['status'] = action == 'enable' ? 1 : 0;
+    } else {
+      singleSpecData[gradeIdKey][action] = e;
+    }
+    this.setState({
+      singleSpecData
+    })
+  }
+
+  /**会员等级价编辑 *************************************************************************************************************/
+  singleSpecUserColumns = [
+    {
+      title: "", align: "center", dataIndex: "text2", width: 100,
+      render: (text, record, index) =>
+        <Popconfirm
+          placement="topLeft" title='确认要删除吗？'
+          onConfirm={() => this.onUserDataChange(record, 'delete')} >
+          <a><Icon title="删除" type='delete' className='margin-right theme-color font-20' />删除</a>
+        </Popconfirm>
+    },
+    { title: "会员名称", align: "center", width: 100, dataIndex: "name", render: data => data || '--' },
+    { title: "会员手机号", align: "center", width: 100, dataIndex: "phone", render: data => data || "--" },
+    { title: "会员等级", align: "center", dataIndex: "gradeName", render: data => data || "--" },
+    {
+      title: "是否可购买", align: "center", dataIndex: "status",
+      render: (data, record, index) => (
+        <Switch
+          checked={data == 1}
+          onChange={(e) => this.onUserDataChange(record, 'status', e)}
+        />
+      )
+    },
+    {
+      title: "相关信息", align: "center", width: 380, render: (data, record, index) =>
+        <div className='flex-middle'>
+          <span className='margin0-10'>价格</span>
+          <InputNumber disabled={record.status != 1} value={record['price']} precision={2} min={0} onChange={(e) => this.onUserDataChange(record, 'price', e)} />
+          <span className='margin0-10'>起订量</span>
+          <InputNumber disabled={record.status != 1} value={record['minBuyQty']} precision={0} min={0} onChange={(e) => this.onUserDataChange(record, 'minBuyQty', e)} />
+        </div>
+    }
+  ]
+
+  onSelectUser = (data) => {
+
+    let { name, phone, gradeName, id } = data;
+    let { selectUserIds, userPriceList, singleSpecData } = this.state;
+    selectUserIds.push(id);
+    userPriceList.push({
+      name,
+      phone,
+      gradeName,
+      productSkuId: singleSpecData.productSkuId,
+      userId: id,
+      status: 1,
+      //售价
+      price: 0,
+      //起订量
+      minBuyQty: 0
+    });
+    this.setState({
+      selectUserIds,
+      userPriceList
+    })
+  }
+
+  showUserModal = () => {
+    this.setState({
+      userModalIsVisible: true
+    })
+  }
+
+  _hideUserModal = () => {
+    this.setState({
+      userModalIsVisible: false
+    })
+  }
+
+  filterUserClicked = (params) => {
+    let { likeName, gradeId } = params;
+    let { userPriceList, gradeIdMap } = this.state;
+    likeName = likeName && likeName.trim();
+    if (!gradeId && !likeName) {
+      this.setState({
+        userIsFilered: false
+      })
+      return
+    }
+
+    let filtereduserPriceList = [];
+
+    if (gradeId) {
+      let gradeName = gradeIdMap[gradeId];
+      filtereduserPriceList = userPriceList.filter(item => item.gradeName == gradeName);
+    } else {
+      filtereduserPriceList = userPriceList;
+    }
+
+    if (likeName) {
+      filtereduserPriceList = filtereduserPriceList.filter(item => {
+        let reg = new RegExp(likeName, "ig");
+        return reg.test(item.phone) || reg.test(item.name)
+      });
+    }
+
+    this.setState({
+      filtereduserPriceList,
+      userIsFilered: true
+    })
+  }
+
+  setAllToFirstUser = () => {
+    let { userPriceList } = this.state;
+    let { price } = userPriceList[0];
+    userPriceList = userPriceList.map(item => {
+      return {
+        ...item,
+        price
+      }
+    })
+    this.setState({
+      userPriceList
+    })
+
+  }
+
+  onUserDataChange = (record, action, e) => {
+
+    let { userPriceList } = this.state;
+    let { userId, sellProductId } = record;
+    let index = 0;
+    userPriceList.forEach((item, i) => {
+      if (item.userId == userId) {
+        index = i;
+      }
+    })
+
+    switch (action) {
+      case "delete":
+        if (!record.id) {
+          userPriceList.splice(index, 1);
+        } else {
+          deleteOrderProductUserPrice({ userId, sellProductId })
+            .then(() => {
+              Toast('删除成功！');
+              this.props.refresh && this.props.refresh();
+            })
+        }
+
+        break;
+
+      case "price":
+      case "minBuyQty":
+        userPriceList[index][action] = e;
+        break;
+
+      case 'status':
+        userPriceList[index][action] = e ? 1 : 0;
+        break;
+    }
+
+    this.setState({
+      userPriceList
+    })
+  }
+
   getGradeColumnsItem = (id, name) => {
     return {
       align: "center", width: 250, dataIndex: `grade_${id}`,
@@ -343,188 +595,6 @@ class Page extends Component {
         </div>
       )
     }
-  }
-
-  deleteGrade = (key, id) => {
-    let { selectGradeIds, singleSpecData, isMultiSpec, userPriceList } = this.state;
-    let idIndex = selectGradeIds.indexOf(id);
-    let columnIndex = 0;
-    this.singleSpecColumns.forEach((item, index) => {
-      if (item.dataIndex == `grade_${id}`) {
-        columnIndex = index;
-      }
-    })
-    this.singleSpecColumns.splice(columnIndex, 1);
-    selectGradeIds.splice(idIndex, 1);
-    singleSpecData[`grade_${id}`] = null;
-    this.setState({
-      selectGradeIds,
-      singleSpecData
-    })
-  }
-
-  onGradeDataChange = (action, gradeIdKey, e) => {
-    let { singleSpecData, isMultiSpec, userPriceList } = this.state;
-    if (action == 'disable' || action == 'enable') {
-      singleSpecData[gradeIdKey]['status'] = action == 'enable' ? 1 : 0;
-    } else {
-      singleSpecData[gradeIdKey][action] = e;
-    }
-    this.setState({
-      singleSpecData
-    })
-  }
-
-  /**会员等级价编辑 *************************************************************************************************************/
-  singleSpecUserColumns = [
-    {
-      title: "", align: "center", dataIndex: "text2", width: 100,
-      render: (text, record, index) =>
-        <Popconfirm
-          placement="topLeft" title='确认要删除吗？'
-          onConfirm={() => this.onUserDataChange(record, 'delete')} >
-          <a><Icon title="删除" type='delete' className='margin-right theme-color font-20' />删除</a>
-        </Popconfirm>
-    },
-    { title: "会员名称", align: "center", width: 100, dataIndex: "name", render: data => data || '--' },
-    { title: "会员手机号", align: "center", width: 100, dataIndex: "phone", render: data => data || "--" },
-    { title: "会员等级", align: "center", dataIndex: "gradeName", render: data => data || "--" },
-    {
-      title: "是否可购买", align: "center", dataIndex: "status",
-      render: (data, record, index) => (
-        <Switch
-          checked={data == 1}
-          onChange={(e) => this.onUserDataChange(record, 'status', e)}
-        />
-      )
-    },
-    {
-      title: "相关信息", align: "center", width: 380, render: (data, record, index) =>
-        <div className='flex-middle'>
-          <span className='margin0-10'>价格</span>
-          <InputNumber value={record['price']} precision={2} min={0} onChange={(e) => this.onUserDataChange(record, 'price', e)} />
-          <span className='margin0-10'>起订量</span>
-          <InputNumber value={record['minBuyQty']} precision={0} min={0} onChange={(e) => this.onUserDataChange(record, 'minBuyQty', e)} />
-        </div>
-    }
-  ]
-
-  onSelectUser = (data) => {
-
-    let { name, phone, gradeName, id } = data;
-    let { selectUserIds, userPriceList, singleSpecData } = this.state;
-    selectUserIds.push(id);
-    userPriceList.push({
-      name,
-      phone,
-      gradeName,
-      productSkuId: singleSpecData.productSkuId,
-      userId: id,
-      status: 1,
-      //售价
-      price: 0,
-      //起订量
-      minBuyQty: 0
-    });
-    this.setState({
-      selectUserIds,
-      userPriceList
-    })
-
-  }
-
-  showUserModal = () => {
-    this.setState({
-      userModalIsVisible: true
-    })
-  }
-
-  _hideUserModal = () => {
-    this.setState({
-      userModalIsVisible: false
-    })
-  }
-
-  filterUserClicked = (params) => {
-    let { likeName, gradeId } = params;
-    let { userPriceList, gradeIdMap } = this.state;
-    likeName = likeName && likeName.trim();
-    if (!gradeId && !likeName) {
-      this.setState({
-        userIsFilered: false
-      })
-      return
-    }
-
-    let filtereduserPriceList = [];
-
-    if (gradeId) {
-      let gradeName = gradeIdMap[gradeId];
-      filtereduserPriceList = userPriceList.filter(item => item.gradeName == gradeName);
-    } else {
-      filtereduserPriceList = userPriceList;
-    }
-
-    if (likeName) {
-      filtereduserPriceList = filtereduserPriceList.filter(item => {
-        let reg = new RegExp(likeName, "ig");
-        return reg.test(item.phone) || reg.test(item.name)
-      });
-    }
-
-    this.setState({
-      filtereduserPriceList,
-      userIsFilered: true
-    })
-
-  }
-
-  setAllToFirstUser = () => {
-    let { userPriceList } = this.state;
-    let { price } = userPriceList[0];
-    userPriceList = userPriceList.map(item => {
-      return {
-        ...item,
-        price
-      }
-    })
-    this.setState({
-      userPriceList
-    })
-
-  }
-
-  onUserDataChange = (record, action, e) => {
-
-    let { userPriceList } = this.state;
-    let { userId } = record;
-    let index = 0;
-    userPriceList.forEach((item, i) => {
-      if (item.userId == userId) {
-        index = i;
-      }
-    })
-
-    switch (action) {
-      case "delete":
-        userPriceList.splice(index, 1);
-        break;
-
-      case "price":
-      case "minBuyQty":
-        userPriceList[index][action] = e;
-        break;
-
-      case 'status':
-        userPriceList[index][action] = e ? 1 : 0;
-        break;
-    }
-
-
-    this.setState({
-      userPriceList
-    })
-
   }
 
   /***渲染**********************************************************************************************************/

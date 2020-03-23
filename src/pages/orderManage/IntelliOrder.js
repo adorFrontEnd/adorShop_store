@@ -41,7 +41,8 @@ class Page extends Component {
     selectAreaData: null,
     remark: null,
     storageId: null,
-    selectIndex: null
+    selectIndex: null,
+    intelliOrderText: null
   }
 
   componentDidMount() {
@@ -50,12 +51,13 @@ class Page extends Component {
 
   /**x下单 */
   saveDataClicked = () => {
-    let { orderBaseInfo, orderSKUList, storageId, selectAreaData, remark, selectUser, selectSaler } = this.state;
+    let { orderBaseInfo, orderSKUList, storageId, selectAreaData, remark, selectUser, selectSaler,intelliOrderText} = this.state;
     let params = getOrderSaveData({ orderBaseInfo, storageId, orderSKUList, selectAreaData, remark, selectSaler, selectUser });
 
     if (!params) {
       return;
     }
+  
     this._showPageLoading();
     smartOrder(params)
       .then(() => {
@@ -283,7 +285,19 @@ class Page extends Component {
       remark
     })
   }
+  intelliOrderTextChange = (e) => {
 
+    let intelliOrderText = e.target.value;
+
+    this.setState({
+      intelliOrderText
+    })
+  }
+
+  intelliOrderTextClick = () => {
+    let { intelliOrderText } = this.state;
+
+  }
   /**渲染**********************************************************************************************************************************/
 
   render() {
@@ -304,10 +318,14 @@ class Page extends Component {
             </div>
 
             <div>
-              <Input.TextArea style={{ minHeight: 120, width: 700 }}></Input.TextArea>
+              <Input.TextArea
+                value={this.state.intelliOrderText}
+                onChange={this.intelliOrderTextChange}
+                style={{ minHeight: 120, width: 700 }}
+              />
             </div>
 
-            <div className='margin-top'><Button type='primary'>智能识别</Button></div>
+            <div className='margin-top'><Button type='primary' onClick={this.intelliOrderTextClick}>智能识别</Button></div>
 
             <div className='margin-top20'>
               <div className='line-height40 font-18 color333 font-bold'>基本信息</div>
@@ -400,7 +418,7 @@ class Page extends Component {
               <Row style={{ borderTop: '1px solid #f2f2f2', borderBottom: '1px solid #f2f2f2' }}>
                 <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>发货仓库</Col>
                 <Col span={20} className='padding-left'>
-                  <Select value={this.state.storageId} onChange={this.onStorageChange} style={{width:200}}>
+                  <Select value={this.state.storageId} onChange={this.onStorageChange} style={{ width: 200 }}>
                     <Select.Option value={null}>请选择仓库</Select.Option>
                     {
                       storageList && storageList.length ?
