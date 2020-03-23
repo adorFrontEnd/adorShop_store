@@ -14,7 +14,7 @@ class Page extends Component {
   state = {
 
     singleSpecData: {},
-    singleUserData: [],
+    userPriceList: [],
 
     uploadModalIsVisible: false,
     selectProductUrls: [],
@@ -27,11 +27,12 @@ class Page extends Component {
     gradeList: [],
     gradeIdMap: {},
     userIsFilered: false,
-    filteredSingleUserData: []
+    filtereduserPriceList: []
   }
 
   componentDidMount() {
     this._getGradeList();
+    this.initSingleSpecColumns();
     this.onSpecDataRevert(this.props.specData);
   }
 
@@ -43,21 +44,23 @@ class Page extends Component {
 
   /**获取规格数据 ****************************************************************************************/
   getSingleSpecData = () => {
-    let { singleSpecData, singleUserData } = this.state;
+    let { singleSpecData, userPriceList } = this.state;
     let sellProductSkuStrList = this.getSellProductSkuStrList(singleSpecData);
-    let userPriceStrList = this.getUserPriceStrList(singleUserData, singleSpecData.id);
+    let userPriceStrList = this.getUserPriceStrList(userPriceList, singleSpecData.productSkuId);
     return {
-      singleSpecData, singleUserData, sellProductSkuStrList, userPriceStrList
+      singleSpecData, userPriceList, sellProductSkuStrList, userPriceStrList
     }
   }
 
   getSellProductSkuStrList = (singleSpecData) => {
-    let { id, number, costPrice } = singleSpecData;
-    let productSkuId = id;
-    let userGradePriceStrList = this.getGradePriceList(singleSpecData, productSkuId);
+    let { productSkuId, number, costPrice } = singleSpecData;
+
+    let productNumber = number;
+    let userGradePriceStrList = this.getGradePriceList(singleSpecData, productSkuId, productNumber);
     let sellProductSkuStrList = [{
       productId: this.props.productId,
       costPrice,
+      productNumber,
       onsaleStatus: 1,
       status: 1,
       productSkuId,
@@ -66,22 +69,22 @@ class Page extends Component {
     return sellProductSkuStrList
   }
 
-  getGradePriceList = (singleSpecData, productSkuId) => {
+  getGradePriceList = (singleSpecData, productSkuId, productNumber) => {
     let keys = Object.keys(singleSpecData).filter(item => item.substr(0, 6) == 'grade_' && singleSpecData[item]);
     let gradePriceList = keys.map(gradeKey => {
       let gradeId = gradeKey.substr(6);
       let { price, performancePrice, recommendPrice, minBuyQty, status } = singleSpecData[gradeKey];
       let data = {
-        productSkuId, gradeId: Number(gradeId), price, performancePrice, recommendPrice, minBuyQty, status
+        productSkuId, productNumber, gradeId: Number(gradeId), price, performancePrice, recommendPrice, minBuyQty, status
       }
       return data
     })
     return gradePriceList
   }
 
-  getUserPriceStrList = (singleUserData, productSkuId) => {
+  getUserPriceStrList = (userPriceList, productSkuId) => {
 
-    let userPriceStrList = singleUserData.map(item => {
+    let userPriceStrList = userPriceList.map(item => {
       let { userId, price, minBuyQty, status } = item;
       return {
         userId, price, minBuyQty, status, productSkuId
@@ -94,15 +97,73 @@ class Page extends Component {
   //规格数据回滚
   onSpecDataRevert = (data) => {
 
-    if (!data) {
+    if (!data || !Object.keys(data).length) {
       this._initSpecData();
     } else {
-      let { singleSpecData } = data;
+
+      let { singleSpecData, selectGradeIds } = this.parseSingleSpecData(data.singleSpecData);
+      let { userPriceList, selectUserIds } = this.parseUserPriceList(data.userPriceList);
       this.setState({
-        singleSpecData
+        singleSpecData,
+        userPriceList,
+        singleSpecData,
+        selectGradeIds
       })
 
     }
+  }
+
+  parseSingleSpecData = (rawSingleSpecData) => {
+
+    if (!rawSingleSpecData) {
+      return
+    }
+    let { userGradePriceList, productSkuId, ...other } = rawSingleSpecData;
+
+    let selectGradeIds = [];
+    if (!userGradePriceList || !userGradePriceList.length) {
+      return { singleSpecData: rawSingleSpecData, selectGradeIds }
+    }
+    let gradeDataObj = {};
+    userGradePriceList.forEach(item => {
+      let gradeKey = `grade_${item.gradeId}`;
+      if (!gradeDataObj.hasOwnProperty(gradeKey)) {
+        gradeDataObj[gradeKey] = { ...item, productSkuId };
+      };
+      selectGradeIds.push(item.gradeId);
+      let gradeData = { name: item.gradeName, id: item.gradeId };
+      this.addGradeColumn({ gradeData });
+    })
+
+    let singleSpecData = {
+      productSkuId,
+      ...other,
+      ...gradeDataObj
+    }
+
+    return {
+      singleSpecData,
+      selectGradeIds
+    }
+  }
+
+  parseUserPriceList = (rawUserPriceList) => {
+
+
+    let userPriceList = [];
+    let selectUserIds = [];
+
+    if (!rawUserPriceList || !rawUserPriceList.length) {
+      return {
+        userPriceList, selectUserIds
+      }
+    }
+    selectUserIds = rawUserPriceList.map(item => item.userId);
+
+    return {
+      rawUserPriceList, selectUserIds
+    }
+
   }
 
   _initSpecData = () => {
@@ -139,38 +200,39 @@ class Page extends Component {
   }
 
   /**规格等级价编辑 ****************************************************************************************/
-
-  singleSpecColumns = [
-    { title: "", align: "center", dataIndex: "text2", width: 50, render: (text, data, index) => <span>{index + 1}</span> },
-    {
-      title: "主图", align: "center", width: 80, dataIndex: "imageUrl", render: data => (
-        <div className='flex-middle flex-center' style={{ cursor: "pointer" }} onClick={() => this.showUploadModal()}>
-          {
-            data && data.length ?
-              <div>
-                <Badge count={data.length}>
-                  <img src={data[0]} style={{ height: 50, width: 50 }} />
-                </Badge>
-              </div>
-              :
-              <div style={{ margin: "0 auto", border: "1px dashed #ccc", borderRadius: "4px", padding: 10 }}>
-                <Icon type='plus' style={{ fontSize: 20 }} />
-              </div>
-          }
-        </div>
-      )
-    },
-    { title: "规格", align: "center", width: 50, dataIndex: "specValue", render: data => data || "--" },
-    { title: "商品编码", align: "center", dataIndex: "number", render: data => data || "--" },
-    { title: "条形码", align: "center", dataIndex: "barCode", render: data => data || "--" },
-    { title: "划线价（元）", align: "center", width: 110, dataIndex: "marketPrice", render: data => data || "--" },
-    { title: "成本价（元）", align: "center", width: 110, dataIndex: "costPrice", render: data => data || "--" },
-    { title: "重量（kg）", align: "center", width: 110, dataIndex: "weight", render: data => data || "--" },
-    {
-      title: data => < a onClick={this.showUserGradeModal} > <Icon type='plus' /> 添加客户级别</a >, width: 120, align: "center",
-      dataIndex: "text1", render: data => '--'
-    }
-  ]
+  initSingleSpecColumns = () => {
+    this.singleSpecColumns = [
+      { title: "", align: "center", dataIndex: "text2", width: 50, render: (text, data, index) => <span>{index + 1}</span> },
+      {
+        title: "主图", align: "center", width: 80, dataIndex: "imageUrl", render: data => (
+          <div className='flex-middle flex-center' style={{ cursor: "pointer" }} onClick={() => this.showUploadModal()}>
+            {
+              data && data.length ?
+                <div>
+                  <Badge count={data.length}>
+                    <img src={data[0]} style={{ height: 50, width: 50 }} />
+                  </Badge>
+                </div>
+                :
+                <div style={{ margin: "0 auto", border: "1px dashed #ccc", borderRadius: "4px", padding: 10 }}>
+                  <Icon type='plus' style={{ fontSize: 20 }} />
+                </div>
+            }
+          </div>
+        )
+      },
+      { title: "规格", align: "center", width: 50, dataIndex: "specValue", render: data => data || "--" },
+      { title: "商品编码", align: "center", dataIndex: "number", render: data => data || "--" },
+      { title: "条形码", align: "center", dataIndex: "barCode", render: data => data || "--" },
+      { title: "划线价（元）", align: "center", width: 110, dataIndex: "marketPrice", render: data => data || "--" },
+      { title: "成本价（元）", align: "center", width: 110, dataIndex: "costPrice", render: data => data || "--" },
+      { title: "重量（kg）", align: "center", width: 110, dataIndex: "weight", render: data => data || "--" },
+      {
+        title: data => < a onClick={this.showUserGradeModal} > <Icon type='plus' /> 添加客户级别</a >, width: 120, align: "center",
+        dataIndex: "text1", render: data => '--'
+      }
+    ]
+  }
 
   showUserGradeModal = () => {
     this.setState({
@@ -193,7 +255,36 @@ class Page extends Component {
 
     let { name, id } = gradeData;
     let length = this.singleSpecColumns.length;
-    let item = {
+    let dataIndexArr = this.singleSpecColumns.map(item => item.dataIndex);
+    if (dataIndexArr.indexOf(`grade_${id}`) != -1) {
+      return;
+    }
+    let item = this.getGradeColumnsItem(id, name);
+
+    this.singleSpecColumns.splice(length - 1, 0, item);
+    let { selectGradeIds, singleSpecData } = this.state;
+    singleSpecData[`grade_${id}`] = {
+      //售价
+      price: 0,
+      //平级推荐奖
+      recommendPrice: 0,
+      //起订量
+      minBuyQty: 0,
+      //业绩计算取价
+      performancePrice: 0,
+      //状态
+      status: 1
+    };
+    selectGradeIds.push(id);
+    this.setState({
+      selectGradeIds,
+      singleSpecData
+    })
+    let { isMultiSpec, userPriceList } = this.state;
+  }
+
+  getGradeColumnsItem = (id, name) => {
+    return {
       align: "center", width: 250, dataIndex: `grade_${id}`,
       title: () => (<a>
         <Popconfirm
@@ -252,32 +343,10 @@ class Page extends Component {
         </div>
       )
     }
-
-    this.singleSpecColumns.splice(length - 1, 0, item);
-    let { selectGradeIds, singleSpecData } = this.state;
-    singleSpecData[`grade_${id}`] = {
-      //售价
-      price: 0,
-      //平级推荐奖
-      recommendPrice: 0,
-      //起订量
-      minBuyQty: 0,
-      //业绩计算取价
-      performancePrice: 0,
-      //状态
-      status: 1
-    };
-    selectGradeIds.push(id);
-    this.setState({
-      selectGradeIds,
-      singleSpecData
-    })
-    let { isMultiSpec, singleUserData } = this.state;
-
   }
 
   deleteGrade = (key, id) => {
-    let { selectGradeIds, singleSpecData, isMultiSpec, singleUserData } = this.state;
+    let { selectGradeIds, singleSpecData, isMultiSpec, userPriceList } = this.state;
     let idIndex = selectGradeIds.indexOf(id);
     let columnIndex = 0;
     this.singleSpecColumns.forEach((item, index) => {
@@ -292,12 +361,10 @@ class Page extends Component {
       selectGradeIds,
       singleSpecData
     })
-
-
   }
 
   onGradeDataChange = (action, gradeIdKey, e) => {
-    let { singleSpecData, isMultiSpec, singleUserData } = this.state;
+    let { singleSpecData, isMultiSpec, userPriceList } = this.state;
     if (action == 'disable' || action == 'enable') {
       singleSpecData[gradeIdKey]['status'] = action == 'enable' ? 1 : 0;
     } else {
@@ -345,13 +412,13 @@ class Page extends Component {
   onSelectUser = (data) => {
 
     let { name, phone, gradeName, id } = data;
-    let { selectUserIds, singleUserData, singleSpecData } = this.state;
+    let { selectUserIds, userPriceList, singleSpecData } = this.state;
     selectUserIds.push(id);
-    singleUserData.push({
+    userPriceList.push({
       name,
       phone,
       gradeName,
-      productSkuId: singleSpecData.id,
+      productSkuId: singleSpecData.productSkuId,
       userId: id,
       status: 1,
       //售价
@@ -361,7 +428,7 @@ class Page extends Component {
     });
     this.setState({
       selectUserIds,
-      singleUserData
+      userPriceList
     })
 
   }
@@ -380,7 +447,7 @@ class Page extends Component {
 
   filterUserClicked = (params) => {
     let { likeName, gradeId } = params;
-    let { singleUserData, gradeIdMap } = this.state;
+    let { userPriceList, gradeIdMap } = this.state;
     likeName = likeName && likeName.trim();
     if (!gradeId && !likeName) {
       this.setState({
@@ -389,50 +456,50 @@ class Page extends Component {
       return
     }
 
-    let filteredSingleUserData = [];
+    let filtereduserPriceList = [];
 
     if (gradeId) {
       let gradeName = gradeIdMap[gradeId];
-      filteredSingleUserData = singleUserData.filter(item => item.gradeName == gradeName);
+      filtereduserPriceList = userPriceList.filter(item => item.gradeName == gradeName);
     } else {
-      filteredSingleUserData = singleUserData;
+      filtereduserPriceList = userPriceList;
     }
 
     if (likeName) {
-      filteredSingleUserData = filteredSingleUserData.filter(item => {
+      filtereduserPriceList = filtereduserPriceList.filter(item => {
         let reg = new RegExp(likeName, "ig");
         return reg.test(item.phone) || reg.test(item.name)
       });
     }
 
     this.setState({
-      filteredSingleUserData,
+      filtereduserPriceList,
       userIsFilered: true
     })
 
   }
 
   setAllToFirstUser = () => {
-    let { singleUserData } = this.state;
-    let { price } = singleUserData[0];
-    singleUserData = singleUserData.map(item => {
+    let { userPriceList } = this.state;
+    let { price } = userPriceList[0];
+    userPriceList = userPriceList.map(item => {
       return {
         ...item,
         price
       }
     })
     this.setState({
-      singleUserData
+      userPriceList
     })
 
   }
 
   onUserDataChange = (record, action, e) => {
 
-    let { singleUserData } = this.state;
+    let { userPriceList } = this.state;
     let { userId } = record;
     let index = 0;
-    singleUserData.forEach((item, i) => {
+    userPriceList.forEach((item, i) => {
       if (item.userId == userId) {
         index = i;
       }
@@ -440,22 +507,22 @@ class Page extends Component {
 
     switch (action) {
       case "delete":
-        singleUserData.splice(index, 1);
+        userPriceList.splice(index, 1);
         break;
 
       case "price":
       case "minBuyQty":
-        singleUserData[index][action] = e;
+        userPriceList[index][action] = e;
         break;
 
       case 'status':
-        singleUserData[index][action] = e ? 1 : 0;
+        userPriceList[index][action] = e ? 1 : 0;
         break;
     }
 
 
     this.setState({
-      singleUserData
+      userPriceList
     })
 
   }
@@ -463,9 +530,9 @@ class Page extends Component {
   /***渲染**********************************************************************************************************/
 
   render() {
-    const { singleSpecData, singleUserData, userIsFilered, filteredSingleUserData } = this.state;
-    const singleDataSource = singleSpecData && singleSpecData.id ? [singleSpecData] : null
-    const singleUserDataSource = userIsFilered ? filteredSingleUserData : singleUserData;
+    const { singleSpecData, userPriceList, userIsFilered, filtereduserPriceList } = this.state;
+    const singleDataSource = singleSpecData && singleSpecData.productSkuId ? [singleSpecData] : null
+    const userPriceListSource = userIsFilered ? filtereduserPriceList : userPriceList;
 
     return (
       <div className='padding'>
@@ -473,7 +540,7 @@ class Page extends Component {
           <div>
             <Table
               indentSize={10}
-              rowKey='id'
+              rowKey='productSkuId'
               bordered={true}
               columns={this.singleSpecColumns}
               loading={this.state.tableLoading}
@@ -507,7 +574,7 @@ class Page extends Component {
               />
               <div className='margin-left20'>
                 {
-                  singleUserDataSource && singleUserDataSource.length > 1 ?
+                  userPriceListSource && userPriceListSource.length > 1 ?
                     <Button type='primary' onClick={this.setAllToFirstUser}>
                       批量设为第一个会员的价格
                       </Button> : null
@@ -521,7 +588,7 @@ class Page extends Component {
               columns={this.singleSpecUserColumns}
               loading={this.state.tableLoading}
               pagination={false}
-              dataSource={singleUserDataSource}
+              dataSource={userPriceListSource}
             />
           </div>
           <Button type='primary' className='normal' onClick={this.showUserModal}>添加</Button>

@@ -16,11 +16,10 @@ class Page extends Component {
   state = {
     id: 0,
     productDetail: {},
-    revertSpecData: {},
+    specData: {},
     imageUrl: [],
     freightMap: {},
     isSpecChange: false,
-    specData: {},
     isOpenSpec: null
   }
 
@@ -72,17 +71,23 @@ class Page extends Component {
     let { baseUnit, containerUnit, isContainerUnit, imageUrl, isOpenSpec, paramList } = productDetail;
     let totalUnitStr = isContainerUnit ? this.getTotalUnitStr(baseUnit, containerUnit) : baseUnit;
     imageUrl = imageUrl.split('|');
-    let revertSpecData = parseSpecData({ isOpenSpec, paramList })
-
+    let { singleSpecData } = parseSpecData({ isOpenSpec, paramList });
+    let userPriceList = [];
+    let { id, ...other } = singleSpecData;
+    let specData = {
+      singleSpecData: {
+        ...other,
+        productSkuId: id
+      },
+      userPriceList
+    }
     this.setState({
+      specData,
       productDetail,
       totalUnitStr,
       imageUrl,
       isOpenSpec,
-      isTplProduct: true
-    })
-    this.setState({
-      revertSpecData,
+      isTplProduct: true,
       isSpecChange: true
     }, () => {
       this.setState({
@@ -93,18 +98,32 @@ class Page extends Component {
 
   //回滚编辑商品时订货商品数据
   revertSellProductDetail = (sellProductDetail) => {
-    let { product } = sellProductDetail;
-    let productDetail = { ...product };
-    let { id, isOpenSpec, isContainerUnit, baseUnit, containerUnit, imageUrl } = product;
+    let { product, productId, sellProductSkuList, userPriceList } = sellProductDetail;
+    let { isOpenSpec, isContainerUnit, baseUnit, containerUnit, imageUrl } = product;
     let totalUnitStr = isContainerUnit ? this.getTotalUnitStr(baseUnit, containerUnit) : baseUnit;
     imageUrl = imageUrl.split('|');
+    let singleSpecData = sellProductSkuList[0];
+    singleSpecData.imageUrl = singleSpecData.imageUrl.split("|");
+    singleSpecData.specValue = "无";
+
+    let specData = {
+      singleSpecData,
+      userPriceList
+    }
+    
     this.setState({
-      productDetail,
-      tplPrdId: id,
+      productDetail: product,
+      specData,
+      tplPrdId: productId,
       totalUnitStr,
       isOpenSpec,
       imageUrl,
-      isTplProduct: false
+      isTplProduct: false,
+      isSpecChange: true
+    }, () => {
+      this.setState({
+        isSpecChange: false
+      })
     })
   }
 
@@ -181,7 +200,7 @@ class Page extends Component {
                   productId={Number(this.state.tplPrdId)}
                   ref='orderProductSpec'
                   shouldChange={this.state.isSpecChange}
-                  specData={this.state.revertSpecData}
+                  specData={this.state.specData}
                 />
             }
 

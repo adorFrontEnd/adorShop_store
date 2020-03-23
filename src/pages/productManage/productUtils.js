@@ -167,7 +167,7 @@ const parseSpecData = (specData) => {
       id,
       imageUrl: imageUrl.split("|"),
       specValue: "无",
-      barCode, costPrice, marketPrice, number, weight
+      barCode, costPrice, marketPrice, number, weight     
     }
   }
 
