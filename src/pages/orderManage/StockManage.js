@@ -83,8 +83,8 @@ class Page extends Component {
     {
       title: '操作',
       render: (text, record, index) => (
-        <span onClick={() => { this.showStockModal(record) }} style={{ color: '#FF9530' }}>
-          补货
+        <span>
+          <a size="small" className="color-red" onClick={() => { this.showStockModal(record) }}> 补货</a>
         </span>
       )
     }
@@ -159,14 +159,16 @@ class Page extends Component {
       newItemModalVisible: false
     })
   }
+  // 保存修改
   saveClicked = () => {
+    let stockData = this.state.stockData;
+    for (var i = 0; i < stockData.length; i++) {
+      if (stockData[i]['changeAfter'] < 0) {
+        Toast('库存不能小于0');
+        return;
+      }
+    }
     let stockStrList = this.formatParams(this.state.stockData);
-    // stockStrList.map(item=>{
-    //   if(item.changeQty &&item.changeQty[0]!=='-' && item.changeQty[0]!=='+'){
-    //     Toast('改变库存格式不正确，正确格式为：+/-数字');
-    //     return;
-    //   }
-    // })
     stockStrList = JSON.stringify(stockStrList);
     updateStock({ stockStrList })
       .then(data => {
@@ -177,6 +179,8 @@ class Page extends Component {
         this.getPageData();
       })
   }
+
+
   // 格式化参数
   formatParams = (stockData) => {
     if (!stockData || !stockData.length) {
@@ -184,7 +188,6 @@ class Page extends Component {
     }
     let result = stockData.map(item => {
       let { id, alarmQty, changeQty } = item;
-
       return {
         id, alarmQty, changeQty
       }
@@ -220,7 +223,11 @@ class Page extends Component {
     let index = this.findClassifyIndexById(id, stockData);
     if (index || index == 0) {
       stockData[index]['changeQty'] = e.target.value;
-      stockData[index]['changeAfter'] = parseInt(e.target.value) + parseInt(stockData[index]['qty']);
+      let changeAfter = parseInt(e.target.value) + parseInt(stockData[index]['qty']);
+      // if (changeAfter < 0) {
+      //   Toast('库存不能小于0')
+      // }
+      stockData[index]['changeAfter'] = changeAfter;
       this.setState({
         stockData
       })
@@ -318,15 +325,28 @@ class Page extends Component {
                       {item.qty}
                     </Col>
                     <Col span={3} className='padding flex-middle' style={{ borderLeft: "1px solid #d9d9d9" }}>
-                      <Input style={{ width: 120 }} onChange={(e) => this.changeStock(e, item.id)} disabled={item.skuStatus == 0} value={item.changeQty}/>
+                      <Input style={{ width: 120 }} onChange={(e) => this.changeStock(e, item.id)} disabled={item.skuStatus == 0} value={item.changeQty} />
                     </Col>
                     <Col span={3} className='padding flex-middle' style={{ borderLeft: "1px solid #d9d9d9" }}>
+
                       {item.changeAfter ? item.changeAfter : item.qty}
                     </Col>
                   </Row>
                 ) : null
               }
 
+            </div>
+            <div className="color-red" style={{ marginTop: '20px' }}>
+              <div >
+                1、该商品如果为有货状态，则代表所有订购商品状态为正常的SKU不存在当前库存为0的情况
+              </div>
+              <div>2、该商品如果为部分缺货状态，则代表所有订购商品状态为正常的SKU有且不完全存在当前库存为0的情况</div>
+              <div>3、该商品如果为全部缺货状态，则代表所有订购商品状态为正常的SKU的所有当前库存为0</div>
+              <div>4、如果某个商品的某个SKU存在该SKU的当前库存小于等于预警库存且不为0时，显示有库存预警</div>
+              <div>5、任何时候库存不得小于0</div>
+              <div>6、如果改变库存时减少库存，会根据实际库存情况进行减少，比如库存当前库存201，减少200库存，在确认时前台销售数3，则实际库存为0，其中有正常销售减3的记录，此次操作实际减库存为198
+
+</div>
             </div>
           </div>
         </Modal>

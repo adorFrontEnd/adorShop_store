@@ -42,7 +42,9 @@ class Page extends Component {
     {
       title: '操作',
       render: (text, record, index) => (
-        <span onClick={() => this.deleteUnit(record)}>移除</span>
+        <span>
+            <a size="small" className="color-red" onClick={() => this.deleteUnit(record)}> 移除</a>
+        </span>
       )
     }
   ]
