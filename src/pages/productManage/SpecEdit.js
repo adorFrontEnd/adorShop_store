@@ -22,17 +22,17 @@ class Page extends Component {
   }
 
   componentWillReceiveProps(props) {
-    if (!props.specData || (props.specData && props.shouldChange)) {
+    if (props.shouldChange) {
       this.onSpecDataRevert(props.specData);
     }
   }
 
-  onSpecDataChangeCallback = (isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses) => {
-    this.props.onChange({
+  getSpecData = () => {
+    let { isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses } = this.state;
+    return {
       isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses
-    })
+    }
   }
-
 
   //规格数据回滚
   onSpecDataRevert = (data) => {
@@ -45,9 +45,7 @@ class Page extends Component {
       this.setState({
         isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses
       })
-      this.props.onChange({
-        isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses
-      })
+
 
     }
   }
@@ -75,9 +73,7 @@ class Page extends Component {
       selectSpecIndex: 0
     }
     this.setState(data);
-    this.props.onChange({
-      isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses
-    })
+
   }
 
   muiltiChecked = (e) => {
@@ -89,7 +85,7 @@ class Page extends Component {
     this.setState({
       isMultiSpec
     })
-    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses);
+   
   }
 
   initMultiData = () => {
@@ -115,7 +111,7 @@ class Page extends Component {
       multiSpecClasses,
       multiSpecData
     })
-    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses);
+ 
   }
 
 
@@ -143,7 +139,7 @@ class Page extends Component {
       multiSpecClasses,
       multiSpecData
     })
-    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses);
+  
   }
 
 
@@ -189,7 +185,7 @@ class Page extends Component {
       this.setState({
         multiSpecData
       })
-      this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses);
+ 
     }
   }
 
@@ -220,7 +216,7 @@ class Page extends Component {
     this.setState({
       multiSpecData
     })
-    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses);
+
   }
 
   //修改规格详细数据
@@ -244,7 +240,7 @@ class Page extends Component {
     this.setState({
       singleSpecData
     })
-    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses);
+
   }
 
 
@@ -287,7 +283,7 @@ class Page extends Component {
         multiSpecData
       })
     }
-    this.onSpecDataChangeCallback(isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses)
+
     this.hideUploadModal();
   }
 

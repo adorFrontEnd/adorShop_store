@@ -19,9 +19,9 @@ const integralRecordPath = routerConfig["user.userManage.userList"].path;
 const giftRecordPath = routerConfig["user.userManage.userList"].path;
 const productEditPath = routerConfig["productManage.productInfo.productEdit"].path;
 const _channelEnum = {
-  "0": "直购",
-  "1": "订货",
-  "2": "云市场"
+  "1": "直购",
+  "2": "订货",
+  "4": "云市场"
 }
 const _channelEnumArr = Object.keys(_channelEnum).map(item => { return { id: item, name: _channelEnum[item] } });
 

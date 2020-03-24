@@ -39,7 +39,7 @@ class Page extends Component {
   }
 
   componentWillReceiveProps(props) {
-    if (!props.specData || (props.specData && props.shouldChange)) {
+    if (props.shouldChange) {
       this.onSpecDataRevert(props.specData);
     }
   }

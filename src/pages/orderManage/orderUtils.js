@@ -90,7 +90,7 @@ const validateSKU = (orderSKUList) => {
   let skuIds = [];
 
   for (let i = 0; i < orderSKUList.length; i++) {
-    let { unitPrice, buyQty, sellPrdSkuId } = orderSKUList[i];
+    let { unitPrice, buyQty, sellPrdSkuId, baseUnit } = orderSKUList[i];
     if (!unitPrice && unitPrice != 0) {
       Toast(`请输入第${i + 1}商品的价格！`);
       return;
@@ -102,7 +102,7 @@ const validateSKU = (orderSKUList) => {
     }
 
     data.push({
-      unitPrice, buyQty, sellPrdSkuId
+      unitPrice, buyQty, sellPrdSkuId, baseUnit
     })
     skuIds.push(sellPrdSkuId);
   }

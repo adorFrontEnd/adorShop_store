@@ -7,6 +7,15 @@ import ExpressRealtimeData from './ExpressRealtimeData';
 
 class OrderShipDataList extends Component {
 
+  getImageUrl = (url) => {
+    if (!url || !url.length) {
+      return
+    }
+
+    let urlArr = url.split("|");
+    return urlArr && urlArr.length > 0 && urlArr[0] ? urlArr[0] : ""
+  }
+
   render() {
     const { data } = this.props;
     return (
@@ -39,24 +48,26 @@ class OrderShipDataList extends Component {
                               item.list.map((element, i) => (
                                 <div key={i}>
                                   <div className='margin-right'>
-                                    <div><img src={element.imageUrl} style={{ width: 80, height: 80 }} /></div>
-                                    <div className='theme-color font-16 ellipsis' style={{ width: 80 }}>
+                                    <div>
+                                      <img src={this.getImageUrl(element.imageUrl) || ""} style={{ width: 100, height: 100 }} />
+                                    </div>
+                                    <div className='theme-color ellipsis' style={{ width: 100 }}>
                                       {element.productName}
                                     </div>
-                                    <div className='ellipsis' style={{ width: 80 }}>
+                                    <div className='ellipsis' style={{ width: 100 }}>
                                       {element.specValue}
                                     </div>
-                                    <div style={{ width: 80 }}>数量：{element.sendQty}</div>
+                                    <div style={{ width: 100 }}>数量：{element.sendQty}</div>
                                   </div>
                                 </div>
                               )) : null
                           }
                         </div>
                       </div>
-                      <div className='margin-left20'>
-                        物流情况
+                      <div className='margin-left20 line-height30'>
+                        物流情况：
                       </div>
-                      <div className='padding0-10'>
+                      <div style={{ padding: "6px 6px" }}>
                         <ExpressRealtimeData
                           data={item.logisticsNumber}
                         />
