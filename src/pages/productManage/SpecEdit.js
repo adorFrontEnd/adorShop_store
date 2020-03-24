@@ -291,7 +291,7 @@ class Page extends Component {
   /***渲染**********************************************************************************************************/
 
   render() {
-    const { getFieldDecorator } = this.props.form;
+   
     const { specValues, multiSpecClasses, multiSpecData, singleSpecData } = this.state;
 
     return (
@@ -528,7 +528,7 @@ class Page extends Component {
   }
 }
 
-export default Form.create()(Page);
+export default Page;
 
 class DeleteItem extends Component {
 
