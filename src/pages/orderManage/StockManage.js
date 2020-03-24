@@ -224,9 +224,6 @@ class Page extends Component {
     if (index || index == 0) {
       stockData[index]['changeQty'] = e.target.value;
       let changeAfter = parseInt(e.target.value) + parseInt(stockData[index]['qty']);
-      // if (changeAfter < 0) {
-      //   Toast('库存不能小于0')
-      // }
       stockData[index]['changeAfter'] = changeAfter;
       this.setState({
         stockData
@@ -249,7 +246,7 @@ class Page extends Component {
       <CommonPage title={_title} >
         <div style={{ marginBottom: '30px' }} className='flex-between'>
           {/* <Button type='primary'>同步网店管家库存</Button> */}
-          <div></div>
+          <div className='color-red'>您的补货记录将记录在库存日志中</div>
           <div style={{ minWidth: 700 }}>
             <SearchForm
               width={700}
@@ -268,7 +265,6 @@ class Page extends Component {
           pagination={this.state.pagination}
           dataSource={this.state.tableDataList}
         />
-
 
         <Modal maskClosable={false}
           title="补货"
@@ -295,7 +291,7 @@ class Page extends Component {
                 <Col span={2} className='_padding10' style={{ borderLeft: "1px solid #d9d9d9" }}>当前库存</Col>
                 <Col span={3} className='_padding10' style={{ borderLeft: "1px solid #d9d9d9" }}>
                   <div>改变库存</div>
-                  <div>(格式：+/-数字)</div>
+                  <div className="color-red">(格式：+/-数字)</div>
                 </Col>
                 <Col span={3} className='_padding10' style={{ borderLeft: "1px solid #d9d9d9" }}>修改后库存</Col>
               </Row>
@@ -334,19 +330,14 @@ class Page extends Component {
                   </Row>
                 ) : null
               }
-
             </div>
             <div className="color-red" style={{ marginTop: '20px' }}>
-              <div >
-                1、该商品如果为有货状态，则代表所有订购商品状态为正常的SKU不存在当前库存为0的情况
-              </div>
+              <div>1、该商品如果为有货状态，则代表所有订购商品状态为正常的SKU不存在当前库存为0的情况</div>
               <div>2、该商品如果为部分缺货状态，则代表所有订购商品状态为正常的SKU有且不完全存在当前库存为0的情况</div>
               <div>3、该商品如果为全部缺货状态，则代表所有订购商品状态为正常的SKU的所有当前库存为0</div>
               <div>4、如果某个商品的某个SKU存在该SKU的当前库存小于等于预警库存且不为0时，显示有库存预警</div>
               <div>5、任何时候库存不得小于0</div>
-              <div>6、如果改变库存时减少库存，会根据实际库存情况进行减少，比如库存当前库存201，减少200库存，在确认时前台销售数3，则实际库存为0，其中有正常销售减3的记录，此次操作实际减库存为198
-
-</div>
+              <div>6、如果改变库存时减少库存，会根据实际库存情况进行减少，比如库存当前库存201，减少200库存，在确认时前台销售数3，则实际库存为0，其中有正常销售减3的记录，此次操作实际减库存为198</div>
             </div>
           </div>
         </Modal>
