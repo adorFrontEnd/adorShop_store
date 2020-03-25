@@ -63,6 +63,8 @@ class NormalLoginForm extends Component {
         onSubmit={this.handleSubmit} className="login-form"
         style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-around" }}
       >
+       
+        <div></div>
         <FormItem>
           {getFieldDecorator('username', {
             rules: [
@@ -115,7 +117,7 @@ class NormalLoginForm extends Component {
             }
           </a>
         </FormItem>
-        <FormItem>
+        <div>
           <Button
             loading={this.props.loading}
             type="primary"
@@ -124,7 +126,7 @@ class NormalLoginForm extends Component {
           >
             登录
           </Button>
-        </FormItem>
+        </div>
         <div>
           {
             this.props.children

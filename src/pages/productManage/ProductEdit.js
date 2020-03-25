@@ -114,6 +114,7 @@ class Page extends Component {
 
   saveDataClicked = () => {
 
+  
     this.props.form.validateFields((err, data) => {
       if (err) {
         return;
@@ -134,7 +135,7 @@ class Page extends Component {
       if (!params) {
         return;
       }
-
+    
       this._showDetailLoading();
       saveOrUpdateProduct({ ...params, id })
         .then(() => {

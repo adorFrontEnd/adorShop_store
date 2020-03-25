@@ -111,7 +111,7 @@ const getParseDetailData = (productDetail) => {
   }
   let stateData = {
     baseUnit, categoryIds, containerUnit, details, containerUnit, freightType, freightPrice, categoryNames,
-    imageUrl, isContainerUnit, isOpenSpec, paramList, videoFile, freightTemplateId:freightTemplateId || null
+    imageUrl, isContainerUnit, isOpenSpec, paramList, videoFile, freightTemplateId: freightTemplateId || null
   }
   let specData = parseSpecData({ isOpenSpec, paramList });
 
@@ -167,7 +167,7 @@ const parseSpecData = (specData) => {
       id,
       imageUrl: imageUrl.split("|"),
       specValue: "无",
-      barCode, costPrice, marketPrice, number, weight     
+      barCode, costPrice, marketPrice, number, weight
     }
   }
 
@@ -209,9 +209,9 @@ const _getSpecData = (specData, isEdit) => {
     }
   }
 
-
   let multiData = _getMultiSpecData(multiSpecData, multiSpecClasses, isEdit);
   paramGroupStrList = multiData.paramGroupStrList;
+  paramStrList = multiData.paramStrList;
 
   return {
     validateData,
@@ -224,28 +224,41 @@ const _getSpecData = (specData, isEdit) => {
 const _getMultiSpecData = (multiSpecData, multiSpecClasses, isEdit) => {
 
   let paramGroupStrList = [];
+  let paramStrList = [];
 
   if (!isEdit) {
     paramGroupStrList = multiSpecClasses.map(item => {
 
-      let { specName, specValues } = item;
+      let { name, value } = item;
       return {
-        name: specName,
-        isChange: true,
+        name,
+        isChange: 1,
         status: 1,
-        value: specValues.map(child => {
+        value: value.map(child => {
           return {
-            name: child,
-            isChange: true,
+            name: child.name,
+            isChange: 1,
             status: 1
           }
         })
       }
     })
+
+    paramStrList = multiSpecData.map(item => {
+      let { specValue, number, barCode, marketPrice, costPrice, status, weight, imageUrl } = item;
+      return {
+        specValue: specValue ? specValue.split(' ') : [],
+        imageUrl: imageUrl ? imageUrl.join("|") : "",
+        status: 1,
+        number, barCode, marketPrice, costPrice, status, weight,
+        isChange: 1
+      }
+    })
   }
 
   return {
-    paramGroupStrList
+    paramGroupStrList,
+    paramStrList
   }
 
 

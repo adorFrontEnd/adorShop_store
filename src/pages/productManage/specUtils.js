@@ -1,6 +1,8 @@
 
 const _getSpecDataBySpecClasses = (multiSpecClasses, seprator) => {
-  let list = multiSpecClasses.map(item => item.specValues);
+  let list = multiSpecClasses.map(item =>{
+    return item.value.map(i=>i.name)
+  })
   let titles = _getSpecDataTitles(list, seprator);
   let specData = _getSpecDataByTitles(titles);
   return specData;

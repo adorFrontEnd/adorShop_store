@@ -31,7 +31,7 @@ class cModal extends Component {
 
   componentWillReceiveProps(props) {
 
-    if ((!this.props.visible && props.visible) || this.compareIds(this.props.categoryIds, props.categoryIds)) {
+    if (!this.props.visible && props.visible) {
       this.reverData(props.categoryIds);
     }
   }
