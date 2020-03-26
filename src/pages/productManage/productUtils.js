@@ -97,7 +97,7 @@ const getParseDetailData = (productDetail) => {
     return
   }
   let { baseUnit, categoryIds, categoryNames, channel, containerUnit, details, freightType, freightPrice, freightTemplateId,
-    imageUrl, isContainerUnit, isOpenSpec, name, paramList, specifications, videoUrl } = productDetail;
+    imageUrl, isContainerUnit, isOpenSpec, name, paramList, specifications, paramGroupList, videoUrl } = productDetail;
 
   channel = _parseChannelValue(channel);
 
@@ -111,9 +111,9 @@ const getParseDetailData = (productDetail) => {
   }
   let stateData = {
     baseUnit, categoryIds, containerUnit, details, containerUnit, freightType, freightPrice, categoryNames,
-    imageUrl, isContainerUnit, isOpenSpec, paramList, videoFile, freightTemplateId: freightTemplateId || null
+    imageUrl, isContainerUnit, isOpenSpec, paramList, paramGroupList, videoFile, freightTemplateId: freightTemplateId || null
   }
-  let specData = parseSpecData({ isOpenSpec, paramList });
+  let specData = parseSpecData({ isOpenSpec, paramList, paramGroupList });
 
   if (isContainerUnit) {
     let { containerUnitName, baseUnitQty } = containerUnit;
@@ -156,10 +156,11 @@ const _parseChannelValue = (channel) => {
 }
 
 const parseSpecData = (specData) => {
-  let { isOpenSpec, paramList } = specData;
+  let { isOpenSpec, paramList, paramGroupList } = specData;
   let isMultiSpec = !!isOpenSpec;
   let singleSpecData = [];
-  let multiSpecData = []
+  let multiSpecData = [];
+  let multiSpecClasses = [];
   if (!isOpenSpec) {
     let _singleSpecData = paramList[0];
     let { id, barCode, costPrice, marketPrice, number, imageUrl, specValue, weight } = _singleSpecData;
@@ -169,10 +170,44 @@ const parseSpecData = (specData) => {
       specValue: "无",
       barCode, costPrice, marketPrice, number, weight
     }
+  } else {
+
+    if (paramGroupList && paramGroupList.length) {
+
+      multiSpecClasses = paramGroupList.map(item => {
+        let { id, name, value, status } = item;
+        let _id = id || Date.now() + Math.random() * 1000;
+        return {
+          _id,
+          id,
+          name,
+          value: value || [],
+          status
+        }
+      })
+    }
+
+    if (paramList && paramList.length) {
+
+      multiSpecData = paramList.map(item => {
+
+        let { id, barCode, costPrice, imageUrl, marketPrice, number, productId, specValue, status, weight } = item;
+        let _specValue = '';
+        if (specValue) {
+          _specValue = JSON.parse(specValue);
+          _specValue = _specValue.join(" ");
+        }
+        let _id = id || Date.now() + Math.random() * 1000;
+        return {
+          _id, id, barCode, costPrice, imageUrl, marketPrice, number, productId, status, weight,
+          specValue: _specValue || ''
+        }
+      })
+    }
   }
 
   return {
-    isMultiSpec, singleSpecData, multiSpecData
+    isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses
   }
 }
 
@@ -186,6 +221,11 @@ const _getSpecData = (specData, isEdit) => {
   if (!isMultiSpec) {
 
     validateData = validateSingleSpecData(singleSpecData);
+    if (validateData) {
+      return {
+        validateData
+      }
+    }
     let { barCode, costPrice, marketPrice, number, imageUrl, specValue, weight, id } = singleSpecData;
     let paramData = {
       imageUrl: imageUrl.join('|'),
@@ -209,6 +249,10 @@ const _getSpecData = (specData, isEdit) => {
     }
   }
 
+  validateData = validateMultiSpecData(multiSpecData, multiSpecClasses);
+  if (validateData) {
+    return { validateData }
+  }
   let multiData = _getMultiSpecData(multiSpecData, multiSpecClasses, isEdit);
   paramGroupStrList = multiData.paramGroupStrList;
   paramStrList = multiData.paramStrList;
@@ -226,42 +270,53 @@ const _getMultiSpecData = (multiSpecData, multiSpecClasses, isEdit) => {
   let paramGroupStrList = [];
   let paramStrList = [];
 
-  if (!isEdit) {
-    paramGroupStrList = multiSpecClasses.map(item => {
 
-      let { name, value } = item;
-      return {
-        name,
-        isChange: 1,
-        status: 1,
-        value: value.map(child => {
-          return {
-            name: child.name,
-            isChange: 1,
-            status: 1
-          }
-        })
-      }
-    })
+  paramGroupStrList = multiSpecClasses.map(item => {
 
-    paramStrList = multiSpecData.map(item => {
-      let { specValue, number, barCode, marketPrice, costPrice, status, weight, imageUrl } = item;
-      return {
-        specValue: specValue ? specValue.split(' ') : [],
-        imageUrl: imageUrl ? imageUrl.join("|") : "",
-        status: 1,
-        number, barCode, marketPrice, costPrice, status, weight,
-        isChange: 1
-      }
-    })
-  }
+    let { name, value, id, status } = item;
+    let result = {
+      name,
+      isChange: 1,
+      status: status == -1 ? -1 : 1,
+      value: value.map(child => {
+        let result = {
+          name: child.name,
+          isChange: 1,
+          status: child.status == -1 ? -1 : 1
+        }
+        if (child && child.id) {
+          result.id = child.id;
+        }
+        return result
+      })
+    }
+    if (id) {
+      result.id = id;
+    }
+    return result
+  })
+
+  paramStrList = multiSpecData.map(item => {
+    let { specValue, number, barCode, marketPrice, costPrice, status, weight, imageUrl, id } = item;
+    specValue = specValue ? specValue.split(' ') : [];
+    let result = {
+      specValue: JSON.stringify(specValue),
+      imageUrl: imageUrl ? imageUrl.join("|") : "",
+      status: status == -1 ? -1 : 1,
+      number, barCode, marketPrice, costPrice, weight,
+      isChange: 1
+    }
+    if (id) {
+      result.id = id;
+    }
+    return result
+  })
+
 
   return {
     paramGroupStrList,
     paramStrList
   }
-
-
 }
 
 const validateSingleSpecData = (singleSpecData) => {
@@ -294,8 +349,70 @@ const validateSingleSpecData = (singleSpecData) => {
   if ((!weight && weight != 0) || Number(weight) < 0) {
     return '请设置重量！';
   }
-
   return;
+}
+
+const validateMultiSpecData = (multiSpecData, multiSpecClasses) => {
+
+  let validateInfo = null;
+  if (!multiSpecClasses || !multiSpecClasses.length) {
+    return '未设置规格组！'
+  }
+
+  if (!multiSpecData || !multiSpecData.length) {
+    return '未设置规格详情！'
+  }
+
+
+  if (multiSpecClasses.filter(item => item.status != -1).length <= 0) {
+    return '未设置规格组！'
+  }
+
+  if (multiSpecData.filter(item => item.status != -1).length <= 0) {
+    return '未设置规格详情！'
+  }
+
+
+  for (let i = 0; i < multiSpecClasses.length; i++) {
+    if (multiSpecClasses[i].status == -1) {
+      continue;
+    }
+    
+    if (!multiSpecClasses[i].name) {
+      return `第${i + 1}个规格组未设置名称`;
+    }
+
+    if (!multiSpecClasses[i].value || !multiSpecClasses[i].value.length) {
+      return `第${i + 1}个规格组未设置规格`;
+    } else {
+      if (multiSpecClasses[i].value.filter(item => item.status != -1).length <= 0) {
+        return `第${i + 1}个规格组未设置规格`;
+      }
+    }
+  }
+
+
+
+  for (let j = 0; j < multiSpecData.length; j++) {
+
+    let specValue = multiSpecData[j].specValue;
+    if (!multiSpecData[j].number) {
+      return `商品-${specValue}未设置商品编码！`;
+    }
+
+    if (!multiSpecData[j].barCode) {
+      return `商品-${specValue}未设置条码！`;
+    }
+
+    if (!multiSpecData[j].marketPrice || multiSpecData[j].marketPrice <= 0) {
+      return `商品-${specValue}未设置市场价！`;
+    }
+
+    if (!multiSpecData[j].costPrice || multiSpecData[j].costPrice <= 0) {
+      return `商品-${specValue}未设置成本价！`;
+    }
+  }
+  return validateInfo
 }
 
 export {

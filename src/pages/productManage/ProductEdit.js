@@ -112,9 +112,13 @@ class Page extends Component {
     window.history.back();
   }
 
-  saveDataClicked = () => {
+  refreshPageData = () => {
+    this.getDetail();
+  }
 
-  
+  saveDataClicked = () => {
+    let specData = this.refs.specEditInstance.getSpecData();
+    console.log(specData);
     this.props.form.validateFields((err, data) => {
       if (err) {
         return;
@@ -135,7 +139,7 @@ class Page extends Component {
       if (!params) {
         return;
       }
-    
+
       this._showDetailLoading();
       saveOrUpdateProduct({ ...params, id })
         .then(() => {
@@ -198,8 +202,8 @@ class Page extends Component {
     this.setState({ cModalIsVisible: false })
   }
 
-  
- 
+
+
 
   /**商品图及详情*********************************************************************************************************/
 
@@ -380,9 +384,10 @@ class Page extends Component {
             <div style={{ background: "#f2f2f2", borderLeft: "6px solid #ff8716" }} className='color333 padding border-radius font-16 margin-bottom'>规格信息</div>
             <div>
               <SpecEdit
+                refresh={this.refreshPageData}
                 ref='specEditInstance'
                 shouldChange={this.state.isSpecChange}
-                specData={this.state.specData}               
+                specData={this.state.specData}
               />
             </div>
 

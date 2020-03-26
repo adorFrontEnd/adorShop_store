@@ -1,7 +1,7 @@
 
 const _getSpecDataBySpecClasses = (multiSpecClasses, seprator) => {
-  let list = multiSpecClasses.map(item =>{
-    return item.value.map(i=>i.name)
+  let list = multiSpecClasses.map(item => {
+    return item.value.map(i => i.name)
   })
   let titles = _getSpecDataTitles(list, seprator);
   let specData = _getSpecDataByTitles(titles);
@@ -14,7 +14,9 @@ const _getSpecDataByTitles = (titles) => {
   }
 
   let specData = titles.map(specValue => {
+    let _id = Date.now() + 10000 * Math.random();
     return {
+      _id,
       specValue,
       productUrls: [],
       number: "",

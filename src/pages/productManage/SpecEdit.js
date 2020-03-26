@@ -4,6 +4,7 @@ import Toast from '../../utils/toast';
 import PictureWall from '../../components/upload/PictureWall';
 import ProductPictureWall from '../../components/upload/ProductPictureWall';
 import { _getSpecDataBySpecClasses } from './specUtils';
+import { deleteSpec } from '../../api/product/product';
 
 class Page extends Component {
 
@@ -14,7 +15,9 @@ class Page extends Component {
     multiSpecData: [],
     uploadModalIsVisible: false,
     selectProductUrls: [],
-    selectSpecIndex: 0
+    selectSpecIndex: 0,
+    deleteMuiltiSpecData: [],
+    deleteMultiSpecClasses: []
   }
 
   componentDidMount() {
@@ -28,9 +31,33 @@ class Page extends Component {
   }
 
   getSpecData = () => {
-    let { isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses } = this.state;
+    let { isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses, deleteMultiSpecClasses, deleteMuiltiSpecData } = this.state;
+    if (deleteMultiSpecClasses && deleteMultiSpecClasses.length) {
+      deleteMultiSpecClasses = deleteMultiSpecClasses.map(item => {
+        let newItemValue = item["deleteValue"] ? [...item["value"], ...item["deleteValue"]] : item["value"];
+        newItemValue = newItemValue.filter(item => item.status == -1);
+        return {
+          ...item,
+          value: newItemValue
+        }
+      })
+    }
+
+    if (multiSpecClasses && multiSpecClasses.length) {
+      multiSpecClasses = multiSpecClasses.map(item => {
+        let newItemValue = item["deleteValue"] ? [...item["value"], ...item["deleteValue"]] : item["value"];
+        return {
+          ...item,
+          value: newItemValue
+        }
+      })
+    }
+
     return {
-      isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses
+      isMultiSpec,
+      singleSpecData,
+      multiSpecData: [...multiSpecData, ...deleteMuiltiSpecData],
+      multiSpecClasses: [...multiSpecClasses, ...deleteMultiSpecClasses]
     }
   }
 
@@ -42,8 +69,14 @@ class Page extends Component {
       this._initSpecData();
     } else {
       let { isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses } = data;
+
       this.setState({
-        isMultiSpec, singleSpecData, multiSpecData, multiSpecClasses
+        isMultiSpec,
+        singleSpecData,
+        multiSpecData,
+        multiSpecClasses,
+        deleteMuiltiSpecData: [],
+        deleteMultiSpecClasses: []
       })
     }
   }
@@ -94,7 +127,8 @@ class Page extends Component {
       _id: Date.now() + Math.random() * 1000,
       name: "",
       value: [],
-      inputSpecValue: ""
+      inputSpecValue: "",
+      status: 1,
     }];
 
     let multiSpecData = [{
@@ -104,6 +138,8 @@ class Page extends Component {
       barCode: "",
       marketPrice: null,
       costPrice: null,
+      status: 1,
+      _id: Date.now() + Math.random() * 1000,
     }];
 
     this.setState({
@@ -162,9 +198,11 @@ class Page extends Component {
   }
 
 
-  onMultiSpecClassesChange = (action, specIndex, e, index) => {
+  onMultiSpecClassesChange = (action, specIndex, e, index, record, item) => {
 
-    let { multiSpecClasses, isMultiSpec, singleSpecData,multiSpecData } = this.state;
+    let { multiSpecClasses, isMultiSpec, singleSpecData, multiSpecData } = this.state;
+    let id = record && record.id;
+    let itemId = item && item.id;
 
     switch (action) {
 
@@ -177,6 +215,7 @@ class Page extends Component {
             _id: Date.now() + Math.random() * 1000,
           }
         )
+        this.deleteAllSpecItem();
         break;
 
       case 'inputSpecValueChange':
@@ -184,11 +223,22 @@ class Page extends Component {
         break;
 
       case 'deleteItem':
-        multiSpecClasses[specIndex]["value"].splice(index, 1);
+        if (!itemId) {
+          multiSpecClasses[specIndex]["value"].splice(index, 1);
+        } else {
+          this.deleteSpecGroupItemValue(id, itemId, specIndex, index);
+          return;
+        }
+
         break;
 
       case 'delete':
-        multiSpecClasses.splice(specIndex, 1);
+        if (!id) {
+          multiSpecClasses.splice(specIndex, 1);
+        } else {
+          this.deleteSpecGroup(id);
+          return;
+        }
         break;
 
       case "specNameChange":
@@ -200,21 +250,21 @@ class Page extends Component {
       multiSpecClasses
     })
 
-    if (action == 'deleteItem' || action == 'delete' || action == 'specNameChange') {
+    if (action == 'deleteItem' || action == 'delete') {
       let newMultiSpecData = _getSpecDataBySpecClasses(multiSpecClasses);
       multiSpecData = this.joinSpecDataBySpecValueMap(newMultiSpecData, multiSpecData);
       this.setState({
         multiSpecData
       })
-
     }
   }
 
 
 
   //修改规格详细数据
-  onMultiSpecDataChange = (index, key, e) => {
+  onMultiSpecDataChange = (index, key, e, record) => {
     let { multiSpecData, isMultiSpec, singleSpecData, multiSpecClasses } = this.state;
+    let id = record && record.id;
 
     switch (key) {
       case 'number':
@@ -230,15 +280,135 @@ class Page extends Component {
         break;
 
       case 'delete':
-        multiSpecData.splice(index, 1);
+        if (!id) {
+          multiSpecData.splice(index, 1);
+        } else {
+          this.deleteSpec([id]);
+          return;
+        }
+
         break
     }
 
     this.setState({
       multiSpecData
     })
+  }
+
+  //删除规格值
+  deleteSpecGroupItemValue = (id, itemId, specIndex, index) => {
+    let { multiSpecClasses, multiSpecData, deleteMuiltiSpecData } = this.state;
+
+    let deleteItem = multiSpecClasses[specIndex]['value'][index];
+    let deleteValue = multiSpecClasses[specIndex]['deleteValue'] || [];
+    deleteValue.push({ ...deleteItem, status: -1, isChange: 1 });
+    multiSpecClasses[specIndex]['value'].splice(index, 1);
+    multiSpecClasses[specIndex]['deleteValue'] = deleteValue;
+    let ItemValue = deleteItem['name'];
+    multiSpecData = multiSpecData.filter(item => {
+      let specValues = item.specValue.split(' ');
+      let isFilter = specValues.indexOf(ItemValue) != -1;
+      if (item.id) {
+        deleteMuiltiSpecData.push({
+          ...item,
+          status: -1
+        })
+      }
+      return isFilter
+    })
+
+
+    this.setState({
+      multiSpecClasses,
+      multiSpecData,
+      deleteMuiltiSpecData
+    })
 
   }
+
+  // 删除所有规格详情
+  deleteAllSpecItem = () => {
+    let { multiSpecData } = this.state;
+    let skuIdArr = multiSpecData && multiSpecData.length > 0 ? multiSpecData.map(item => item.id).filter(i => Boolean(i)) : null;
+    this.deleteSpec(skuIdArr);
+  }
+
+  //删除规格组
+  deleteSpecGroup = (groupId) => {
+
+    if (!groupId) {
+      return;
+    }
+
+    let { multiSpecClasses, multiSpecData } = this.state;
+    let skuIdArr = multiSpecData && multiSpecData.length > 0 ? multiSpecData.map(item => item.id).filter(i => Boolean(i)) : null;
+    this.deleteSpec(skuIdArr, groupId);
+  }
+
+  //删除规格
+  deleteSpec = (skuIdArr, groupId) => {
+
+    let { multiSpecClasses, multiSpecData, deleteMultiSpecClasses, deleteMuiltiSpecData } = this.state;
+    let newMultiSpecData = [];
+    if (skuIdArr && skuIdArr.length) {
+
+      multiSpecData = multiSpecData.filter(item => {
+        let shouldDelete = item.id && skuIdArr.indexOf(item.id) != -1;
+        if (shouldDelete) {
+          deleteMuiltiSpecData.push({
+            ...item,
+            status: -1,
+            isChange: 1
+          })
+        }
+        return !shouldDelete
+      });
+
+      this.setState({
+        deleteMuiltiSpecData
+      })
+
+
+    }
+
+    if (groupId) {
+      multiSpecClasses = multiSpecClasses.filter(item => {
+        let shouldDelete = item.id && groupId == item.id;
+        if (shouldDelete) {
+          let _value = item.value.map(element => {
+            return {
+              ...element,
+              status: -1,
+              isChange: 1
+            }
+          }).filter(item => Boolean(item.id));
+          deleteMultiSpecClasses.push({
+            ...item,
+            value: _value,
+            status: -1,
+            isChange: 1
+          })
+        }
+        return !shouldDelete
+      })
+      this.setState({
+        deleteMultiSpecClasses
+      })
+    }
+
+    if (!multiSpecData || !multiSpecData.length) {
+      multiSpecData = _getSpecDataBySpecClasses(multiSpecClasses);
+    }
+
+    this.setState({
+      multiSpecData,
+      multiSpecClasses
+    })
+
+  }
+
+
+
 
   //修改规格详细数据
   onSingleSpecDataChange = (key, e) => {
@@ -333,7 +503,8 @@ class Page extends Component {
   render() {
 
     const { specValues, multiSpecClasses, multiSpecData, singleSpecData } = this.state;
-    const singleDataSource = [singleSpecData];
+    const singleDataSource = [{ _id: 1, ...singleSpecData }];
+
     return (
       <div className='padding'>
         <div style={{ background: "#f2f2f2" }} className='color333 padding border-radius font-16'>
@@ -345,7 +516,7 @@ class Page extends Component {
               <div>
                 <Table
                   dataSource={singleDataSource}
-                  indentSize={10} rowKey='specValue' bordered={true} columns={this.singleSpecColumns}
+                  indentSize={10} rowKey='_id' bordered={true} columns={this.singleSpecColumns}
                   pagination={false}
                 />
               </div>
@@ -360,13 +531,13 @@ class Page extends Component {
                 </div>
                 {
                   multiSpecClasses.length <= 2 ?
-                    <Button className='margin-left margin-bottom' type='primary' onClick={() => this.onMultiSpecClassesChange('add')}>添加规格</Button>
+                    <Button onClick={() => this.onMultiSpecClassesChange('add')} className='margin-left margin-bottom' type='primary'>添加规格</Button>
                     : null
                 }
                 <div>
                   <Table
                     dataSource={multiSpecData} columns={this.multiSpecColumns}
-                    indentSize={10} rowKey='specValue' bordered={true}
+                    indentSize={10} rowKey='_id' bordered={true}
                     pagination={false}
                   />
                 </div>
@@ -489,10 +660,10 @@ class Page extends Component {
 
   multiSpecClassesColumn = [
     {
-      title: "", align: "center", dataIndex: "text2", width: 100, render: (text, data, specIndex) =>
+      title: "规格组", align: "center", dataIndex: "text2", width: 100, render: (text, data, specIndex) =>
         <Popconfirm
-          placement="topLeft" title='确认删除该规格吗？'
-          onConfirm={() => this.onMultiSpecClassesChange('delete', specIndex)}
+          placement="topLeft" title={<div>删除该规格组时，所有的规格详情数据都将清空，<br />同时不可恢复，确认要删除吗？</div>}
+          onConfirm={() => this.onMultiSpecClassesChange('delete', specIndex, null, null, data)}
         >
           <div>
             <DeleteItem
@@ -518,9 +689,25 @@ class Page extends Component {
               <div key={item.name} style={{ marginRight: "14px", background: "#ff8716", color: "#fff", position: "relative", borderRadius: "3px", padding: "6px 10px" }}
               >
                 <span >{item.name}</span>
-                <a onClick={() => this.onMultiSpecClassesChange('deleteItem', specIndex, null, index)} style={{ right: "-8px", top: "-4px", position: "absolute", textAlign: "center", fontSize: "20px", borderRadius: "50%", background: "#d96609", color: "#fff", display: 'inline-block', width: '20px', height: 20, lineHeight: "16px" }}>
-                  ×
-                </a>
+                {
+                  item.id ?
+                    <Popconfirm
+                      placement="topLeft" title={<div>删除该规格值时，相关的规格详情数据都将删除，<br />同时不可恢复，确认要删除吗？</div>}
+                      onConfirm={() => this.onMultiSpecClassesChange('deleteItem', specIndex, null, index, record, item)}
+                    >
+                      <a style={{ right: "-8px", top: "-4px", position: "absolute", textAlign: "center", fontSize: "20px", borderRadius: "50%", background: "#d96609", color: "#fff", display: 'inline-block', width: '20px', height: 20, lineHeight: "16px" }}>
+                        ×
+                      </a>
+                    </Popconfirm>
+                    :
+                    <a
+                      onClick={() => this.onMultiSpecClassesChange('deleteItem', specIndex, null, index, item)}
+                      style={{ right: "-8px", top: "-4px", position: "absolute", textAlign: "center", fontSize: "20px", borderRadius: "50%", background: "#d96609", color: "#fff", display: 'inline-block', width: '20px', height: 20, lineHeight: "16px" }}>
+                      ×
+                    </a>
+                }
+
+
               </div>
             )
             : null
@@ -536,10 +723,10 @@ class Page extends Component {
 
   multiSpecColumns = [
     {
-      title: "", align: "center", dataIndex: "text2", width: 100, render: (data, record, specIndex) =>
+      title: "规格详情", align: "center", dataIndex: "text2", width: 100, render: (data, record, specIndex) =>
         <Popconfirm
-          placement="topLeft" title='确认删除该规格吗？'
-          onConfirm={() => this.onMultiSpecDataChange(specIndex, 'delete')}
+          placement="topLeft" title='删除该规格详情不可恢复，确认删除吗？'
+          onConfirm={() => this.onMultiSpecDataChange(specIndex, 'delete', null, record)}
         >
           <div>
             <DeleteItem
@@ -567,7 +754,7 @@ class Page extends Component {
         </div>
       )
     },
-    { title: "规格", align: "center", dataIndex: "specValue", render: data => data || "无" },
+    { title: "规格", align: "center", dataIndex: "specValue", render: data => <div style={{ minWidth: 130 }}>{data}</div> || "无" },
     {
       title: "商品编码", align: "center", dataIndex: "number", render: (data, record, specIndex) =>
         <Input placeholder='输入商品编码' value={data} style={{ maxWidth: "100%" }} onChange={(e) => this.onMultiSpecDataChange(specIndex, 'number', e)} />

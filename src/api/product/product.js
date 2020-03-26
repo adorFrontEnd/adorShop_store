@@ -17,11 +17,16 @@ const getProductDetail = (params) => {
   return baseHttpProvider.getApi('api/prd/product/getDetail', params);
 }
 
+const deleteSpec = (params) => {
+  return baseHttpProvider.postFormApi('api/prd/product/deleteSpec', params);
+}
+
 
 export {
   saveOrUpdateProduct,
   searchProductList,
   deleteProduct,
-  getProductDetail
+  getProductDetail,
+  deleteSpec
 }
 
