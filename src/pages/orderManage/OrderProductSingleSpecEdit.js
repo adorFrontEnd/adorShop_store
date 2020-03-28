@@ -3,12 +3,11 @@ import { Col, Row, Checkbox, Modal, Select, Switch, Table, Spin, Icon, Form, But
 import Toast from '../../utils/toast';
 import PictureWall from '../../components/upload/PictureWall';
 import ProductShowPictureWall from '../../components/upload/ProductShowPictureWall';
-import { _getSpecDataBySpecClasses } from '../productManage/specUtils';
 import GradeSelectModal from '../../components/order/GradeSelectModal';
 import UserSelectModal from '../../components/order/UserSelectModal';
 import { SearchForm } from '../../components/common-form';
 import { getGradeList } from '../../api/user/grade';
-import { deleteOrderProductUserPrice, deleteUserGradePrice } from '../../api/product/orderProduct';
+
 
 
 class Page extends Component {
@@ -16,7 +15,9 @@ class Page extends Component {
   state = {
 
     singleSpecData: {},
+    deleteSingleSpecData: {},
     userPriceList: [],
+    deleteUserPriceList: [],
 
     uploadModalIsVisible: false,
     selectProductUrls: [],
@@ -45,22 +46,23 @@ class Page extends Component {
   }
 
   /**获取规格数据 ****************************************************************************************/
-  getSingleSpecData = () => {
-    let { singleSpecData, userPriceList } = this.state;
+  getSpecData = () => {
+    let { singleSpecData, userPriceList, deleteUserPriceList, deleteSingleSpecData } = this.state;
     let sellProductSkuId = singleSpecData && singleSpecData.id;
-    let sellProductSkuStrList = this.getSellProductSkuStrList(singleSpecData, sellProductSkuId);
-    let userPriceStrList = this.getUserPriceStrList(userPriceList, singleSpecData.productSkuId, sellProductSkuId);
+    let sellProductSkuStrList = this.getSellProductSkuStrList(singleSpecData, deleteSingleSpecData, sellProductSkuId);
+    let userPriceStrList = this.getUserPriceStrList(userPriceList, deleteUserPriceList, singleSpecData.productSkuId, sellProductSkuId);
     return {
       singleSpecData, userPriceList, sellProductSkuStrList, userPriceStrList
     }
   }
 
-  getSellProductSkuStrList = (singleSpecData, sellProductSkuId) => {
+  getSellProductSkuStrList = (singleSpecData, deleteSingleSpecData, sellProductSkuId) => {
     let { productSkuId, number, costPrice, id } = singleSpecData;
 
     let productNumber = number;
-    let userGradePriceStrList = this.getGradePriceList(singleSpecData, productSkuId, productNumber, sellProductSkuId);
-
+    let _userGradePriceStrList = this.getGradePriceList(singleSpecData, productSkuId, productNumber, sellProductSkuId);
+    let deleteUserGradePriceStrList = this.getGradePriceList(deleteSingleSpecData, productSkuId, productNumber, sellProductSkuId);
+    let userGradePriceStrList = [..._userGradePriceStrList, ...deleteUserGradePriceStrList];
     let sellProductSku = {
       productId: this.props.productId,
       costPrice,
@@ -94,7 +96,8 @@ class Page extends Component {
       let gradeId = gradeKey.substr(6);
       let { price, performancePrice, recommendPrice, minBuyQty, status, id } = singleSpecData[gradeKey];
       let data = {
-        productSkuId, productNumber, gradeId: Number(gradeId), price, performancePrice, recommendPrice, minBuyQty, status
+        productSkuId, productNumber, gradeId: Number(gradeId), price, performancePrice, recommendPrice, minBuyQty,
+        status: status == -1 ? - 1 : 1
       }
       if (id) {
         data.id = id;
@@ -115,12 +118,14 @@ class Page extends Component {
     return gradePriceList
   }
 
-  getUserPriceStrList = (userPriceList, productSkuId, sellProductSkuId) => {
+  getUserPriceStrList = (userPriceList, deleteUserPriceList, productSkuId, sellProductSkuId) => {
 
-    let userPriceStrList = userPriceList.map(item => {
+    let userList = [...userPriceList, ...deleteUserPriceList];
+    let userPriceStrList = userList.map(item => {
       let { userId, price, minBuyQty, status, id } = item;
       let result = {
-        userId, price, minBuyQty, status, productSkuId
+        status: status == -1 ? -1 : 1,
+        userId, price, minBuyQty, productSkuId
       }
 
       if (id) {
@@ -157,7 +162,9 @@ class Page extends Component {
         userPriceList,
         singleSpecData,
         selectGradeIds,
-        selectUserIds
+        selectUserIds,
+        deleteUserPriceList: [],
+        deleteSingleSpecData: {}
       })
 
     }
@@ -237,7 +244,8 @@ class Page extends Component {
     let data = {
       singleSpecData,
       uploadModalIsVisible: false,
-      selectProductUrls: []
+      selectProductUrls: [],
+      deleteSingleSpecData: {}
     }
     this.setState(data);
   }
@@ -256,7 +264,7 @@ class Page extends Component {
   /**规格等级价编辑 ****************************************************************************************/
   initSingleSpecColumns = () => {
     this.singleSpecColumns = [
-      { title: "", align: "center", dataIndex: "text2", width: 50, render: (text, data, index) => <span>{index + 1}</span> },
+      { title: "", align: "center", dataIndex: "text11", width: 50, render: (text, data, index) => <span>{index + 1}</span> },
       {
         title: "主图", align: "center", width: 80, dataIndex: "imageUrl", render: data => (
           <div className='flex-middle flex-center' style={{ cursor: "pointer" }} onClick={() => this.showUploadModal()}>
@@ -338,7 +346,7 @@ class Page extends Component {
   }
 
   deleteGrade = (key, id) => {
-    let { selectGradeIds, singleSpecData, isMultiSpec, userPriceList } = this.state;
+    let { selectGradeIds, singleSpecData, isMultiSpec, userPriceList, deleteSingleSpecData } = this.state;
     let idIndex = selectGradeIds.indexOf(id);
     let columnIndex = 0;
     this.singleSpecColumns.forEach((item, index) => {
@@ -346,23 +354,25 @@ class Page extends Component {
         columnIndex = index;
       }
     })
-    let record = singleSpecData[`grade_${id}`];
-    if (!record.id) {
-      this.singleSpecColumns.splice(columnIndex, 1);
-      selectGradeIds.splice(idIndex, 1);
-      singleSpecData[`grade_${id}`] = null;
-      this.setState({
-        selectGradeIds,
-        singleSpecData
-      })
-      return;
-    }
 
-    deleteUserGradePrice({ sellProductId: this.props.sellProductId, gradeId: id })
-      .then(() => {
-        Toast('删除成功！');
-        this.props.refresh && this.props.refresh();
-      })
+    let record = singleSpecData[`grade_${id}`];
+    this.singleSpecColumns.splice(columnIndex, 1);
+
+    if (record.id) {
+      deleteSingleSpecData[`grade_${id}`] = {
+        ...record,
+        status: -1,
+        isChange: 1
+      }
+    }
+    singleSpecData[`grade_${id}`] = null;
+    selectGradeIds.splice(idIndex, 1);
+    this.setState({
+      selectGradeIds,
+      singleSpecData,
+      deleteSingleSpecData
+    })
+
 
   }
 
@@ -511,11 +521,8 @@ class Page extends Component {
         if (!record.id) {
           userPriceList.splice(index, 1);
         } else {
-          deleteOrderProductUserPrice({ userId, sellProductId })
-            .then(() => {
-              Toast('删除成功！');
-              this.props.refresh && this.props.refresh();
-            })
+          this.deleteUserPrice({ userId, sellProductId })
+          return;
         }
 
         break;
@@ -535,6 +542,32 @@ class Page extends Component {
     })
   }
 
+  deleteUserPrice = ({ userId }) => {
+    let { userPriceList, deleteUserPriceList } = this.state;
+    userPriceList = userPriceList.filter(item => {
+
+      let isDelete = item.userId == userId;
+      if (isDelete) {
+        deleteUserPriceList.push({
+          ...item,
+          status: -1,
+          isChange: 1
+        })
+      }
+      return !isDelete
+    })
+    let selectUserIds = userPriceList.map(item => item.userId);
+    this.setState({
+      userPriceList,
+      deleteUserPriceList,
+      selectUserIds
+    })
+  }
+
+  deleteUserGrade = ({ sellProductId, gradeId }) => {
+    let { singleSpecData } = this.state;
+  }
+
   getGradeColumnsItem = (id, name) => {
     return {
       align: "center", width: 250, dataIndex: `grade_${id}`,
@@ -549,7 +582,7 @@ class Page extends Component {
       render: (data, record, index) => (
         <div className='flex-between'>
           <div>
-            <div className='flex-between'>
+            <div className='flex-between flex-middle'>
               <span>售价</span>
               <InputNumber
                 onChange={(e) => this.onGradeDataChange('price', `grade_${id}`, e, index)}
@@ -557,21 +590,21 @@ class Page extends Component {
                 disabled={record[`grade_${id}`].status != 1}
                 precision={2} min={0} />
             </div>
-            <div className='flex-between'>
+            <div className='flex-between flex-middle'>
               <span>平级推荐奖</span>
               <InputNumber
                 onChange={(e) => this.onGradeDataChange('recommendPrice', `grade_${id}`, e, index)}
                 value={record[`grade_${id}`].recommendPrice} disabled={record[`grade_${id}`].status != 1}
                 precision={2} min={0} />
             </div>
-            <div className='flex-between'>
+            <div className='flex-between flex-middle'>
               <span>起订量</span>
               <InputNumber
                 onChange={(e) => this.onGradeDataChange('minBuyQty', `grade_${id}`, e, index)}
                 value={record[`grade_${id}`].minBuyQty} disabled={record[`grade_${id}`].status != 1}
                 precision={0} min={0} />
             </div>
-            <div className='flex-between'>
+            <div className='flex-between flex-middle'>
               <span style={{ marginRight: 5 }}>业绩计算取价</span>
               <InputNumber
                 onChange={(e) => this.onGradeDataChange('performancePrice', `grade_${id}`, e, index)}
@@ -677,6 +710,8 @@ class Page extends Component {
         </Modal>
 
         <GradeSelectModal
+          hasDataList={true}
+          dataList={this.state.gradeList}
           onCancel={this._hideUserGradeModal}
           visible={this.state.gradeModalIsVisible}
           selectItem={this.onSelectGrade}

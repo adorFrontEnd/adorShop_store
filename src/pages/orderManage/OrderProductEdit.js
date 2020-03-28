@@ -3,6 +3,7 @@ import { Col, Row, Checkbox, Card, Modal, Select, Spin, Form, Button, Input, Aut
 import Toast from '../../utils/toast';
 import CommonPage from '../../components/common-page';
 import OrderProductSingleSpecEdit from './OrderProductSingleSpecEdit';
+import OrderProductMultiSpecEdit from './OrderProductMultiSpecEdit';
 import { searchFreightList } from '../../api/product/freight';
 import { getProductDetail } from '../../api/product/product';
 import { getSellProductDetail, saveOrUpdateSellProduct } from '../../api/product/orderProduct';
@@ -66,19 +67,35 @@ class Page extends Component {
 
   //回滚新建商品时商品模板数据
   revertTplProductDetail = (productDetail) => {
-    let { baseUnit, containerUnit, isContainerUnit, imageUrl, isOpenSpec, paramList } = productDetail;
+    let { baseUnit, containerUnit, isContainerUnit, imageUrl, isOpenSpec, paramList, paramGroupList } = productDetail;
     let totalUnitStr = isContainerUnit ? this.getTotalUnitStr(baseUnit, containerUnit) : baseUnit;
     imageUrl = imageUrl.split('|');
-    let { singleSpecData } = parseSpecData({ isOpenSpec, paramList });
+    let { isMultiSpec, singleSpecData, multiSpecData } = parseSpecData({ isOpenSpec, paramList });
     let userPriceList = [];
-    let { id, ...other } = singleSpecData;
-    let specData = {
-      singleSpecData: {
-        ...other,
-        productSkuId: id
-      },
-      userPriceList
+    let specData = {};
+    if (!isMultiSpec) {
+      let { id, ...other } = singleSpecData;
+      specData = {
+        singleSpecData: {
+          ...other,
+          productSkuId: id
+        },
+        userPriceList
+      }
+    } else {
+      multiSpecData = multiSpecData.map(item => {
+        let { id, ...other } = item;
+        return {
+          ...other,
+          productSkuId: id
+        }
+      })
+      specData = {
+        multiSpecData,
+        userPriceList
+      }
     }
+
     this.setState({
       specData,
       productDetail,
@@ -100,13 +117,21 @@ class Page extends Component {
     let { isOpenSpec, isContainerUnit, baseUnit, containerUnit, imageUrl } = product;
     let totalUnitStr = isContainerUnit ? this.getTotalUnitStr(baseUnit, containerUnit) : baseUnit;
     imageUrl = imageUrl.split('|');
-    let singleSpecData = sellProductSkuList[0];
-    singleSpecData.imageUrl = singleSpecData.imageUrl.split("|");
-    singleSpecData.specValue = "无";
 
-    let specData = {
-      singleSpecData,
-      userPriceList
+    let specData = {};
+    if (!isOpenSpec) {
+      let singleSpecData = sellProductSkuList[0];
+      singleSpecData.imageUrl = singleSpecData.imageUrl.split("|");
+      singleSpecData.specValue = "无";
+      specData = {
+        singleSpecData,
+        userPriceList
+      }
+    } else {
+      specData = {
+        multiSpecData: sellProductSkuList,
+        userPriceList
+      }
     }
 
     this.setState({
@@ -142,7 +167,7 @@ class Page extends Component {
   /**规格信息**********************************************************************************************************/
 
   saveDataClicked = () => {
-    let { sellProductSkuStrList, userPriceStrList } = this.refs.orderProductSpec.getSingleSpecData();
+    let { sellProductSkuStrList, userPriceStrList } = this.refs.orderProductSpec.getSpecData();
 
     let params = {
       id: this.state.sellPrdId,
@@ -159,7 +184,7 @@ class Page extends Component {
         this._hideDetailLoading();
         this.goBack();
       })
-      .catch(()=>{
+      .catch(() => {
         this._hideDetailLoading();
       })
   }
@@ -202,7 +227,16 @@ class Page extends Component {
           <div>
             {
               this.state.isOpenSpec ?
-                null :
+                <OrderProductMultiSpecEdit
+                  ref='orderProductSpec'
+                  refresh={this.refreshPageData}
+                  productId={Number(this.state.tplPrdId)}
+                  sellProductId={this.state.sellPrdId && this.state.sellPrdId != 0 ? Number(this.state.sellPrdId) : null}
+                  ref='orderProductSpec'
+                  shouldChange={this.state.isSpecChange}
+                  specData={this.state.specData}
+                />
+                :
                 <OrderProductSingleSpecEdit
                   refresh={this.refreshPageData}
                   productId={Number(this.state.tplPrdId)}

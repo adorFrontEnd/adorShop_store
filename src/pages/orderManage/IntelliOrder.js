@@ -14,6 +14,7 @@ import { smartOrder } from '../../api/order/order';
 import NumberFilter from '../../utils/filter/number';
 import { getOrderSaveData } from './orderUtils';
 import { getSelectList } from '../../api/storeManage/storeManage';
+import { getSpecValue } from '../../utils/productUtils';
 
 import UserSelectModal from '../../components/order/UserSelectModal';
 import SalerSelectModal from '../../components/order/SalerSelectModal';
@@ -51,13 +52,13 @@ class Page extends Component {
 
   /**x下单 */
   saveDataClicked = () => {
-    let { orderBaseInfo, orderSKUList, storageId, selectAreaData, remark, selectUser, selectSaler,intelliOrderText} = this.state;
+    let { orderBaseInfo, orderSKUList, storageId, selectAreaData, remark, selectUser, selectSaler, intelliOrderText } = this.state;
     let params = getOrderSaveData({ orderBaseInfo, storageId, orderSKUList, selectAreaData, remark, selectSaler, selectUser });
 
     if (!params) {
       return;
     }
-  
+
     this._showPageLoading();
     smartOrder(params)
       .then(() => {
@@ -141,7 +142,7 @@ class Page extends Component {
     { title: "类型", align: "center", dataIndex: "productType", render: data => "商品" },
     { title: "商品编码", align: "center", dataIndex: "number", render: data => data || "--" },
     { title: "商品名称", align: "center", dataIndex: "name", render: data => data || "--" },
-    { title: "商品规格", align: "center", dataIndex: "specValue", render: data => data || "--" },
+    { title: "商品规格", align: "center", dataIndex: "specValue", render: data => getSpecValue(data) || '--' },
     { title: "单位", align: "center", dataIndex: "baseUnit", render: data => data || "--" },
     { title: "单价（元）", align: "center", dataIndex: "unitPrice", render: (text, record, index) => <InputNumber value={text} onChange={(e) => this.onOrderProductChange('unitPrice', index, e)} precision={2} min={0} /> },
     { title: "数量", align: "center", dataIndex: "buyQty", render: (text, record, index) => <InputNumber value={text} onChange={(e) => this.onOrderProductChange('buyQty', index, e)} precision={0} min={0} /> },

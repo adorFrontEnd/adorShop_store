@@ -48,6 +48,7 @@ class cModal extends Component {
     categoryIds = categoryIds || [];
     let { idMap } = this.state;
     if (this.props.showList) {
+      categoryIds = categoryIds.filter(item => idMap[item]);
       let categoryList = categoryIds.map(item => {
         return {
           id: item,
@@ -97,11 +98,11 @@ class cModal extends Component {
     searchList()
       .then((res) => {
         let rawClassifyList = res.data;
-        if(this.props.showList){
-          rawClassifyList = rawClassifyList.map(item=>{
+        if (this.props.showList) {
+          rawClassifyList = rawClassifyList.map(item => {
             return {
               ...item,
-              name:idMap[item.id]['name']
+              name: idMap[item.id]['name']
             }
           })
         }

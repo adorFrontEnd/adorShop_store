@@ -199,7 +199,7 @@ deleteSalesman = (record) => {
             </Form>
 
 
-            <div >
+            <div style={{ marginBottom: '20px' }}>
               <SearchForm
                 searchText='筛选'
                 towRow={false}

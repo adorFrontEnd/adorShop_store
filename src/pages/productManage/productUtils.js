@@ -1,4 +1,5 @@
 import Toast from '../../utils/toast';
+import { getSpecValue } from '../../utils/productUtils';
 
 //保存数据
 const getSaveData = (formData, stateData, isEdit) => {
@@ -166,7 +167,7 @@ const parseSpecData = (specData) => {
     let { id, barCode, costPrice, marketPrice, number, imageUrl, specValue, weight } = _singleSpecData;
     singleSpecData = {
       id,
-      imageUrl: imageUrl.split("|"),
+      imageUrl: imageUrl ? imageUrl.split("|") : null,
       specValue: "无",
       barCode, costPrice, marketPrice, number, weight
     }
@@ -194,12 +195,12 @@ const parseSpecData = (specData) => {
         let { id, barCode, costPrice, imageUrl, marketPrice, number, productId, specValue, status, weight } = item;
         let _specValue = '';
         if (specValue) {
-          _specValue = JSON.parse(specValue);
-          _specValue = _specValue.join(" ");
+          _specValue = getSpecValue(specValue);
         }
         let _id = id || Date.now() + Math.random() * 1000;
         return {
           _id, id, barCode, costPrice, imageUrl, marketPrice, number, productId, status, weight,
+          imageUrl: imageUrl ? imageUrl.split("|") : null,
           specValue: _specValue || ''
         }
       })
@@ -377,7 +378,7 @@ const validateMultiSpecData = (multiSpecData, multiSpecClasses) => {
     if (multiSpecClasses[i].status == -1) {
       continue;
     }
-    
+
     if (!multiSpecClasses[i].name) {
       return `第${i + 1}个规格组未设置名称`;
     }

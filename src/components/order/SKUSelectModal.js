@@ -4,6 +4,7 @@ import { SearchForm } from '../common-form';
 import Toast from '../../utils/toast';
 import { pagination } from '../../utils/pagination';
 import { getPrdSkuList } from '../../api/order/order';
+import { getSpecValue } from '../../utils/productUtils';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
@@ -92,16 +93,15 @@ class SKUModal extends Component {
     )
   }
 
-
-  // 表格相关列
+   // 表格相关列
   columns = [
-    { title: "商品编号", dataIndex: "number", render: data => data || "--" },
-    { title: "商品主图", dataIndex: "imageUrl", render: data => data ? <img src={data} style={{ height: 40, width: 40 }} /> : '--' },
-    { title: "商品名称", dataIndex: "name", render: data => data || "--" },
-    { title: "商品分类", dataIndex: "prdCategory", render: data => data || "--" },
-    { title: "商品规格", dataIndex: "specValue", render: data => data || "--" },
+    { title: "商品编号", align: "center", dataIndex: "number", render: data => data || "--" },
+    { title: "商品主图", align: "center", dataIndex: "imageUrl", render: data => data ? <img src={data} style={{ height: 40, width: 40 }} /> : '--' },
+    { title: "商品名称", align: "center", dataIndex: "name", render: data => data || "--" },
+    { title: "商品分类", align: "center", dataIndex: "prdCategory", render: data => data || "--" },
+    { title: "商品规格", align: "center", dataIndex: "specValue", render: data => data ? getSpecValue(data) : "--" },
     {
-      title: '单选商品',
+      title: '单选商品', align: "center",
       render: (text, record, index) => this.renderAction(text, record, index)
     }
   ]
@@ -148,6 +148,8 @@ class SKUModal extends Component {
           </div>
           <div>
             <Table
+              bordered={true}
+              className='small-table'
               indentSize={10}
               rowKey="sellPrdSkuId"
               columns={this.columns}

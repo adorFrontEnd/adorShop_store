@@ -244,7 +244,7 @@ class Page extends Component {
     const { getFieldDecorator } = this.props.form;
     return (
       <CommonPage title={_title} >
-        <div style={{ marginBottom: '30px' }} className='flex-between'>
+        <div style={{ marginBottom: '30px' }} className='flex-between align-center'>
           {/* <Button type='primary'>同步网店管家库存</Button> */}
           <div className='color-red'>您的补货记录将记录在库存日志中</div>
           <div style={{ minWidth: 700 }}>

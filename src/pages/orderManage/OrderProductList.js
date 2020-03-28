@@ -12,7 +12,7 @@ import { connect } from 'react-redux';
 import { changeRoute } from '../../store/actions/route-actions';
 import ProductTemplateSelectModal from '../../components/product/ProductTemplateSelectModal';
 
-const _title = "商品列表";
+const _title = "订货商品";
 const _description = "";
 const orderProductDetailPath = routerConfig["orderManage.orderProduct.orderProductEdit"].path;
 const _channelEnum = {
@@ -35,7 +35,7 @@ class Page extends Component {
 
   componentDidMount() {
     this.getPageData()
-    this.props.changeRoute({ path: 'product.productInfo.productList', title: '商品列表', parentTitle: '商品信息' });
+    this.props.changeRoute({ path: 'product.productInfo.productList', title: '订货商品', parentTitle: '订货商品' });
 
   }
 

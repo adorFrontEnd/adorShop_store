@@ -12,7 +12,19 @@ class GradeSelectModal extends Component {
   }
 
   componentDidMount() {
+    if (this.props.hasDataList) {
+      return;
+    }
+
     this.getPageData();
+  }
+
+  componentWillReceiveProps(props) {
+    if (props.dataList && props.dataList.length && (!this.props.dataList || this.props.dataList.length)) {
+      this.setState({
+        tableDataList: this.props.dataList
+      })
+    }
   }
 
   params = {
@@ -71,10 +83,10 @@ class GradeSelectModal extends Component {
 
   // 表格相关列
   columns = [
- 
-    { title: "等级名称", dataIndex: "name",align:'center',render: data => data || "--" },    
+
+    { title: "等级名称", dataIndex: "name", align: 'center', render: data => data || "--" },
     {
-      title: '选择',width:100,
+      title: '选择', width: 100,
       render: (text, record, index) => this.renderAction(text, record, index)
     }
   ]
