@@ -3,12 +3,12 @@ import { CHANGE_ROUTE ,DELETE_ROUTE} from '../actions/route-actions';
 
 const initialState = {
   routeInfo:{
-    title:"数据导出",
-    path:"/dataExport/dataExport"
+    title:"",
+    path:""
   },
   routeArray:[{
-    title:"数据导出",
-    path:"/dataExport/dataExport"
+    title:"",
+    path:""
   }]
 }
 export default (state = initialState, action) => {
