@@ -19,7 +19,8 @@ class Page extends Component {
   state = {
     status: false,
     pageData: null,
-    pageDetail: {}
+    pageDetail: {},
+    natureStr: null
   }
   componentWillMount() {
     let id = this.props.match.params.id;
@@ -40,10 +41,11 @@ class Page extends Component {
     itemDictionary({ id })
       .then(pageDetail => {
 
-        let { natureStr, rangeStr, realName, unit } = pageDetail;        
+        let { natureStr, rangeStr, realName, unit } = pageDetail;
         this.props.form.setFieldsValue({ natureStr, rangeStr, realName });
         this.setState({
-          pageDetail
+          pageDetail,
+          natureStr
         })
       })
   }
@@ -76,14 +78,11 @@ class Page extends Component {
   ]
 
   // 下拉框
-  handleChange = (value) => {
-    if (value == 1) {
-      this.setState({ isShowGoods: true, isShowNum: false })
-    } else if (value == 3) {
-      this.setState({ isShowNum: true, isShowGoods: false })
-    } else {
-      this.setState({ isShowGoods: false, isShowNum: false })
-    }
+  handleChange = (natureStr) => {
+
+    this.setState({
+      natureStr
+    })
   }
 
   // 打开modal
@@ -172,7 +171,7 @@ class Page extends Component {
               }
             </Form.Item>
             {
-              this.state.isShowNum ?
+              this.state.natureStr == 'amq' ?
                 <Form.Item
                   labelCol={{ span: 4 }}
                   wrapperCol={{ span: 10 }}
@@ -196,7 +195,7 @@ class Page extends Component {
           </Form>
         </div>
         {
-          this.state.isShowGoods ?
+          this.state.natureStr == 'prd' ?
             <div>
               <Button type='primary' style={{ margin: '20px 0' }} onClick={this.showAuthModal}>添加商品</Button>
               <Table

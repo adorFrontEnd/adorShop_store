@@ -509,7 +509,7 @@ class Page extends Component {
     return (
       <div className='padding'>
         <div style={{ background: "#f2f2f2" }} className='color333 padding border-radius font-16'>
-          <Checkbox checked={this.state.isMultiSpec} onChange={this.muiltiChecked}>多规格</Checkbox>
+          <Checkbox disabled={this.props.isEdit} checked={this.state.isMultiSpec} onChange={this.muiltiChecked}>多规格</Checkbox>
         </div>
         <div style={{ minHeight: 300 }}>
           {

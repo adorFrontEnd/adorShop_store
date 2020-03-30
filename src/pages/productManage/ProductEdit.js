@@ -51,14 +51,16 @@ class Page extends Component {
     freightType: 0,
     freightPrice: null,
     freightTemplateId: null,
-    isSpecChange: false
+    isSpecChange: false,
+    isEdit:false
   }
 
   componentWillMount() {
     let id = this.props.match.params.id;
-    let isEdit = !!id;
+    let isEdit = !!id && id != 0;
     this.setState({
       id,
+      isEdit,
       _title: isEdit ? "编辑商品" : "创建商品",
       showLoading: false
     })
@@ -384,6 +386,7 @@ class Page extends Component {
             <div style={{ background: "#f2f2f2", borderLeft: "6px solid #ff8716" }} className='color333 padding border-radius font-16 margin-bottom'>规格信息</div>
             <div>
               <SpecEdit
+                isEdit={this.state.isEdit}
                 refresh={this.refreshPageData}
                 ref='specEditInstance'
                 shouldChange={this.state.isSpecChange}
