@@ -182,8 +182,8 @@ class Page extends Component {
           <div className="flex-between align-center margin-bottom flex-wrap">
             <div style={{ minWidth: 330 }} className='margin-bottom20'>
               <NavLink to={productEditPath + "/0"}><Button type='primary' onClick={() => this.goEdit('0')}>创建商品</Button></NavLink>
-              <Button type='primary' className='margin0-10'>批量倒入商品</Button>
-              <Button type='primary' >批量删除</Button>
+              {/* <Button type='primary' className='margin0-10'>批量导入商品</Button> */}
+              <Button type='primary' className='margin0-10'>批量删除</Button>
             </div>
             <div style={{ minWidth: 700 }} className='margin-bottom20'>
               <SearchForm
