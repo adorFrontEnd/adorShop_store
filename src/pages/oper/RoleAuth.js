@@ -86,18 +86,19 @@ class Page extends Component {
             record.name != '超级管理员' ?
               <span>
                 <a onClick={() => { this.showAuthModalClick(record) }}>编辑</a>
-                <Divider type="vertical" />
                 {
                   record.accountNum == 0 ?
-                    <Popconfirm
-                      placement="topLeft" title='确认要删除吗？'
-                      onConfirm={() => { this.deleteRole(record) }} >
-                      <a size="small" className='color-red'>删除</a>
-                    </Popconfirm>
+                    <span>
+                      <Divider type="vertical" />
+                      <Popconfirm
+                        placement="topLeft" title='确认要删除吗？'
+                        onConfirm={() => { this.deleteRole(record) }} >
+                        <a size="small" className='color-red'>删除</a>
+                      </Popconfirm>
+                    </span>
                     :
                     null
                 }
-
               </span>
               :
               '--'
@@ -231,7 +232,7 @@ class Page extends Component {
   }
 
   onCheckedChange = (selectRoleAuth) => {
-   
+
     this.setState({
       selectRoleAuth
     })
@@ -275,7 +276,7 @@ class Page extends Component {
                 <AuthSelection
                   selectRoleAuth={this.state.selectRoleAuth}
                   selectRoleSpecAuth={this.state.selectRoleSpecAuth}
-                  onCheckedChange={this.onCheckedChange}                
+                  onCheckedChange={this.onCheckedChange}
                 />
               </Col>
             </Row>

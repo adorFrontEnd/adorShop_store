@@ -4,7 +4,7 @@ import Toast from '../../utils/toast';
 import CommonPage from '../../components/common-page';
 import { SearchForm } from '../../components/common-form';
 import dateUtil from '../../utils/dateUtil';
-// import PictureWall from '../../components/upload/PictureWall';
+import PictureWall from '../../components/upload/PictureWall';
 import SingleDistrictSelect from '../../components/areaSelect/SingleDistrictSelect';
 import { getGradeList } from "../../api/user/grade";
 import { searchUser, createUser, getUserDetail, detectPhone } from '../../api/user/user';
@@ -27,7 +27,8 @@ class Page extends Component {
     headUrl: "xxxx",
     isPhoneValid: false,
     superiorCustomerName: null,
-    userDetail: null
+    userDetail: null,
+    headUrl:""
   }
 
   componentWillMount() {
@@ -73,6 +74,7 @@ class Page extends Component {
         let hasSuperiorId = !!superiorId;
         let selectAreaData = this.formatSelectAreaData(area)
         this.setState({
+          headUrl,
           userDetail,
           hasSuperiorId,
           selectAreaData,
@@ -121,7 +123,7 @@ class Page extends Component {
         return;
       }
       let { customerName, accountNumber, gradeId, status, remark } = params;
-      let { hasSuperiorId, selectAreaData, headUrl, selectSuperiorId, userDetail,isPhoneValid } = this.state;
+      let { hasSuperiorId, selectAreaData, headUrl, selectSuperiorId, userDetail, isPhoneValid } = this.state;
 
       if (!isPhoneValid) {
         Toast('请检测登录账号是否可用！');
@@ -135,12 +137,12 @@ class Page extends Component {
       let password = md5(accountNumber.toString());
       let superiorId = hasSuperiorId ? selectSuperiorId : null;
       let area = this.getAreaData(selectAreaData);
-      
+
       if (!area) {
         Toast('请选择客户地区！');
         return;
       }
-    
+
 
       let shopUserId = userDetail && userDetail.shopUserId;
       let id = userDetail && userDetail.id
@@ -234,7 +236,7 @@ class Page extends Component {
   searchSuperiorIdClicked = (e) => {
     let { superiorCustomerName } = this.state;
 
-    if(!superiorCustomerName){
+    if (!superiorCustomerName) {
       Toast("请输入客户名称！");
       return;
     }
@@ -274,6 +276,15 @@ class Page extends Component {
   onAccountNumberChange = () => {
     this.setState({
       isPhoneValid: false
+    })
+  }
+
+  
+  // 上传图片
+  uploadActivityLogoPic = (picList) => {
+    let headUrl = picList && picList.length ? picList[0] : "";
+    this.setState({
+      headUrl
     })
   }
 
@@ -476,20 +487,20 @@ class Page extends Component {
                   )
                 }
               </Form.Item>
-              {/* <Row className='line-height40 margin-top margin-bottom'>
-              <Col span={5} className='text-right'>
-                <span className='label-color label-required'>头像：</span>
-              </Col>
-              <Col span={19} >
-                <PictureWall
-                  allowType={['1', '2']}
-                  folder='trace'
-                  pictureList={this.state.avatar ? [this.state.avatar] : null}
-                  uploadCallback={this.uploadActivityLogoPic}
-                />
-                <div className='color-red' style={{ lineHeight: "16px" }}>建议尺寸420px*420px，图片格式png、jpg，大小不超过3MB</div>               
-              </Col>
-            </Row> */}
+              <Row className='line-height40 margin-top margin-bottom'>
+                <Col span={8} className='text-right'>
+                  <span className='label-color'>头像：</span>
+                </Col>
+                <Col span={16} >
+                  <PictureWall
+                    allowType={['1', '2']}
+                    folder='shop'
+                    pictureList={this.state.headUrl ? [this.state.headUrl] : null}
+                    uploadCallback={this.uploadActivityLogoPic}
+                  />
+                  <div className='color-red' style={{ lineHeight: "16px" }}>建议尺寸420px*420px，图片格式png、jpg，大小不超过3MB</div>
+                </Col>
+              </Row>
             </Form>
           </Spin>
         </div>
