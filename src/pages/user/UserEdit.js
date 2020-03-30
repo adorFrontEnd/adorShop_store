@@ -13,9 +13,7 @@ import { md5 } from "../../utils/signMD5.js";
 const _description = "";
 const _statusEnum = {
   "0": "正常",
-  "1": "待审核",
-  "2": "未通过",
-  "3": "已停用"
+  "1": "待审核"
 }
 
 class Page extends Component {

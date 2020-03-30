@@ -6,7 +6,8 @@ import { connect } from 'react-redux'
 import { Link, NavLink } from 'react-router-dom';
 import { baseRoute, routerConfig } from '../../../config/router.config';
 import { withRouter } from 'react-router-dom';
-import { userLogout, getCacheUserInfo } from '../../../middleware/localStorage/login';
+import { userLogout, getCacheUserInfo, getCacheShopName } from '../../../middleware/localStorage/login';
+
 import '../../../assets/css/common.less'
 import './index.less';
 
@@ -17,6 +18,7 @@ class Header extends Component {
     this.setState({
       userName: userInfo.nickname || userInfo.phoneNumber,
       roleName: userInfo.roleName,
+      shopName: userInfo.shopName
     })
   }
   logout = () => {
@@ -51,14 +53,14 @@ class Header extends Component {
     return (
       <div className="header">
         <Row className="header-top">
-          <Col span={24} className="flex-between align-center" style={{ height: 60,borderBottom:"2px solid #f2f2f2" }}>
-            <div>              
+          <Col span={24} className="flex-between align-center" style={{ height: 60, borderBottom: "2px solid #f2f2f2" }}>
+            <div>
               <div className='logo'>
                 <div className='flex align-center'>
                   <div className='img-wrap'>
-                    <img src='/favicon.ico' style={{height:50,width:50}} alt='' />
+                    <img src='/favicon.ico' style={{ height: 50, width: 50 }} alt='' />
                   </div>
-                  <div className='logo-title font-20 ellipsis'>爱朵电商<span className='margin0-10'>|</span><span className='font-14'>门店后台系统</span></div>
+                  <div className='logo-title font-20 ellipsis'>爱朵电商<span className='margin0-10'>|</span><span className='font-16'>{this.state.shopName || '门店后台系统'}</span></div>
                 </div>
               </div>
             </div>

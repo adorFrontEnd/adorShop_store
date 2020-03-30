@@ -60,6 +60,12 @@ const getCacheAccountList = () => {
   return null
 }
 
+const getCacheShopName = () => {
+  let userInfo = getCacheUserInfo();
+  return userInfo && userInfo.shopName ? userInfo.shopName : ""
+}
+
+
 export {
   setCacheUserInfo,
   getCacheRouterConfig,
@@ -68,5 +74,6 @@ export {
   isUserLogin,
   userLogout,
   getCacheAccountList,
-  setCacheAccountList
+  setCacheAccountList,
+  getCacheShopName
 } 
