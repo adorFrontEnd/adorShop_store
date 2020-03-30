@@ -161,7 +161,7 @@ class Page extends Component {
       if (selectOper.username) {
         username = selectOper.username;
       }
-    }else{
+    } else {
       this.resetUsername();
     }
     this.setState({
@@ -248,6 +248,12 @@ class Page extends Component {
     }
     usernameCheck({ username })
       .then(data => {
+
+        if (data && data.roleName == '超级管理员') {
+          Toast('该账号为本店铺超级管理员，不能更改角色！');
+          return
+        }
+
         this.setState({
           checkInfo: data ? "1" : "0",
           checkedOper: data
@@ -439,14 +445,14 @@ class Page extends Component {
               <Col offset={3}>
                 {
                   checkInfo == '0' ?
-                    <span className='color-red'>
+                    <span className='color-red margin-top'>
                       该手机号尚未注册，请先使用该手机号在门店登录页面完成注册
                   </span> : null
                 }
                 {
                   checkInfo == '1' && checkedOper ?
                     <div className='padding-top'>
-                      <div>存在账号，保存即确认使用此账号作为该门店的超级管理员</div>
+                      <div>存在账号，保存即确认使用此账号</div>
                       <div style={{ border: "1px solid #ccc", padding: 10 }} className='flex-middle'>
                         <div>
                           <img src={checkedOper.imageUrl} style={{ height: 40, width: 40 }} />

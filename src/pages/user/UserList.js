@@ -79,7 +79,7 @@ class Page extends Component {
     type: "INPUT",
     field: "likeName",
     style: { width: 320 },
-    placeholder: "客户名称/客户编码/登录账号/地区/联系人/上级"
+    placeholder: "客户名称/客户编码/登录账号/地区"
   }]
 
   //查询按钮点击事件
@@ -281,7 +281,7 @@ class Page extends Component {
             <NavLink to={userEditPath + "/0"}>
               <Button type='primary' onClick={() => this.goEdit('0')}>创建客户</Button>
             </NavLink>
-            <div style={{ minWidth: 850 }}>
+            <div style={{ minWidth: 870 }}>
               <SearchForm
                 searchText='筛选'
                 towRow={false}

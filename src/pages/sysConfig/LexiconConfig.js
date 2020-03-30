@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import CommonPage from '../../components/common-page';
-import { Table, Form, Input, Col, Switch, Row, Button, Modal, Select, InputNumber,Popconfirm } from "antd";
+import { Table, Form, Input, Col, Switch, Row, Button, Modal, Select, InputNumber, Popconfirm } from "antd";
 import { NavLink, Link } from 'react-router-dom';
 import { insertDictionary, itemDictionary } from '../../api/sysConfig/sysConfig';
 import { searchSellProductList } from '../../api/product/orderProduct';
@@ -199,7 +199,23 @@ class Page extends Component {
       }
 
       let { realName, natureStr } = data;
-      insertDictionary({ realName, natureStr })
+      let { startRange, endRange } = this.state;
+      let params = {
+        realName, natureStr
+      }
+      if (natureStr == 'amq') {
+        if (!startRange || !endRange) {
+          Toast('请输入数量范围！');
+          return;
+        }
+        params = {
+          ...params,
+          startRange,
+          endRange
+        }
+      }
+
+      insertDictionary(params)
         .then(() => {
           Toast('保存词库成功！');
         })
@@ -259,6 +275,12 @@ class Page extends Component {
     this._hideProductModal();
   }
 
+  onRangeChange = (key, value) => {
+    let data = {}
+    data[key] = value;
+    this.setState(data);
+  }
+
   render() {
 
     const { getFieldDecorator } = this.props.form;
@@ -312,26 +334,16 @@ class Page extends Component {
             </Form.Item>
             {
               this.state.natureStr == 'amq' ?
-                <Form.Item
-                  labelCol={{ span: 4 }}
-                  wrapperCol={{ span: 10 }}
-                  label='数量范围'
-                  field='num'>
-                  {
-                    getFieldDecorator('num', {
-                      initialValue: null,
-                      rules: [
-                        { required: true, message: '请输入数量范围' }
-                      ]
-                    })(
-                      <div>
-                        <InputNumber min={1} onChange={this.onChange} />
-                        ~<InputNumber min={1} onChange={this.onChange} />
-                      </div>
-                    )
-                  }
-                </Form.Item> : null
+                <Row className='line-height40'>
+                  <Col span={4} className='label-required text-right'>数量范围：</Col>
+                  <Col span={16}>
+                    <InputNumber value={this.state.startRange} precision={0} min={1} onChange={(e) => this.onRangeChange('startRange', e)} />
+                        ~<InputNumber value={this.state.endRange} precision={0} min={1} onChange={(e) => this.onRangeChange('endRange', e)} />
+                  </Col>
+                </Row>
+                : null
             }
+
           </Form>
         </div>
         {
