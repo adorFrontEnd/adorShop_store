@@ -4,41 +4,50 @@ import { Table, Form, Input, Col, Switch, Row, Button, Modal, Popconfirm, Divide
 import { NavLink, Link } from 'react-router-dom';
 import dateUtil from '../../utils/dateUtil';
 import { baseRoute, routerConfig } from '../../config/router.config';
+import { pagination } from '../../utils/pagination';
 import { SearchForm, SubmitForm } from '../../components/common-form';
 import { changeRoute } from '../../store/actions/route-actions';
 import { connect } from 'react-redux';
 import Toast from '../../utils/toast';
+import { listDictionary } from '../../api/sysConfig/sysConfig';
+
 const _title = "智能词库";
 const LexiconConfigPath = routerConfig["sysConfig.orderConfig.lexiconConfig"].path;
 const _lexiconCategory = {
-  "0": "姓名",
-  "1": "商品",
-  "2": "规格",
-  "3": "数量"
+  "nr": "姓名",
+  "prd": "商品",
+  "spec": "规格",
+  "amq": "数量"
 }
 const _lexiconCategoryArr = Object.keys(_lexiconCategory).map(item => { return { id: item, name: _lexiconCategory[item] } });
 class Page extends Component {
 
   state = {
     status: false,
-    pageData: null
+    pageDataList: null
   }
 
   componentDidMount() {
+    this.getPageData();
   }
+
+
   // 表格相关列
   columns = [
 
-    { title: "关键词", dataIndex: "customerName", render: data => data || "--" },
-    { title: "关键类别", dataIndex: "customerNumber", render: data => data || "--" },
-    { title: "范围", dataIndex: "accountNumber", render: data => data || "--" },
+    { title: "关键词", dataIndex: "realName", render: data => data || "--" },
+    { title: "关键类别", dataIndex: "natureStr", render: data => data ? _lexiconCategory[data] : "--" },
+    { title: "范围", dataIndex: "rangeStr", render: data => data || "--" },
     { title: "创建时间", dataIndex: "gmtCreate", render: data => data ? dateUtil.getDateTime(data) : "--" },
     {
       title: '操作',
       render: (text, record, index) => (
         <span>
           <span>
-            <a onClick={() => { this.showAcountModal(record) }}>编辑信息</a>
+            <NavLink to={LexiconConfigPath + "/" + record.id}>
+              编辑
+            </NavLink>
+
             <Divider type="vertical" />
             <Popconfirm
               placement="topLeft" title='确认要删除吗？'
@@ -60,7 +69,7 @@ class Page extends Component {
       defaultOption: { id: null, name: "所有类别" },
       placeholder: '选择类别',
       initialValue: null,
-      optionList:_lexiconCategoryArr
+      optionList: _lexiconCategoryArr
     },
     {
       type: "INPUT",
@@ -69,17 +78,59 @@ class Page extends Component {
       placeholder: "商品名称/商品编号"
     }]
 
-//查询按钮点击事件
-searchClicked = (params) => {
-  let { inputData } = params;
-  inputData = inputData || null;
-  this.params = {
-    page: 1,
-    ...params,
-    inputData
+  //查询按钮点击事件
+  searchClicked = (params) => {
+    let { inputData } = params;
+    inputData = inputData || null;
+    this.params = {
+      page: 1,
+      ...params,
+      inputData
+    }
+    this.getPageData();
   }
-  // this.getPageData();
-}
+
+  params = {
+    page: 1
+  }
+
+  // 获取页面列表
+  getPageData = () => {
+    let _this = this;
+    this._showTableLoading();
+    listDictionary(this.params).then(res => {
+      this._hideTableLoading();
+      let _pagination = pagination(res, (current) => {
+        this.params.page = current
+        _this.getPageData();
+      }, (cur, pageSize) => {
+        this.params.page = 1;
+        this.params.size = pageSize;
+        _this.getPageData();
+      })
+
+      this.setState({
+        pageDataList: res.data,
+        pagination: _pagination,
+
+      })
+
+    }).catch(() => {
+      this._hideTableLoading();
+    })
+  }
+
+  _showTableLoading = () => {
+    this.setState({
+      showTableLoading: true
+    })
+  }
+
+  _hideTableLoading = () => {
+    this.setState({
+      showTableLoading: false
+    })
+  }
 
   goLexiconConfig = (id) => {
     let title = id == '0' ? '词库配置' : "词库配置"
@@ -96,14 +147,14 @@ searchClicked = (params) => {
             <Button type='primary' onClick={() => this.goLexiconConfig('0')}>创建词库</Button>
           </NavLink>
           <div style={{ minWidth: 700 }}>
-              <SearchForm
-                width={700}
-                searchText='筛选'
-                towRow={false}
-                searchClicked={this.searchClicked}
-                formItemList={this.formItemList}
-              />
-            </div>
+            <SearchForm
+              width={700}
+              searchText='筛选'
+              towRow={false}
+              searchClicked={this.searchClicked}
+              formItemList={this.formItemList}
+            />
+          </div>
         </div>
         <Table
           indentSize={10}
@@ -111,9 +162,9 @@ searchClicked = (params) => {
           columns={this.columns}
           loading={this.state.showTableLoading}
           pagination={this.state.pagination}
-          dataSource={this.state.tableDataList}
+          dataSource={this.state.pageDataList}
         />
-        
+
       </CommonPage>
     )
   }

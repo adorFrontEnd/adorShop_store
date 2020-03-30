@@ -297,7 +297,7 @@ class Page extends Component {
 
   //删除规格值
   deleteSpecGroupItemValue = (id, itemId, specIndex, index) => {
-    let { multiSpecClasses, multiSpecData, deleteMuiltiSpecData } = this.state;
+    let { multiSpecClasses, multiSpecData, deleteMuiltiSpecData, deleteMultiSpecClasses } = this.state;
 
     let deleteItem = multiSpecClasses[specIndex]['value'][index];
     let deleteValue = multiSpecClasses[specIndex]['deleteValue'] || [];
@@ -307,8 +307,9 @@ class Page extends Component {
     let ItemValue = deleteItem['name'];
     multiSpecData = multiSpecData.filter(item => {
       let specValues = item.specValue.split(' ');
-      let isFilter = specValues.indexOf(ItemValue) != -1;
-      if (item.id) {
+      let itemValueIndex = specValues.indexOf(ItemValue);
+      let isFilter = itemValueIndex == -1;
+      if (item.id && !isFilter) {
         deleteMuiltiSpecData.push({
           ...item,
           status: -1

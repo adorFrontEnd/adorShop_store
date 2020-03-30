@@ -2,36 +2,50 @@ import React, { Component } from "react";
 import CommonPage from '../../components/common-page';
 import { Table, Form, Input, Col, Switch, Row, Button, Modal, Select, InputNumber } from "antd";
 import { NavLink, Link } from 'react-router-dom';
+import { insertDictionary, itemDictionary } from '../../api/sysConfig/sysConfig';
+
 import Toast from '../../utils/toast';
-import { relative } from "path";
-import Flatted from "flatted";
 import './index.less'
 const _title = "词库配置";
 const _lexiconCategory = {
-  "0": "姓名",
-  "1": "商品",
-  "2": "规格",
-  "3": "数量"
+  "nr": "姓名",
+  "prd": "商品",
+  "spec": "规格",
+  "amq": "数量"
 }
 const _lexiconCategoryArr = Object.keys(_lexiconCategory).map(item => { return { id: item, name: _lexiconCategory[item] } });
 
 class Page extends Component {
   state = {
     status: false,
-    pageData: null
+    pageData: null,
+    pageDetail: {}
   }
   componentWillMount() {
     let id = this.props.match.params.id;
-    let isEdit = !!id;
+    let isEdit = !!id && id != 0;
     this.setState({
       id,
       _title: isEdit ? "编辑客户" : "添加客户",
       showLoading: false
     })
 
+    if (isEdit) {
+      this.getDetail(id);
+    }
   }
 
-  componentDidMount() {
+  getDetail = (id) => {
+    id = id || this.state.id;
+    itemDictionary({ id })
+      .then(pageDetail => {
+
+        let { natureStr, rangeStr, realName, unit } = pageDetail;        
+        this.props.form.setFieldsValue({ natureStr, rangeStr, realName });
+        this.setState({
+          pageDetail
+        })
+      })
   }
 
   // 表格相关列
@@ -43,7 +57,7 @@ class Page extends Component {
       title: '操作',
       render: (text, record, index) => (
         <span>
-            <a size="small" className="color-red" onClick={() => this.deleteUnit(record)}> 移除</a>
+          <a size="small" className="color-red" onClick={() => this.deleteUnit(record)}> 移除</a>
         </span>
       )
     }
@@ -85,11 +99,18 @@ class Page extends Component {
       newItemModalVisible: false
     })
   }
+
   saveDataClicked = () => {
     this.props.form.validateFields((err, data) => {
       if (err) {
         return;
       }
+
+      let { realName, natureStr } = data;
+      insertDictionary({ realName, natureStr })
+        .then(() => {
+          Toast('保存词库成功！');
+        })
       window.history.back();
     })
   }
@@ -111,10 +132,10 @@ class Page extends Component {
               labelCol={{ span: 4 }}
               wrapperCol={{ span: 10 }}
               label='关键词'
-              field='spec'
+              field='realName'
             >
               {
-                getFieldDecorator('name', {
+                getFieldDecorator('realName', {
                   rules: [
                     { required: true, message: '输入关键词' }
                   ]
@@ -129,9 +150,9 @@ class Page extends Component {
               labelCol={{ span: 4 }}
               wrapperCol={{ span: 10 }}
               label='关键词类别：'
-              field='gradeId'>
+              field='natureStr'>
               {
-                getFieldDecorator('gradeId', {
+                getFieldDecorator('natureStr', {
                   initialValue: null,
                   rules: [
                     { required: true, message: '请选择类别' }
@@ -203,7 +224,7 @@ class Page extends Component {
           <div style={{ display: 'flex', position: 'relative' }}>
             <div style={{ width: '70%', padding: '24px', borderRight: '1px solid #f2f2f2' }}>
               <div style={{ display: 'flex', marginBottom: '20px' }}>
-                <Input allowClear style={{ width: "240px" }} onChange={this.onKeywordsChange} placeholder='商品名称/商品编号/商品分类'/>
+                <Input allowClear style={{ width: "240px" }} onChange={this.onKeywordsChange} placeholder='商品名称/商品编号/商品分类' />
                 <Button type='primary' onClick={this.onsearchClick} style={{ margin: '0 10px' }}>搜索</Button>
                 <Button type='primary' onClick={this.resetClicked}>重置</Button>
               </div>
