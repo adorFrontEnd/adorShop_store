@@ -43,7 +43,7 @@ const updateConfig = (params) => {
 
 //智能词库
 const listDictionary = (params) => {
-  return baseHttpProvider.getApi('api/nlp/dictionary/listDictionary', { page: 1, size: 10, ...params }, { total: true })
+  return baseHttpProvider.postFormApi('api/nlp/dictionary/listDictionary', { page: 1, size: 10, ...params }, { total: true })
 }
 
 const insertDictionary = (params) => {

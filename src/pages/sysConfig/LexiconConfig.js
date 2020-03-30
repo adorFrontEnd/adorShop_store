@@ -3,6 +3,9 @@ import CommonPage from '../../components/common-page';
 import { Table, Form, Input, Col, Switch, Row, Button, Modal, Select, InputNumber } from "antd";
 import { NavLink, Link } from 'react-router-dom';
 import { insertDictionary, itemDictionary } from '../../api/sysConfig/sysConfig';
+import { searchSellProductList } from '../../api/product/orderProduct';
+import { pagination } from '../../utils/pagination';
+
 
 import Toast from '../../utils/toast';
 import './index.less'
@@ -20,7 +23,11 @@ class Page extends Component {
     status: false,
     pageData: null,
     pageDetail: {},
-    natureStr: null
+    natureStr: null,
+    modalTableDataList: null,
+    showTableLoading: false,
+    selectProductList: [],
+    selectProductIds: []
   }
   componentWillMount() {
     let id = this.props.match.params.id;
@@ -66,16 +73,35 @@ class Page extends Component {
   ]
   modalColumns = [
     { title: "商品名称", dataIndex: "name", render: data => data || "--" },
-    { title: "商品图", dataIndex: "image", render: data => <span><img style={{ height: 40, width: 40 }} src={data} /></span> },
-    { title: "商品分类", dataIndex: "catogery", render: data => data || "--" },
-    { title: "包装规格", dataIndex: "spec", render: data => data || "--" },
+    { title: "商品图", dataIndex: "imageUrl", render: data => data ? (<img src={data} style={{ height: 40, width: 40 }} />) : "--" },
+    { title: "商品分类", dataIndex: "categoryNames", render: data => data || "--" },
+    { title: "包装规格", dataIndex: "specifications", render: data => data || "--" },
     {
-      title: '操作',
+      title: '操作',width:150,
       render: (text, record, index) => (
-        <Button onClick={() => this.chooseProduct(record)} type='primary'>选择</Button>
+        <div>
+          {
+            this.state.selectProductIds.indexOf(record.id) == -1 ?
+              <Button onClick={() => this.chooseProduct(record)} type='primary'>选择</Button>
+              :
+              <a>已选择</a>
+          }
+        </div>
       )
     }
   ]
+
+  chooseProduct = (record) => {
+
+    let { selectProductList } = this.state;
+    selectProductList = selectProductList || [];
+    selectProductList.push(record);
+    let selectProductIds = selectProductList.map(item => item.id);
+    this.setState({
+      selectProductList,
+      selectProductIds
+    })
+  }
 
   // 下拉框
   handleChange = (natureStr) => {
@@ -86,18 +112,61 @@ class Page extends Component {
   }
 
   // 打开modal
-  showAuthModal = (data) => {
+  showProductModal = (data) => {
     this.setState({
       newItemModalVisible: true
     })
+    this.getProductList();
   }
 
   // 隐藏modal
-  _hideNewItemModal = () => {
+  _hideProductModal = () => {
     this.setState({
       newItemModalVisible: false
     })
   }
+
+  params = {
+    page: 1
+  }
+
+  getProductList = () => {
+    let _this = this;
+    this._showTableLoading();
+    searchSellProductList(this.params).then(res => {
+      this._hideTableLoading();
+
+      let _pagination = pagination(res, (current) => {
+        this.params.page = current
+        _this.getPageData();
+      }, (cur, pageSize) => {
+        this.params.page = 1;
+        this.params.size = pageSize
+        _this.getPageData();
+      })
+
+      this.setState({
+        modalTableDataList: res.data,
+        pagination: _pagination
+      })
+    }).catch(() => {
+      this._hideTableLoading();
+    })
+  }
+
+  _showTableLoading = () => {
+
+    this.setState({
+      showTableLoading: true
+    })
+  }
+
+  _hideTableLoading = () => {
+    this.setState({
+      showTableLoading: false
+    })
+  }
+
 
   saveDataClicked = () => {
     this.props.form.validateFields((err, data) => {
@@ -197,7 +266,7 @@ class Page extends Component {
         {
           this.state.natureStr == 'prd' ?
             <div>
-              <Button type='primary' style={{ margin: '20px 0' }} onClick={this.showAuthModal}>添加商品</Button>
+              <Button type='primary' style={{ margin: '20px 0' }} onClick={this.showProductModal}>添加商品</Button>
               <Table
                 indentSize={10}
                 rowKey="id"
@@ -216,7 +285,7 @@ class Page extends Component {
         <Modal maskClosable={false}
           title="商品选择"
           visible={this.state.newItemModalVisible}
-          onCancel={this._hideNewItemModal}
+          onCancel={this._hideProductModal}
           className='noPadding'
           width={1100}
         >
@@ -236,17 +305,23 @@ class Page extends Component {
                 dataSource={this.state.modalTableDataList}
               />
             </div>
-            <div style={{ padding: '10px', width: '30%' }} >
-              <div style={{ display: 'flex', border: '1px solid #f2f2f2', padding: '10px', marginBottom: '10px' }}>
-                <div style={{ width: '75px', height: '75px', background: '#f2f2f2', marginRight: '10px' }}></div>
-                <div style={{ width: '80%' }}>
-                  <div className='flex-between' >
-                    <div style={{ fontWeight: 'bold', fontSize: '14px' }}> 盛夏光年</div>
-                    <img style={{ height: 15, width: 15 }} src='/image/close.png' />
-                  </div>
-                  <div>纸品-纸尿裤</div>
-                </div>
-              </div>
+            <div style={{ padding: '10px', width: '30%', maxHeight: 540, overflowY: "auto" }} >
+              {
+                this.state.selectProductList && this.state.selectProductList.length > 0 ?
+                  this.state.selectProductList.map(item =>
+                    <div key={item.id} style={{ display: 'flex', border: '1px solid #f2f2f2', padding: '10px', marginBottom: '10px' }}>
+                      <div style={{ width: '75px', height: '75px', background: '#f2f2f2', marginRight: '10px' }}></div>
+                      <div style={{ width: '80%' }}>
+                        <div className='flex-between' >
+                          <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{item.name}</div>
+                          <img style={{ height: 15, width: 15 }} src='/image/close.png' />
+                        </div>
+                        <div>{item.categoryNames || '--'}</div>
+                      </div>
+                    </div>
+                  )
+                  : null
+              }
             </div>
           </div>
         </Modal>
