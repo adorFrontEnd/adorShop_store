@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import CommonPage from '../../components/common-page';
-import { Table, Form, Input, Col, Switch, Row, Button, Modal, Select, InputNumber } from "antd";
+import { Table, Form, Input, Col, Switch, Row, Button, Modal, Select, InputNumber,Popconfirm } from "antd";
 import { NavLink, Link } from 'react-router-dom';
 import { insertDictionary, itemDictionary } from '../../api/sysConfig/sysConfig';
 import { searchSellProductList } from '../../api/product/orderProduct';
@@ -61,17 +61,37 @@ class Page extends Component {
   // 表格相关列
   columns = [
     { title: "商品名称", dataIndex: "name", render: data => data || "--" },
-    { title: "商品图", dataIndex: "image", render: data => <span><img style={{ height: 40, width: 40 }} src={data} /></span> },
-    { title: "包装规格", dataIndex: "spec", render: data => data || "--" },
+    { title: "商品图", dataIndex: "imageUrl", render: data => <span><img style={{ height: 40, width: 40 }} src={data} /></span> },
+    { title: "包装规格", dataIndex: "specifications", render: data => data || "--" },
     {
       title: '操作',
       render: (text, record, index) => (
         <span>
-          <a size="small" className="color-red" onClick={() => this.deleteUnit(record)}> 移除</a>
+          <Popconfirm
+            placement="topLeft" title='确认要移除吗？'
+            onConfirm={() => { this.deleteUnit(record, index) }} >
+            <a size="small" className="color-red" > 移除</a>
+          </Popconfirm>
         </span>
       )
     }
   ]
+
+  deleteUnit = (record, index) => {
+    let id = record.id;
+    let { tableDataList, selectProductIds } = this.state;
+    let itemIndex = selectProductIds.indexOf(id);
+    if (itemIndex >= 0) {
+      selectProductIds.splice(index, 1);
+    }
+    tableDataList.splice(index, 1);
+
+    this.setState({
+      selectProductIds,
+      tableDataList
+    })
+
+  }
   modalColumns = [
     { title: "商品名称", dataIndex: "name", render: data => data || "--" },
     { title: "商品图", dataIndex: "imageUrl", render: data => data ? (<img src={data} style={{ height: 40, width: 40 }} />) : "--" },
@@ -234,7 +254,7 @@ class Page extends Component {
     tableDataList = tableDataList.concat(selectProductList);
     this.setState({
       tableDataList,
-      selectProductList:[]     
+      selectProductList: []
     })
     this._hideProductModal();
   }
@@ -350,7 +370,7 @@ class Page extends Component {
               </div>
               <Table
                 indentSize={10}
-                rowKey="modalId"
+                rowKey="id"
                 columns={this.modalColumns}
                 loading={this.state.showTableLoading}
                 pagination={this.state.pagination}

@@ -145,17 +145,17 @@ class Page extends Component {
     { title: "状态", dataIndex: "status", render: data => data || data == 0 ? <span className={_statusColorEnum[data]}>{_statusEnum[data]}</span> : "--" },
     {
       title: "上级", dataIndex: "superiorId", render: (text, record, index) => (
-        <>
+        <div>
           {
             record.superiorCustomerNumber ?
-              <div className='text-center'>
+              <div>
                 <div className='theme-color'>{record.superiorCustomerName}</div>
                 <div>{record.superiorCustomerNumber}</div>
               </div>
               :
-              <div className='text-center'>--</div>
+              <div>--</div>
           }
-        </>
+        </div>
       )
     },
     { title: "创建时间", dataIndex: "gmtCreate", render: data => data ? dateUtil.getDateTime(data) : "--" },
