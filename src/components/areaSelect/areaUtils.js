@@ -108,7 +108,7 @@ const cityIdsIsRepeat = (list, totalList) => {
     return;
   }
   disrtrictIds = disrtrictIds.map(item=>item.toString()); 
-  totalDisrtrictIds = disrtrictIds.map(item=>item.toString()); 
+  totalDisrtrictIds = totalDisrtrictIds.map(item=>item.toString()); 
 
   for (let i = 0; i < disrtrictIds.length; i++) {
     let item = disrtrictIds[i];
