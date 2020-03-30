@@ -27,7 +27,8 @@ class Page extends Component {
     modalTableDataList: null,
     showTableLoading: false,
     selectProductList: [],
-    selectProductIds: []
+    selectProductIds: [],
+    tableDataList: []
   }
   componentWillMount() {
     let id = this.props.match.params.id;
@@ -77,7 +78,7 @@ class Page extends Component {
     { title: "商品分类", dataIndex: "categoryNames", render: data => data || "--" },
     { title: "包装规格", dataIndex: "specifications", render: data => data || "--" },
     {
-      title: '操作',width:150,
+      title: '操作', width: 150,
       render: (text, record, index) => (
         <div>
           {
@@ -93,10 +94,13 @@ class Page extends Component {
 
   chooseProduct = (record) => {
 
-    let { selectProductList } = this.state;
+    let { selectProductList, selectProductIds } = this.state;
     selectProductList = selectProductList || [];
+    selectProductIds = selectProductIds || [];
+
     selectProductList.push(record);
-    let selectProductIds = selectProductList.map(item => item.id);
+    selectProductIds.push(record.id);
+
     this.setState({
       selectProductList,
       selectProductIds
@@ -186,6 +190,53 @@ class Page extends Component {
   // 返回
   goEditBack = () => {
     window.history.back();
+  }
+
+  onKeywordsChange = (e) => {
+    let inputData = e.target.value;
+    this.setState({
+      inputData
+    })
+  }
+
+  onsearchClick = () => {
+    let { inputData } = this.state;
+
+    this.params = {
+      ...this.params,
+      inputData
+    }
+
+    this.getProductList();
+  }
+
+  resetClicked = () => {
+    this.setState({
+      inputData: null
+    })
+  }
+
+  deleteProductItem = (item, index) => {
+    let { selectProductList, selectProductIds } = this.state;
+    let idIndex = selectProductIds.indexOf(item.id);
+    selectProductList.splice(index, 1);
+    if (idIndex >= 0) {
+      selectProductIds.splice(idIndex, 1);
+    }
+    this.setState({
+      selectProductList,
+      selectProductIds
+    })
+  }
+
+  onProductModalSave = () => {
+    let { selectProductList, selectProductIds, tableDataList } = this.state;
+    tableDataList = tableDataList.concat(selectProductList);
+    this.setState({
+      tableDataList,
+      selectProductList:[]     
+    })
+    this._hideProductModal();
   }
 
   render() {
@@ -285,6 +336,7 @@ class Page extends Component {
         <Modal maskClosable={false}
           title="商品选择"
           visible={this.state.newItemModalVisible}
+          onOk={this.onProductModalSave}
           onCancel={this._hideProductModal}
           className='noPadding'
           width={1100}
@@ -292,7 +344,7 @@ class Page extends Component {
           <div style={{ display: 'flex', position: 'relative' }}>
             <div style={{ width: '70%', padding: '24px', borderRight: '1px solid #f2f2f2' }}>
               <div style={{ display: 'flex', marginBottom: '20px' }}>
-                <Input allowClear style={{ width: "240px" }} onChange={this.onKeywordsChange} placeholder='商品名称/商品编号/商品分类' />
+                <Input value={this.state.inputData} allowClear style={{ width: "240px" }} onChange={this.onKeywordsChange} placeholder='商品名称/商品编号/商品分类' />
                 <Button type='primary' onClick={this.onsearchClick} style={{ margin: '0 10px' }}>搜索</Button>
                 <Button type='primary' onClick={this.resetClicked}>重置</Button>
               </div>
@@ -308,13 +360,20 @@ class Page extends Component {
             <div style={{ padding: '10px', width: '30%', maxHeight: 540, overflowY: "auto" }} >
               {
                 this.state.selectProductList && this.state.selectProductList.length > 0 ?
-                  this.state.selectProductList.map(item =>
+                  this.state.selectProductList.map((item, index) =>
                     <div key={item.id} style={{ display: 'flex', border: '1px solid #f2f2f2', padding: '10px', marginBottom: '10px' }}>
-                      <div style={{ width: '75px', height: '75px', background: '#f2f2f2', marginRight: '10px' }}></div>
+                      <div style={{ width: '75px', height: '75px', background: '#f2f2f2', marginRight: '10px' }}>
+                        {
+                          item.imageUrl ?
+                            <img src={item.imageUrl} style={{ width: '75px', height: '75px' }} />
+                            : "暂无图片"
+                        }
+
+                      </div>
                       <div style={{ width: '80%' }}>
                         <div className='flex-between' >
                           <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{item.name}</div>
-                          <img style={{ height: 15, width: 15 }} src='/image/close.png' />
+                          <img onClick={() => this.deleteProductItem(item, index)} style={{ height: 15, width: 15 }} src='/image/close.png' />
                         </div>
                         <div>{item.categoryNames || '--'}</div>
                       </div>

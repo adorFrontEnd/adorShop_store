@@ -235,6 +235,11 @@ class Page extends Component {
 
   searchSuperiorIdClicked = (e) => {
     let { superiorCustomerName } = this.state;
+
+    if(!superiorCustomerName){
+      Toast("请输入客户名称！");
+      return;
+    }
     this.setState({
       selectSuperiorId: null
     })
