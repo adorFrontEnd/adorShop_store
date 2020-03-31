@@ -1,12 +1,13 @@
 import React, { Component } from "react";
 import CommonPage from '../../components/common-page';
-import { Table, Form, Input, Col, Switch, Row, Button, Modal, Popconfirm, Divider, InputNumber } from "antd";
+import { Table, Form, Input, Col, Switch, Row, Button, Modal, Popconfirm, Divider, InputNumber, Radio } from "antd";
 import { pagination } from '../../utils/pagination';
 import dateUtil from '../../utils/dateUtil';
 import { baseRoute, routerConfig } from '../../config/router.config';
 import { SearchForm, SubmitForm } from '../../components/common-form';
 import Toast from '../../utils/toast';
 import { updateStock, getStockList, getDetail } from '../../api/order/StockManage';
+import { getSpecValue } from '../../utils/productUtils';
 
 const _title = "库存管理";
 const _storeStatus = {
@@ -28,7 +29,6 @@ class Page extends Component {
 
   componentDidMount() {
     this.getPageData()
-
   }
 
 
@@ -50,6 +50,7 @@ class Page extends Component {
         this.params.size = pageSize
         _this.getPageData();
       })
+
       this.setState({
         tableDataList: res.data,
         pagination: _pagination
@@ -137,17 +138,33 @@ class Page extends Component {
     let selectOper = data || null;
     this.setState({ id: data.id })
     let { id } = data;
+    this.setState({
+      tableLoading: true
+    })
     getDetail({ id })
       .then((data) => {
-        this.setState({ stockData: data })
+        this.setState({ stockData: data, tableLoading: false })
       })
-
+      .catch(() => {
+        this.setState({
+          tableLoading: false
+        })
+      })
   }
+
   refreshStockData = () => {
     let { id } = this.state
+    this.setState({
+      tableLoading: true
+    })
     getDetail({ id })
       .then((data) => {
-        this.setState({ stockData: data })
+        this.setState({ stockData: data, tableLoading: false })
+      })
+      .catch(() => {
+        this.setState({
+          tableLoading: false
+        })
       })
   }
   // 关闭modal
@@ -184,7 +201,8 @@ class Page extends Component {
       return []
     }
     let result = stockData.map(item => {
-      let { id, alarmQty, changeQty } = item;
+      let { id, alarmQty, changeQty, increaseType } = item;
+      changeQty = `${increaseType == 1 ? '+' : '-'}${changeQty}`;
       return {
         id, alarmQty, changeQty
       }
@@ -208,24 +226,19 @@ class Page extends Component {
   }
 
   // 修改库存
-  changeStock = (e, id) => {
+  changeStock = (e, index) => {
     let { stockData } = this.state;
     if (!stockData) {
       return;
     }
-    if (e.target.value[0] !== '-' && e.target.value[0] !== '+') {
-      Toast('改变库存格式不正确，正确格式为：+/-数字');
-      return;
-    }
-    let index = this.findClassifyIndexById(id, stockData);
-    if (index || index == 0) {
-      stockData[index]['changeQty'] = e.target.value;
-      let changeAfter = parseInt(e.target.value) + parseInt(stockData[index]['qty']);
-      stockData[index]['changeAfter'] = changeAfter;
-      this.setState({
-        stockData
-      })
-    }
+    let changeQty = e;
+    stockData[index]['changeQty'] = e;
+    let plusminus = stockData[index]['increaseType'] == 1 ? 1 : -1;
+    let changeAfter = plusminus * changeQty + parseInt(stockData[index]['qty']);
+    stockData[index]['changeAfter'] = changeAfter;
+    this.setState({
+      stockData
+    })
   }
   // 查找分类在数组的索引
   findClassifyIndexById = (id, arr) => {
@@ -237,6 +250,58 @@ class Page extends Component {
     });
     return index >= 0 ? index : null;
   }
+
+  changeIncreaseType = (e, index) => {
+    let increaseType = e.target.value;
+    let { stockData } = this.state;
+    stockData[index]["increaseType"] = increaseType;
+    let changeQty = stockData[index]['changeQty'];
+    let plusminus = increaseType == 1 ? 1 : -1;
+    let changeAfter = plusminus * changeQty + parseInt(stockData[index]['qty']);
+    stockData[index]['changeAfter'] = changeAfter;
+    this.setState({
+      stockData
+    })
+  }
+
+  stockColumns = [
+    { title: "主图", align: "center", dataIndex: "imageUrl", render: data => <img style={{ height: 40, width: 40 }} src={data} /> },
+    { title: "规格", align: "center", dataIndex: "specValue", render: data => getSpecValue(data) || '--' },
+    { title: "商品编码", align: "center", dataIndex: "productNumber", render: data => data || "--" },
+    { title: "条形码", align: "center", dataIndex: "productBarCode", render: data => data || "--" },
+    { title: "状态", align: "center", dataIndex: "skuStatus", render: data => data == 0 ? "禁购" : "正常" },
+    {
+      title: "预警库存", align: "center", dataIndex: "alarmQty",
+      render: (data, record, index) =>
+        <InputNumber precision={0} min={0}
+          value={data} style={{ width: 120 }}
+          onChange={(e) => this.stockWarning(e, record.id)} disabled={record.skuStatus == 0}
+        />
+    },
+    { title: "当前库存", align: "center", dataIndex: "qty", render: data => data || "--" },
+    {
+      title: <span>改变库存<br /> (格式：+/-数字)</span>, align: "center", render: (data, record, index) => (
+        <div className='flex-middle'>
+          <div style={{ width: 60 }}>
+            <Radio.Group value={record.increaseType == '1' ? 1 : 0} onChange={(e) => this.changeIncreaseType(e, index)}>
+              <Radio style={{ width: 50 }} value={0}><span style={{ display: "inline-block", width: 20 }} className='font-18'>-</span></Radio>
+              <Radio style={{ width: 50 }} value={1}><span style={{ display: "inline-block", width: 20 }} className='font-18'>+</span></Radio>
+            </Radio.Group>
+          </div>
+          <InputNumber
+            style={{ width: 120 }} min={1} precision={0}
+            onChange={(e) => this.changeStock(e, index)}
+            disabled={record.skuStatus == 0} value={record.changeQty}
+          />
+        </div>
+      )
+    },
+    {
+      title: "修改后库存", align: "center",
+      render: (data, record, index) => record.changeAfter ? record.changeAfter : record.qty
+    },
+  ]
+
   render() {
     const { getFieldDecorator } = this.props.form;
     return (
@@ -269,64 +334,23 @@ class Page extends Component {
           onCancel={this._hideNewItemModal}
           onOk={this.saveClicked}
           className='noPadding'
-          width={1200}
+          width={1000}
+          afterClose={() => { this.setState({ stockData: null }) }}
         >
-          <div style={{ minHeight: 300, padding: "10px" }}>
-            <div style={{ display: 'flex' }}>
-              <Button type='primary' onClick={this.refreshStockData}>刷新</Button>
+          <div style={{ padding: "10px" }}>
+            <div className='margin-bottom flex'>
+              <Button type='primary' className='normal' onClick={this.refreshStockData}>刷新</Button>
               <div style={{ marginLeft: '10px', color: '#FF9530', lineHeight: '32px' }}>刷新当前实际库存</div>
             </div>
             <div>
-              <Row style={{ border: "1px solid #d9d9d9", marginTop: "10px" }}>
-                <Col span={1} className='_padding10'></Col>
-                <Col span={2} className='_padding10' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>主图</Col>
-                <Col span={2} className='_padding10' >规格</Col>
-                <Col span={3} className='_padding10' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>商品编码</Col>
-                <Col span={3} className='_padding10' >条形码</Col>
-                <Col span={2} className='_padding10' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>状态</Col>
-                <Col span={3} className='_padding10'>预警库存</Col>
-                <Col span={2} className='_padding10' style={{ borderLeft: "1px solid #d9d9d9" }}>当前库存</Col>
-                <Col span={3} className='_padding10' style={{ borderLeft: "1px solid #d9d9d9" }}>
-                  <div>改变库存</div>
-                  <div className="color-red">(格式：+/-数字)</div>
-                </Col>
-                <Col span={3} className='_padding10' style={{ borderLeft: "1px solid #d9d9d9" }}>修改后库存</Col>
-              </Row>
-              {
-                this.state.stockData && this.state.stockData.length ? this.state.stockData.map(item =>
-                  <Row style={{ border: "1px solid #d9d9d9", marginTop: "-1px", display: 'flex', alignItems: 'auto' }} key={item.id}>
-                    <Col span={1} className='padding flex-middle flex-center'>{item.id}</Col>
-                    <Col span={2} className='flex-middle flex-center' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>
-                      <img style={{ height: 40, width: 40 }} src={item.imageUrl} />
-                    </Col>
-                    <Col span={2} className='padding flex-center align-center'>{item.specValue || '--'}</Col>
-                    <Col span={3} className='padding flex-middle' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>
-                      {item.productBarCode}
-                    </Col>
-                    <Col span={3} className='padding flex-middle'>
-                      {item.productNumber}
-                    </Col>
-                    <Col span={2} className='padding flex-middle' style={{ borderLeft: "1px solid #d9d9d9", borderRight: "1px solid #d9d9d9" }}>
-                      {item.skuStatus == 0 ?
-                        <div>禁购</div> : <div>正常</div>
-                      }
-                    </Col>
-                    <Col span={3} className='padding flex-middle'>
-                      <InputNumber value={item.alarmQty} style={{ width: 120 }} onChange={(e) => this.stockWarning(e, item.id)} disabled={item.skuStatus == 0} />
-                    </Col>
-                    <Col span={2} className='padding flex-middle' style={{ borderLeft: "1px solid #d9d9d9" }}>
-                      {item.qty}
-                    </Col>
-                    <Col span={3} className='padding flex-middle' style={{ borderLeft: "1px solid #d9d9d9" }}>
-                      <Input style={{ width: 120 }} onChange={(e) => this.changeStock(e, item.id)} disabled={item.skuStatus == 0} value={item.changeQty} />
-                    </Col>
-                    <Col span={3} className='padding flex-middle' style={{ borderLeft: "1px solid #d9d9d9" }}>
-
-                      {item.changeAfter ? item.changeAfter : item.qty}
-                    </Col>
-                  </Row>
-                ) : null
-              }
+              <Table
+                bordered={true}
+                rowKey="id"
+                columns={this.stockColumns}
+                loading={this.state.tableLoading}
+                pagination={false}
+                dataSource={this.state.stockData}
+              />
             </div>
             <div className="color-red" style={{ marginTop: '20px' }}>
               <div>1、该商品如果为有货状态，则代表所有订购商品状态为正常的SKU不存在当前库存为0的情况</div>
@@ -338,7 +362,7 @@ class Page extends Component {
             </div>
           </div>
         </Modal>
-      </CommonPage>
+      </CommonPage >
     )
   }
 }
