@@ -10,7 +10,7 @@ import { NavLink, Link } from 'react-router-dom';
 import { baseRoute, routerConfig } from '../../config/router.config';
 import { connect } from 'react-redux';
 import { changeRoute } from '../../store/actions/route-actions';
-import { searchProductList, deleteProduct } from '../../api/product/product';
+import { searchProductList, deleteProduct,batchDelete } from '../../api/product/product';
 
 
 const _title = "商品列表";
@@ -30,7 +30,8 @@ class Page extends Component {
   state = {
     tableDataList: null,
     showTableLoading: false,
-    exportUserListUrl: null
+    exportUserListUrl: null,
+    selectIds:null
   }
 
   componentDidMount() {
@@ -170,6 +171,28 @@ class Page extends Component {
     this.props.changeRoute({ path: 'product.productInfo.productEdit', title: '商品编辑', parentTitle: '商品管理' });
   }
 
+  onTableRowSelection = (selectedRowKeys, selectedRows) => {
+    let selectIds = selectedRowKeys;
+    this.setState({
+      selectIds
+    })
+  }
+
+  batchDeleteClick = () => {
+    let { selectIds } = this.state;
+    if (!selectIds || !selectIds.length) {
+      Toast("请选择商品！");
+      return;
+    }
+    let ids = selectIds.join();
+    
+    batchDelete({ids})
+    .then(()=>{
+      Toast("删除成功！")
+      this.getPageData()
+    })
+  }
+
   /**渲染**********************************************************************************************************************************/
 
   render() {
@@ -183,7 +206,7 @@ class Page extends Component {
             <div style={{ minWidth: 330 }} className='margin-bottom20'>
               <NavLink to={productEditPath + "/0"}><Button type='primary' onClick={() => this.goEdit('0')}>创建商品</Button></NavLink>
               {/* <Button type='primary' className='margin0-10'>批量导入商品</Button> */}
-              <Button type='primary' className='margin0-10'>批量删除</Button>
+              <Button type='primary' className='margin0-10' onClick={this.batchDeleteClick}>批量删除</Button>
             </div>
             <div style={{ minWidth: 700 }} className='margin-bottom20'>
               <SearchForm
@@ -197,6 +220,9 @@ class Page extends Component {
           </div>
 
           <Table
+            rowSelection={{
+              onChange: this.onTableRowSelection
+            }}
             indentSize={10}
             rowKey="id"
             columns={this.columns}

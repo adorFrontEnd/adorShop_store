@@ -55,8 +55,9 @@ const deleteDeliveryRecord= (params) => {
   return baseHttpProvider.getApi('api/ord/order/deleteDeliveryRecord', params);
 }
 
-
-
+const parseSmartOrderText= (params) => {
+  return baseHttpProvider.postFormApi('api/nlp/parse/parse', params);
+}
 
 
 export {
@@ -72,6 +73,7 @@ export {
   confirmDelivery,
   getOrderShippingData,
   confirmReceipt,
-  deleteDeliveryRecord
+  deleteDeliveryRecord,
+  parseSmartOrderText
 }
 

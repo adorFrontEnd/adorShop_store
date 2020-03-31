@@ -9,7 +9,7 @@ import { SearchForm, SubmitForm } from '../../components/common-form';
 import { changeRoute } from '../../store/actions/route-actions';
 import { connect } from 'react-redux';
 import Toast from '../../utils/toast';
-import { listDictionary } from '../../api/sysConfig/sysConfig';
+import { listDictionary, delDictionary } from '../../api/sysConfig/sysConfig';
 
 const _title = "智能词库";
 const LexiconConfigPath = routerConfig["sysConfig.orderConfig.lexiconConfig"].path;
@@ -31,14 +31,14 @@ class Page extends Component {
     this.getPageData();
   }
 
-  getNatureStr = (data)=>{
-    if(!data){
+  getNatureStr = (data) => {
+    if (!data) {
       return '--';
     }
-    if(/prd/.test(data)){
+    if (/prd/.test(data)) {
       return '商品'
     }
-    return _lexiconCategory[data] 
+    return _lexiconCategory[data]
   }
 
   // 表格相关列
@@ -58,22 +58,58 @@ class Page extends Component {
             </NavLink>
 
             <Divider type="vertical" />
-            <Popconfirm
-              placement="topLeft" title='确认要删除吗？'
-              onConfirm={() => { this.deleteClassify(record) }} >
-              <a size="small" style={{ color: '#ff8716' }}>删除</a>
-            </Popconfirm>
+            {
+              record.natureStr == 'amq' ?
+                <Popconfirm
+                  placement="topLeft" title='确认要删除吗？'
+                  cancelText={`删除${record.realName}`}
+                  okText={`删除${record.rangeStr}${record.unit}`}
+                  onConfirm={() => { this.deleteAmqy(record, true) }}
+                  onCancel={() => { this.deleteAmqy(record) }}
+                >
+                  <a size="small" style={{ color: '#ff8716' }}>删除</a>
+                </Popconfirm> :
+                <Popconfirm
+                  placement="topLeft" title='确认要删除吗？'
+                  onConfirm={() => { this.deleteClassify(record) }} >
+                  <a size="small" style={{ color: '#ff8716' }}>删除</a>
+                </Popconfirm>
+            }
           </span>
         </span>
       )
     }
   ]
+
+  deleteClassify = (record) => {
+    let { id } = record;
+    this.delDictionary({ id })
+  }
+
+  deleteAmqy = (record, isBatch) => {
+    let { id, rangeStr, unit } = record;
+    let params = { unit, id };
+    if (isBatch) {
+      params.rangeStr = rangeStr;
+    }
+    this.delDictionary(params);
+  }
+
+  // 删除
+  delDictionary = (params) => {
+    delDictionary(params)
+      .then(() => {
+        Toast("删除成功！");
+        this.getPageData();
+        return;
+      })
+  }
   /******查询表单操作****************************************************************************************************************** */
   // 顶部查询表单
   formItemList = [
     {
       type: "SELECT",
-      field: "status",
+      field: "natureStr",
       style: { width: 140 },
       defaultOption: { id: null, name: "所有类别" },
       placeholder: '选择类别',
@@ -82,19 +118,19 @@ class Page extends Component {
     },
     {
       type: "INPUT",
-      field: "inputData",
+      field: "realName",
       style: { width: 300 },
-      placeholder: "商品名称/商品编号"
+      placeholder: "关键字"
     }]
 
   //查询按钮点击事件
   searchClicked = (params) => {
-    let { inputData } = params;
-    inputData = inputData || null;
+    let { realName } = params;
+    realName = realName || null;
     this.params = {
-      page: 1,
+      page: 1,      
       ...params,
-      inputData
+      realName
     }
     this.getPageData();
   }

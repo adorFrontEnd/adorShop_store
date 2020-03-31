@@ -114,7 +114,15 @@ const validateSKU = (orderSKUList) => {
 
 }
 
+const parseSmartOrderResult = (data) => {
+
+  let { contactAddress, contactCity, contactPerson, contactPhone, contactProvince, productIds, quantity, specNames } = data;
+  return {
+    contactAddress, contactCity, contactPerson, contactPhone, contactProvince, productIds, quantity, specNames 
+  }
+}
 
 export {
-  getOrderSaveData
+  getOrderSaveData,
+  parseSmartOrderResult
 }

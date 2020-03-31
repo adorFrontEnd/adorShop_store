@@ -52,7 +52,7 @@ class Page extends Component {
     freightPrice: null,
     freightTemplateId: null,
     isSpecChange: false,
-    isEdit:false
+    isEdit: false
   }
 
   componentWillMount() {
@@ -369,7 +369,8 @@ class Page extends Component {
               label='可购渠道：'
               field='channel'>
               {
-                getFieldDecorator('channel', {
+                getFieldDecorator('channel', {    
+                  initialValue:[2],                    
                   rules: [
                     { required: true, message: '可购渠道至少选择一项!' }
                   ]

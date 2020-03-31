@@ -21,12 +21,17 @@ const deleteSpec = (params) => {
   return baseHttpProvider.postFormApi('api/prd/product/deleteSpec', params);
 }
 
+const batchDelete = (params) => {
+  return baseHttpProvider.getApi('api/prd/product/batchDelete', params);
+}
+
 
 export {
   saveOrUpdateProduct,
   searchProductList,
   deleteProduct,
   getProductDetail,
-  deleteSpec
+  deleteSpec,
+  batchDelete
 }
 

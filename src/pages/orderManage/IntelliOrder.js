@@ -10,9 +10,9 @@ import { NavLink, Link } from 'react-router-dom';
 import { baseRoute, routerConfig } from '../../config/router.config';
 import { connect } from 'react-redux';
 import { changeRoute } from '../../store/actions/route-actions';
-import { smartOrder } from '../../api/order/order';
+import { smartOrder, parseSmartOrderText } from '../../api/order/order';
 import NumberFilter from '../../utils/filter/number';
-import { getOrderSaveData } from './orderUtils';
+import { getOrderSaveData, parseSmartOrderResult } from './orderUtils';
 import { getSelectList } from '../../api/storeManage/storeManage';
 import { getSpecValue } from '../../utils/productUtils';
 
@@ -32,6 +32,7 @@ class Page extends Component {
     salerModalIsVisible: false,
     skuModalIsVisible: false,
     areaModalIsVisible: false,
+    demoModalIsVisible: false,
     selectUser: null,
     selectSaler: null,
     storageList: [],
@@ -43,7 +44,8 @@ class Page extends Component {
     remark: null,
     storageId: null,
     selectIndex: null,
-    intelliOrderText: null
+    intelliOrderText: null,
+    parseLoading: false
   }
 
   componentDidMount() {
@@ -297,8 +299,51 @@ class Page extends Component {
 
   intelliOrderTextClick = () => {
     let { intelliOrderText } = this.state;
+    if (!intelliOrderText || !intelliOrderText.trim()) {
+      Toast('请输入需要识别的订单描述文档！');
+      return;
+    }
 
+    this.setState({
+      parseLoading: true
+    })
+    parseSmartOrderText({ text: intelliOrderText })
+      .then((data) => {
+        this.setState({
+          parseLoading: false
+        })
+        let result = parseSmartOrderResult(data);
+        let { contactAddress, contactCity, contactPerson, contactPhone, contactProvince, productIds, quantity, specNames } = result;
+        let { orderBaseInfo } = this.state;
+        orderBaseInfo = {
+          ...orderBaseInfo,
+          contactAddress,
+          contactPerson,
+          contactPhone
+        }
+        this.setState({
+          orderBaseInfo
+        })
+      })
+      .catch(()=>{
+        this.setState({
+          parseLoading: false
+        })
+      })
   }
+
+  showDemoModal = () => {
+    this.setState({
+      demoModalIsVisible: true
+    })
+  }
+
+  hideDemoModal = () => {
+    this.setState({
+      demoModalIsVisible: false
+    })
+  }
+
   /**渲染**********************************************************************************************************************************/
 
   render() {
@@ -317,16 +362,19 @@ class Page extends Component {
               收款
             </Button>
             </div>
-
-            <div>
-              <Input.TextArea
-                value={this.state.intelliOrderText}
-                onChange={this.intelliOrderTextChange}
-                style={{ minHeight: 120, width: 700 }}
-              />
-            </div>
-
-            <div className='margin-top'><Button type='primary' onClick={this.intelliOrderTextClick}>智能识别</Button></div>
+            <Spin spinning={this.state.parseLoading}>
+              <div>
+                <Input.TextArea
+                  value={this.state.intelliOrderText}
+                  onChange={this.intelliOrderTextChange}
+                  style={{ minHeight: 120, width: 700 }}
+                />
+              </div>
+              <div className='margin-top'>
+                <Button type='primary' onClick={this.intelliOrderTextClick}>智能识别</Button>
+                <Button type="link" onClick={this.showDemoModal}>查看示例</Button>
+              </div>
+            </Spin>
 
             <div className='margin-top20'>
               <div className='line-height40 font-18 color333 font-bold'>基本信息</div>
@@ -394,7 +442,7 @@ class Page extends Component {
                 <Col span={8} className='padding-left' ></Col>
                 <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>详细地址</Col>
                 <Col span={8} className='padding-left'>
-                  <Input value={orderBaseInfo.contactAddress} onChange={(e) => this.onOrderInfoChange("contactAddress", e.target.value)} style={{ width: "80%" }} /></Col>
+                  <Input value={orderBaseInfo.contactAddress} onChange={(e) => this.onOrderInfoChange("contactAddress", e.target.value)} style={{ width: "95%" }} /></Col>
               </Row>
               <Row style={{ borderTop: '1px solid #f2f2f2' }}>
                 <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>订单总金额</Col>
@@ -507,6 +555,21 @@ class Page extends Component {
           hide={this._hideAreaSelectModal}
           onOk={this.selectAreaSaveClicked}
         />
+
+        <Modal
+          maskClosable={false}
+          title='查看示例'
+          visible={this.state.demoModalIsVisible}
+          footer={null}
+          onCancel={this.hideDemoModal}
+        >
+          <div>
+            收货人：夏梨花<br />
+            手机号码：18800000001<br />
+            所在地区：四川省成都市武侯区世外桃源广场<br />
+            大鱼海棠纸尿裤 s码 4包<br />
+          </div>
+        </Modal>
       </CommonPage >
     )
   }

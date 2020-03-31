@@ -71,5 +71,6 @@ export {
   updateConfig,
   listDictionary,
   insertDictionary,
-  itemDictionary
+  itemDictionary,
+  delDictionary
 }

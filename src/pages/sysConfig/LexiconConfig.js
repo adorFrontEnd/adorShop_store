@@ -53,7 +53,17 @@ class Page extends Component {
         let { natureStr, rangeStr, realName, unit } = pageDetail;
         let { natureStrType, productIds } = this.getNatureStr(natureStr);
         let selectProductIds = productIds;
-        this.props.form.setFieldsValue({ natureStr: natureStrType, rangeStr, realName });
+        natureStr = natureStrType;
+        let formData = { natureStr, rangeStr, realName };
+        if (natureStr == 'amq') {
+          formData.realName = unit;
+          let [startRange, endRange] = rangeStr.split("~");
+          this.setState({
+            startRange, endRange
+          })
+        }
+
+        this.props.form.setFieldsValue(formData);
         this.setState({
           pageDetail,
           natureStr,
@@ -73,11 +83,11 @@ class Page extends Component {
 
     let ids = selectProductIds.join();
     getSellProductByIds({ ids })
-    .then((tableDataList)=>{
-      this.setState({
-        tableDataList
+      .then((tableDataList) => {
+        this.setState({
+          tableDataList
+        })
       })
-    })
   }
 
   getNatureStr = (data) => {
@@ -90,7 +100,7 @@ class Page extends Component {
       }
     }
     if (/prd/.test(data)) {
-     
+
       let prdIds = data.substr(4);
       productIds = prdIds.split(":");
       return {
@@ -107,17 +117,22 @@ class Page extends Component {
   // 表格相关列
   columns = [
     { title: "商品名称", dataIndex: "name", render: data => data || "--" },
-    { title: "商品图", dataIndex: "imageUrl", render: data => <span><img style={{ height: 40, width: 40 }} src={data} /></span> },
+    { title: "商品图", dataIndex: "imageUrl", render: data => this.getImageUrl(data) },
     { title: "包装规格", dataIndex: "specifications", render: data => data || "--" },
     {
       title: '操作',
       render: (text, record, index) => (
         <span>
-          <Popconfirm
-            placement="topLeft" title='确认要移除吗？'
-            onConfirm={() => { this.deleteUnit(record, index) }} >
-            <a size="small" className="color-red" > 移除</a>
-          </Popconfirm>
+          {
+            this.state.isEdit ?
+              "--"
+              :
+              <Popconfirm
+                placement="topLeft" title='确认要移除吗？'
+                onConfirm={() => { this.deleteUnit(record, index) }} >
+                <a size="small" className="color-red" > 移除</a>
+              </Popconfirm>
+          }
         </span>
       )
     }
@@ -136,11 +151,21 @@ class Page extends Component {
       selectProductIds,
       tableDataList
     })
-
   }
+
+  getImageUrl = (data) => {
+    let imageUrl = '';
+    if (data) {
+      let imageUrlArr = data.split("|");
+      imageUrl = imageUrlArr && imageUrlArr[0] ? imageUrlArr[0] : ""
+    }
+    return imageUrl ? <img src={imageUrl} style={{ height: 40, width: 40 }} /> : "--"
+  }
+
+
   modalColumns = [
     { title: "商品名称", dataIndex: "name", render: data => data || "--" },
-    { title: "商品图", dataIndex: "imageUrl", render: data => data ? (<img src={data} style={{ height: 40, width: 40 }} />) : "--" },
+    { title: "商品图", dataIndex: "imageUrl", render: data => this.getImageUrl(data) },
     { title: "商品分类", dataIndex: "categoryNames", render: data => data || "--" },
     { title: "包装规格", dataIndex: "specifications", render: data => data || "--" },
     {
@@ -246,8 +271,13 @@ class Page extends Component {
 
       let { realName, natureStr } = data;
       let { startRange, endRange, selectProductIds } = this.state;
+      realName = realName.trim();
+      if(!realName){
+        Toast('关键词为空！');
+        return;
+      }
       let params = {
-        realName, natureStr
+        realName:realName.toLowerCase(), natureStr
       }
       if (natureStr == 'amq') {
         if (!startRange || !endRange) {
@@ -275,8 +305,8 @@ class Page extends Component {
       insertDictionary(params)
         .then(() => {
           Toast('保存词库成功！');
-        })
-      window.history.back();
+          this.goEditBack();
+        })     
     })
   }
 
@@ -344,6 +374,15 @@ class Page extends Component {
 
     return (
       <CommonPage title={_title} >
+        <div style={{ position: "fixed", bottom: "10%", right: "10%", zIndex: "999" }}>
+          {
+            !this.state.isEdit ?
+              <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} onClick={this.saveDataClicked}>保存</Button>
+              : null
+          }
+          <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} className='yellow-btn margin-left20' onClick={this.goEditBack}>返回</Button>
+        </div>
+
         <div style={{ width: 600 }}>
           <Form className='common-form'>
             <Form.Item
@@ -406,22 +445,22 @@ class Page extends Component {
         {
           this.state.natureStr == 'prd' ?
             <div>
-
-              <Button disabled={this.state.isEdit} type='primary' style={{ margin: '20px 0' }} onClick={this.showProductModal}>添加商品</Button>
+              {
+                !this.state.isEdit ?
+                  <Button disabled={this.state.isEdit} type='primary' style={{ margin: '20px 0' }} onClick={this.showProductModal}>添加商品</Button>
+                  :
+                  null
+              }
               <Table
                 indentSize={10}
                 rowKey="id"
                 columns={this.columns}
                 loading={this.state.showTableLoading}
-                pagination={this.state.pagination}
+                pagination={false}
                 dataSource={this.state.tableDataList}
               />
             </div> : null
         }
-        <div style={{ display: 'flex', flexDirection: 'row-reverse', marginTop: '30%' }}>
-          <Button className='save-btn' type='primary' onClick={this.goEditBack} > 返回</Button>
-          <Button className='save-btn' type='primary' onClick={this.saveDataClicked} style={{ marginRight: '10px' }}>保存</Button>
-        </div>
 
         <Modal maskClosable={false}
           title="商品选择"
