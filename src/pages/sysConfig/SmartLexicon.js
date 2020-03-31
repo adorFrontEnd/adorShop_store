@@ -31,12 +31,21 @@ class Page extends Component {
     this.getPageData();
   }
 
+  getNatureStr = (data)=>{
+    if(!data){
+      return '--';
+    }
+    if(/prd/.test(data)){
+      return '商品'
+    }
+    return _lexiconCategory[data] 
+  }
 
   // 表格相关列
   columns = [
 
     { title: "关键词", dataIndex: "realName", render: data => data || "--" },
-    { title: "关键类别", dataIndex: "natureStr", render: data => data ? _lexiconCategory[data] : "--" },
+    { title: "关键类别", dataIndex: "natureStr", render: data => this.getNatureStr(data) },
     { title: "范围", dataIndex: "rangeStr", render: data => data || "--" },
     { title: "创建时间", dataIndex: "gmtCreate", render: data => data ? dateUtil.getDateTime(data) : "--" },
     {
@@ -45,7 +54,7 @@ class Page extends Component {
         <span>
           <span>
             <NavLink to={LexiconConfigPath + "/" + record.id}>
-              编辑
+              查看
             </NavLink>
 
             <Divider type="vertical" />

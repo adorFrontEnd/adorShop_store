@@ -5,7 +5,7 @@ import { NavLink, Link } from 'react-router-dom';
 import { insertDictionary, itemDictionary } from '../../api/sysConfig/sysConfig';
 import { searchSellProductList } from '../../api/product/orderProduct';
 import { pagination } from '../../utils/pagination';
-
+import { getSellProductByIds } from '../../api/product/orderProduct';
 
 import Toast from '../../utils/toast';
 import './index.less'
@@ -34,6 +34,7 @@ class Page extends Component {
     let id = this.props.match.params.id;
     let isEdit = !!id && id != 0;
     this.setState({
+      isEdit,
       id,
       _title: isEdit ? "编辑客户" : "添加客户",
       showLoading: false
@@ -50,12 +51,57 @@ class Page extends Component {
       .then(pageDetail => {
 
         let { natureStr, rangeStr, realName, unit } = pageDetail;
-        this.props.form.setFieldsValue({ natureStr, rangeStr, realName });
+        let { natureStrType, productIds } = this.getNatureStr(natureStr);
+        let selectProductIds = productIds;
+        this.props.form.setFieldsValue({ natureStr: natureStrType, rangeStr, realName });
         this.setState({
           pageDetail,
-          natureStr
+          natureStr,
+          selectProductIds
         })
+        if (selectProductIds && selectProductIds.length) {
+          this.getSellProductList(selectProductIds)
+        } else {
+          this.setState({
+            tableDataList: []
+          })
+        }
       })
+  }
+
+  getSellProductList = (selectProductIds) => {
+
+    let ids = selectProductIds.join();
+    getSellProductByIds({ ids })
+    .then((tableDataList)=>{
+      this.setState({
+        tableDataList
+      })
+    })
+  }
+
+  getNatureStr = (data) => {
+
+    let productIds = [];
+    if (!data) {
+      return {
+        natureStrType: '',
+        productIds
+      }
+    }
+    if (/prd/.test(data)) {
+     
+      let prdIds = data.substr(4);
+      productIds = prdIds.split(":");
+      return {
+        natureStrType: 'prd',
+        productIds
+      }
+    }
+    return {
+      natureStrType: data,
+      productIds
+    }
   }
 
   // 表格相关列
@@ -199,7 +245,7 @@ class Page extends Component {
       }
 
       let { realName, natureStr } = data;
-      let { startRange, endRange } = this.state;
+      let { startRange, endRange, selectProductIds } = this.state;
       let params = {
         realName, natureStr
       }
@@ -212,6 +258,17 @@ class Page extends Component {
           ...params,
           startRange,
           endRange
+        }
+      }
+
+      if (natureStr == 'prd') {
+        if (!selectProductIds || !selectProductIds.length) {
+          Toast('暂未选择商品！');
+          return;
+        }
+        params = {
+          ...params,
+          natureStr: "prd:" + selectProductIds.join(':')
         }
       }
 
@@ -301,7 +358,7 @@ class Page extends Component {
                     { required: true, message: '输入关键词' }
                   ]
                 })(
-                  <Input allowClear />
+                  <Input disabled={this.state.isEdit} allowClear />
                 )
               }
               <div style={{ color: 'red', marginLeft: '10px', position: 'absolute', top: '-10px', right: '-300px' }}>关键词不能重复，一个关键词只允许有一种类别</div>
@@ -319,7 +376,7 @@ class Page extends Component {
                     { required: true, message: '请选择类别' }
                   ]
                 })(
-                  <Select onChange={this.handleChange}>
+                  <Select disabled={this.state.isEdit} onChange={this.handleChange}>
                     <Select.Option value={null} >请选择类别</Select.Option>
                     {
                       _lexiconCategoryArr ?
@@ -337,8 +394,8 @@ class Page extends Component {
                 <Row className='line-height40'>
                   <Col span={4} className='label-required text-right'>数量范围：</Col>
                   <Col span={16}>
-                    <InputNumber value={this.state.startRange} precision={0} min={1} onChange={(e) => this.onRangeChange('startRange', e)} />
-                        ~<InputNumber value={this.state.endRange} precision={0} min={1} onChange={(e) => this.onRangeChange('endRange', e)} />
+                    <InputNumber disabled={this.state.isEdit} value={this.state.startRange} precision={0} min={1} onChange={(e) => this.onRangeChange('startRange', e)} />
+                        ~<InputNumber disabled={this.state.isEdit} value={this.state.endRange} precision={0} min={1} onChange={(e) => this.onRangeChange('endRange', e)} />
                   </Col>
                 </Row>
                 : null
@@ -349,7 +406,8 @@ class Page extends Component {
         {
           this.state.natureStr == 'prd' ?
             <div>
-              <Button type='primary' style={{ margin: '20px 0' }} onClick={this.showProductModal}>添加商品</Button>
+
+              <Button disabled={this.state.isEdit} type='primary' style={{ margin: '20px 0' }} onClick={this.showProductModal}>添加商品</Button>
               <Table
                 indentSize={10}
                 rowKey="id"
