@@ -41,15 +41,11 @@ class Page extends Component {
   }
 
   componentDidMount() {
-    this.props.changeRoute({ path: 'user.userManage.userList', title: '客户列表', parentTitle: '会员管理' });
+
     this.getGradeList();
     this.getPageData();
   }
 
-  goUserEdit = () => {
-    let title = '积分记录';
-    this.props.changeRoute({ path: 'marketManage.integralRecord', title, parentTitle: '市场营销' });
-  }
 
   params = {
     page: 1
@@ -209,7 +205,7 @@ class Page extends Component {
           {
             record.status == "0" || record.status == "1" || record.status == "3" ?
               <span>
-                <span onClick={() => { this.goUserEdit(record.shopUserId) }}><NavLink to={userEditPath + "/" + record.shopUserId}>编辑</NavLink></span>
+                <span><NavLink to={userEditPath + "/" + record.shopUserId}>编辑</NavLink></span>
                 <Divider type="vertical" />
               </span>
               : null
@@ -263,10 +259,6 @@ class Page extends Component {
     })
   }
 
-  goEdit = (id) => {
-    let title = id == '0' ? '添加客户' : "编辑客户"
-    this.props.changeRoute({ path: 'user.userManage.userEdit', title, parentTitle: '会员管理' });
-  }
 
   /**渲染**********************************************************************************************************************************/
 
@@ -274,12 +266,12 @@ class Page extends Component {
     const { getFieldDecorator } = this.props.form;
 
     return (
-      <CommonPage title={_title} description={_description} >
+      <CommonPage path='user.userManage.userList' title={_title} description={_description} >
 
         <div>
           <div className="flex-between align-center margin-bottom20">
             <NavLink to={userEditPath + "/0"}>
-              <Button type='primary' onClick={() => this.goEdit('0')}>创建客户</Button>
+              <Button type='primary'>创建客户</Button>
             </NavLink>
             <div style={{ minWidth: 870 }}>
               <SearchForm

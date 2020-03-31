@@ -6,6 +6,7 @@ import { Link, NavLink } from 'react-router-dom';
 import { baseRoute, routerConfig } from '../../../config/router.config';
 import { withRouter } from 'react-router-dom';
 import { userLogout, getCacheUserInfo } from '../../../middleware/localStorage/login';
+
 import '../../../assets/css/common.less'
 import './index.less';
 
@@ -59,6 +60,13 @@ class Page extends Component {
                   <Icon type="home" />
                 </a>
               </Breadcrumb.Item>
+              {
+                this.props.routeInfo.grandParentTitle ?
+                  <Breadcrumb.Item>
+                    <span>{this.props.routeInfo.grandParentTitle}</span>
+                  </Breadcrumb.Item>
+                  : null
+              }
               {
                 this.props.routeInfo.parentTitle ?
                   <Breadcrumb.Item>

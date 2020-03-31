@@ -350,7 +350,7 @@ class Page extends Component {
     const { getFieldDecorator } = this.props.form;
 
     return (
-      <CommonPage title={_title} >
+      <CommonPage path='productManage.other.freightTemplateEdit' title={_title} >
         <Spin spinning={this.state.showLoading}>
           <div className='margin10-0' >
             <Row className='line-height30 margin-bottom20' style={{ width: 500 }}>

@@ -24,18 +24,7 @@ class Page extends Component {
   }
 
   componentDidMount() {
-    this.props.changeRoute({ path: 'user.userManage.userGrade', title: '客户级别', parentTitle: '会员管理' });
     this.getPageData();
-  }
-
-  goIntegralRecord = () => {
-    let title = '积分记录';
-    this.props.changeRoute({ path: 'marketManage.integralRecord', title, parentTitle: '市场营销' });
-  }
-
-  goGiftRecord = () => {
-    let title = '兑奖记录';
-    this.props.changeRoute({ path: 'marketManage.giftRecord', title, parentTitle: '市场营销' });
   }
 
   params = {
@@ -202,7 +191,7 @@ class Page extends Component {
     const { getFieldDecorator } = this.props.form;
 
     return (
-      <CommonPage title={_title} description={_description} >
+      <CommonPage path='user.userManage.userGrade' title={_title} description={_description} >
 
         <div>
           <Spin spinning={this.state.showLoading}>

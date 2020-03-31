@@ -240,7 +240,7 @@ class Page extends Component {
 
 
     return (
-      <CommonPage title={_title} >
+      <CommonPage  path='productManage.other.freightTemplate' title={_title} >
         <div className='margin10-0' >
           <Spin spinning={this.state.showLoading}>
             <div className='margin-bottom'>

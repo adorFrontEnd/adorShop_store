@@ -7,20 +7,19 @@ import { SearchForm, SubmitForm } from '../../components/common-form';
 import dateUtil from '../../utils/dateUtil';
 import { searchSellProductList, exportOrderProduct, updateOnsaleStatus, batchDelete, deleteSellProduct, batchOnsaleStatus } from '../../api/product/orderProduct';
 import { NavLink, Link } from 'react-router-dom';
-import { baseRoute, routerConfig } from '../../config/router.config';
-import { connect } from 'react-redux';
-import { changeRoute } from '../../store/actions/route-actions';
+import { routerConfig } from '../../config/router.config';
+
 import ProductTemplateSelectModal from '../../components/product/ProductTemplateSelectModal';
 
 const _title = "订货商品";
 const _description = "";
 const orderProductDetailPath = routerConfig["orderManage.orderProduct.orderProductEdit"].path;
-const _channelEnum = {
-  "0": "直购",
-  "1": "订货",
-  "2": "云市场"
-}
-const _channelEnumArr = Object.keys(_channelEnum).map(item => { return { id: item, name: _channelEnum[item] } });
+// const _channelEnum = {
+//   "0": "直购",
+//   "1": "订货",
+//   "2": "云市场"
+// }
+// const _channelEnumArr = Object.keys(_channelEnum).map(item => { return { id: item, name: _channelEnum[item] } });
 
 
 class Page extends Component {
@@ -35,8 +34,6 @@ class Page extends Component {
 
   componentDidMount() {
     this.getPageData()
-    this.props.changeRoute({ path: 'product.productInfo.productList', title: '订货商品', parentTitle: '订货商品' });
-
   }
 
   params = {
@@ -48,7 +45,7 @@ class Page extends Component {
   formItemList = [
     {
       type: "SELECT",
-      field: "status",
+      field: "onsaleStatus",
       style: { width: 140 },
       placeholder: '选择状态',
       initialValue: null,
@@ -58,18 +55,19 @@ class Page extends Component {
         { id: 0, name: "已下架" }
       ]
     },
-    // 0有货  1部分有货 2全部缺货
+
+    // 0全部缺货 1部分缺货 2有货
     {
       type: "SELECT",
-      field: "storeStatus",
+      field: "stockStatus",
       style: { width: 140 },
       placeholder: '选择状态',
       initialValue: null,
       optionList: [
         { id: null, name: "全部" },
-        { id: 0, name: "有货" },
+        { id: 0, name: "全部缺货" },
         { id: 1, name: "部分有货" },
-        { id: 2, name: "全部缺货" }
+        { id: 2, name: "有货" }
       ]
     },
     {
@@ -142,7 +140,7 @@ class Page extends Component {
               <a onClick={() => this.updateOnsaleStatus(record, 1)}>上架</a>
           }
           <Divider type="vertical" />
-          <span onClick={() => { this.goEdit(record.id) }}><NavLink to={orderProductDetailPath + "/" + record.id + "/0"}>编辑</NavLink></span>
+          <span><NavLink to={orderProductDetailPath + "/" + record.id + "/0"}>编辑</NavLink></span>
           <Divider type="vertical" />
           <Popconfirm
             placement="topLeft" title='确认要删除吗？'
@@ -191,11 +189,6 @@ class Page extends Component {
     this.setState({
       showTableLoading: false
     })
-  }
-
-  goEdit = (id) => {
-    let title = id == '0' ? '新建商品' : "编辑商品"
-    this.props.changeRoute({ path: 'product.productInfo.productEdit', title: '商品编辑', parentTitle: '商品管理' });
   }
 
   _showProductModal = () => {
@@ -257,7 +250,7 @@ class Page extends Component {
     const { getFieldDecorator } = this.props.form;
     const { selectProductItem } = this.state;
     return (
-      <CommonPage title={_title} description={_description} >
+      <CommonPage path='orderManage.orderProduct.orderProduct' title={_title} description={_description} >
 
         <div>
           <div className="flex-between align-center margin-bottom flex-wrap">
@@ -302,10 +295,5 @@ class Page extends Component {
     )
   }
 }
-const mapStateToProps = state => state;
-const mapDispatchToProps = (dispatch) => {
-  return {
-    changeRoute: data => dispatch(changeRoute(data))
-  }
-}
-export default connect(mapStateToProps, mapDispatchToProps)(Form.create()(Page));
+
+export default (Form.create()(Page));

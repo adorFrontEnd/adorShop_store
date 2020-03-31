@@ -28,12 +28,12 @@ class Page extends Component {
     isPhoneValid: false,
     superiorCustomerName: null,
     userDetail: null,
-    headUrl:""
+    headUrl: ""
   }
 
   componentWillMount() {
     let id = this.props.match.params.id;
-    let isEdit = !!id;
+    let isEdit = !!id && id != 0;
     this.setState({
       id,
       _title: isEdit ? "编辑客户" : "添加客户",
@@ -279,7 +279,7 @@ class Page extends Component {
     })
   }
 
-  
+
   // 上传图片
   uploadActivityLogoPic = (picList) => {
     let headUrl = picList && picList.length ? picList[0] : "";
@@ -295,7 +295,7 @@ class Page extends Component {
     let { labelList, selectAreaData } = this.state;
 
     return (
-      <CommonPage title={this.state._title} description={_description} >
+      <CommonPage path='user.userManage.userEdit' title={this.state._title} pathTitle={this.state._title} description={_description} >
         <div style={{ width: 650 }}>
           <Spin spinning={this.state.showLoading}>
             <Row className='line-height40 padding10-0'>

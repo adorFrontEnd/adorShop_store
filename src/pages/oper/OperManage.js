@@ -319,7 +319,7 @@ class Page extends Component {
     const { getFieldDecorator } = this.props.form;
     const { checkInfo, checkedOper } = this.state;
     return (
-      <CommonPage title={_title} description={_description} >
+      <CommonPage path='oper.operManage.operManage' title={_title} description={_description} >
         <div>
           <Button onClick={() => { this.showAcountModal() }} style={{ width: 100 }} type='primary'>创建账号</Button>
         </div>

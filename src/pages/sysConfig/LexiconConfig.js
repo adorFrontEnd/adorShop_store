@@ -6,7 +6,6 @@ import { insertDictionary, itemDictionary } from '../../api/sysConfig/sysConfig'
 import { searchSellProductList } from '../../api/product/orderProduct';
 import { pagination } from '../../utils/pagination';
 import { getSellProductByIds } from '../../api/product/orderProduct';
-
 import Toast from '../../utils/toast';
 import './index.less'
 const _title = "词库配置";
@@ -36,7 +35,7 @@ class Page extends Component {
     this.setState({
       isEdit,
       id,
-      _title: isEdit ? "编辑客户" : "添加客户",
+      _title: isEdit ? "词库查看" : "词库配置",
       showLoading: false
     })
 
@@ -272,12 +271,12 @@ class Page extends Component {
       let { realName, natureStr } = data;
       let { startRange, endRange, selectProductIds } = this.state;
       realName = realName.trim();
-      if(!realName){
+      if (!realName) {
         Toast('关键词为空！');
         return;
       }
       let params = {
-        realName:realName.toLowerCase(), natureStr
+        realName: realName.toLowerCase(), natureStr
       }
       if (natureStr == 'amq') {
         if (!startRange || !endRange) {
@@ -306,7 +305,7 @@ class Page extends Component {
         .then(() => {
           Toast('保存词库成功！');
           this.goEditBack();
-        })     
+        })
     })
   }
 
@@ -373,7 +372,7 @@ class Page extends Component {
     const { getFieldDecorator } = this.props.form;
 
     return (
-      <CommonPage title={_title} >
+      <CommonPage path='sysConfig.orderConfig.lexiconConfig' title={this.state._title} pathTitle={this.state._title} >
         <div style={{ position: "fixed", bottom: "10%", right: "10%", zIndex: "999" }}>
           {
             !this.state.isEdit ?

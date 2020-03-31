@@ -73,7 +73,7 @@ if(swichStatus){
   render() {
     const { getFieldDecorator } = this.props.form;
     return (
-      <CommonPage title={_title} >
+      <CommonPage path='sysConfig.syncConfig.syncConfig' title={_title} >
         <>
           <>
             <div className='font-20 line-height40 font-bold'>网店管家</div>
@@ -86,18 +86,18 @@ if(swichStatus){
                 <Form style={{ width: 500 }} className='common-form'>
                   <Form.Item
                     field="appId"
-                    label="appappIdID"
+                    label="appId"
                     labelCol={{ span: 6 }}
                     wrapperCol={{ span: 16 }}
                   >
                     {
                       getFieldDecorator('appId', {
                         rules: [
-                          { required: true, message: '请设置appID!' }
+                          { required: true, message: '请设置appId!' }
                         ],
                         initialValue: null
                       })(
-                        <Input autoComplete="false" placeholder='请设置AppID' />
+                        <Input autoComplete="false" placeholder='请设置appId' />
                       )
                     }
                   </Form.Item>
@@ -120,7 +120,7 @@ if(swichStatus){
                   </Form.Item>
                   <Form.Item
                     field="tokenStr"
-                    label="tokenStr"
+                    label="token"
                     labelCol={{ span: 6 }}
                     wrapperCol={{ span: 16 }}
                   >

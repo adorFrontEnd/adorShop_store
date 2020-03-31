@@ -6,10 +6,6 @@ import Toast from '../../utils/toast';
 import { SearchForm, SubmitForm } from '../../components/common-form';
 import dateUtil from '../../utils/dateUtil';
 import { getStorageList, putStorage, deleteStorage, getSelectList } from '../../api/storeManage/storeManage';
-import { NavLink, Link } from 'react-router-dom';
-import { baseRoute, routerConfig } from '../../config/router.config';
-import { connect } from 'react-redux';
-import { changeRoute } from '../../store/actions/route-actions';
 
 
 const _title = "仓库管理";
@@ -141,7 +137,7 @@ class Page extends Component {
     const { getFieldDecorator } = this.props.form;
 
     return (
-      <CommonPage title={_title} description={_description} >
+      <CommonPage path='storeManage.storeInfo.storeManage' title={_title} description={_description} >
 
         <div>
           <div className="flex-between align-center margin-bottom20 flex-wrap">
@@ -227,10 +223,5 @@ class Page extends Component {
     )
   }
 }
-const mapStateToProps = state => state;
-const mapDispatchToProps = (dispatch) => {
-  return {
-    changeRoute: data => dispatch(changeRoute(data))
-  }
-}
-export default connect(mapStateToProps, mapDispatchToProps)(Form.create()(Page));
+
+export default Form.create()(Page);

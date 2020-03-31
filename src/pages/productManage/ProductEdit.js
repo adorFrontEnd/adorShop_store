@@ -257,7 +257,7 @@ class Page extends Component {
     let { labelList, selectAreaData, unitList, showLoading } = this.state;
 
     return (
-      <CommonPage title={this.state._title} description={_description} >
+      <CommonPage path='productManage.productInfo.productEdit' title={this.state._title} pathTitle={this.state._title} description={_description} >
         <div style={{ position: "fixed", bottom: "10%", right: "10%", zIndex: "999" }}>
           <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} onClick={this.saveDataClicked}>保存</Button>
           <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} className='yellow-btn margin-left20' onClick={this.goBack}>返回</Button>

@@ -78,6 +78,7 @@ const routerConfigArr = [
   {
     route_name: "user",
     title: "会员管理",
+    loginRequired: true,
     icon: "team",
     moduleAuth: true
   },
@@ -309,7 +310,7 @@ const routerConfigArr = [
     path: baseRoute + "/orderManage/orderProductEdit",
     loginRequired: true,
     moduleAuth: false,
-    title: "商品详情",
+    title: "编辑商品",
     icon: "profile"
   },
   {

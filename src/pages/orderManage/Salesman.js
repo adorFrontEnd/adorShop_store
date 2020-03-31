@@ -6,16 +6,10 @@ import Toast from '../../utils/toast';
 import { SearchForm, SubmitForm } from '../../components/common-form';
 import dateUtil from '../../utils/dateUtil';
 import { searchUserList, exportUserList } from '../../api/user/user';
-import { NavLink, Link } from 'react-router-dom';
-import { baseRoute, routerConfig } from '../../config/router.config';
-import { connect } from 'react-redux';
-import { changeRoute } from '../../store/actions/route-actions';
 import { saveOrUpdateSalesman, getSalesmanList, deleteSalesman } from '../../api/order/salesman';
 
 const _title = "业务员管理";
 const _description = "";
-
-
 
 class Page extends Component {
 
@@ -28,8 +22,6 @@ class Page extends Component {
     this.getPageData()
 
   }
-
-
 
   params = {
     page: 1
@@ -152,7 +144,7 @@ deleteSalesman = (record) => {
     const { getFieldDecorator } = this.props.form;
 
     return (
-      <CommonPage title={_title} description={_description} >
+      <CommonPage path='orderManage.salesman.salesman' title={_title} description={_description} >
 
         <div>
           <div className="flex-between align-center margin-bottom20 flex-wrap">
@@ -240,10 +232,4 @@ deleteSalesman = (record) => {
     )
   }
 }
-const mapStateToProps = state => state;
-const mapDispatchToProps = (dispatch) => {
-  return {
-    changeRoute: data => dispatch(changeRoute(data))
-  }
-}
-export default connect(mapStateToProps, mapDispatchToProps)(Form.create()(Page));
+export default (Form.create()(Page));

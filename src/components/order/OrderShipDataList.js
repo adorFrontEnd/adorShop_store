@@ -4,6 +4,8 @@ import { SearchForm } from '../common-form';
 import Toast from '../../utils/toast';
 import dateUtil from '../../utils/dateUtil';
 import ExpressRealtimeData from './ExpressRealtimeData';
+import { getSpecValue } from '../../utils/productUtils';
+
 
 class OrderShipDataList extends Component {
 
@@ -55,7 +57,7 @@ class OrderShipDataList extends Component {
                                       {element.productName}
                                     </div>
                                     <div className='ellipsis' style={{ width: 100 }}>
-                                      {element.specValue}
+                                      {getSpecValue(element.specValue)}
                                     </div>
                                     <div style={{ width: 100 }}>数量：{element.sendQty}</div>
                                   </div>

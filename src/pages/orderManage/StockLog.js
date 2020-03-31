@@ -6,9 +6,6 @@ import Toast from '../../utils/toast';
 import { SearchForm, SubmitForm } from '../../components/common-form';
 import dateUtil from '../../utils/dateUtil';
 import { searchUserList, exportUserList } from '../../api/user/user';
-import { NavLink, Link } from 'react-router-dom';
-import { baseRoute, routerConfig } from '../../config/router.config';
-import { connect } from 'react-redux';
 import { changeRoute } from '../../store/actions/route-actions';
 import { getStockLogList, batchDeleteStatus } from '../../api/order/StockManage';
 
@@ -157,7 +154,7 @@ class Page extends Component {
 
 
     return (
-      <CommonPage title={_title} description={_description} >
+      <CommonPage path='orderManage.stockManage.stockLog' title={_title} description={_description} >
         <div className='margin10-0 flex-between align-center'>
           <Button onClick={this.batchDeleteStatus} type='primary'>批量删除</Button>
           <div className='flex-end margin-left' style={{ flex: "1 0 auto" }} >
@@ -230,10 +227,5 @@ class Page extends Component {
     )
   }
 }
-const mapStateToProps = state => state;
-const mapDispatchToProps = (dispatch) => {
-  return {
-    changeRoute: data => dispatch(changeRoute(data))
-  }
-}
-export default connect(mapStateToProps, mapDispatchToProps)(Form.create()(Page));
+
+export default (Form.create()(Page));

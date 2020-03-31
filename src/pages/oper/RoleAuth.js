@@ -241,7 +241,7 @@ class Page extends Component {
   render() {
     const { getFieldDecorator } = this.props.form;
     return (
-      <CommonPage title={_title} description={_description} >
+      <CommonPage path='oper.roleAuth.roleAuth' title={_title} description={_description} >
         <div className='padding20-0'>
           <Button onClick={() => { this.showAuthModalClick() }} type='primary'>创建角色</Button>
         </div>

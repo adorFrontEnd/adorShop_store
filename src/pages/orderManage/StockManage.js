@@ -1,13 +1,10 @@
 import React, { Component } from "react";
 import CommonPage from '../../components/common-page';
 import { Table, Form, Input, Col, Switch, Row, Button, Modal, Popconfirm, Divider, InputNumber } from "antd";
-import { NavLink, Link } from 'react-router-dom';
 import { pagination } from '../../utils/pagination';
 import dateUtil from '../../utils/dateUtil';
 import { baseRoute, routerConfig } from '../../config/router.config';
 import { SearchForm, SubmitForm } from '../../components/common-form';
-import { changeRoute } from '../../store/actions/route-actions';
-import { connect } from 'react-redux';
 import Toast from '../../utils/toast';
 import { updateStock, getStockList, getDetail } from '../../api/order/StockManage';
 
@@ -243,7 +240,7 @@ class Page extends Component {
   render() {
     const { getFieldDecorator } = this.props.form;
     return (
-      <CommonPage title={_title} >
+      <CommonPage path='orderManage.stockManage.stockManage' title={_title} >
         <div style={{ marginBottom: '30px' }} className='flex-between align-center'>
           {/* <Button type='primary'>同步网店管家库存</Button> */}
           <div className='color-red'>您的补货记录将记录在库存日志中</div>
@@ -345,10 +342,5 @@ class Page extends Component {
     )
   }
 }
-const mapStateToProps = state => state;
-const mapDispatchToProps = (dispatch) => {
-  return {
-    changeRoute: data => dispatch(changeRoute(data))
-  }
-}
-export default connect(mapStateToProps, mapDispatchToProps)(Form.create()(Page));
+
+export default (Form.create()(Page));

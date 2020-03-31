@@ -10,7 +10,7 @@ import { NavLink, Link } from 'react-router-dom';
 import { baseRoute, routerConfig } from '../../config/router.config';
 import { connect } from 'react-redux';
 import { changeRoute } from '../../store/actions/route-actions';
-import { searchProductList, deleteProduct,batchDelete } from '../../api/product/product';
+import { searchProductList, deleteProduct, batchDelete } from '../../api/product/product';
 
 
 const _title = "商品列表";
@@ -31,12 +31,11 @@ class Page extends Component {
     tableDataList: null,
     showTableLoading: false,
     exportUserListUrl: null,
-    selectIds:null
+    selectIds: null
   }
 
   componentDidMount() {
     this.getPageData();
-    this.props.changeRoute({ path: 'product.productInfo.productList', title: '商品列表', parentTitle: '商品信息' });
 
   }
 
@@ -185,12 +184,12 @@ class Page extends Component {
       return;
     }
     let ids = selectIds.join();
-    
-    batchDelete({ids})
-    .then(()=>{
-      Toast("删除成功！")
-      this.getPageData()
-    })
+
+    batchDelete({ ids })
+      .then(() => {
+        Toast("删除成功！")
+        this.getPageData()
+      })
   }
 
   /**渲染**********************************************************************************************************************************/
@@ -199,8 +198,7 @@ class Page extends Component {
     const { getFieldDecorator } = this.props.form;
 
     return (
-      <CommonPage title={_title} description={_description} >
-
+      <CommonPage path='productManage.productInfo.productList' title={_title} description={_description} >
         <div>
           <div className="flex-between align-center margin-bottom flex-wrap">
             <div style={{ minWidth: 330 }} className='margin-bottom20'>

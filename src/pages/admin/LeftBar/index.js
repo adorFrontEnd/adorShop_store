@@ -6,6 +6,7 @@ import { connect } from 'react-redux';
 import { changeRoute } from '../../../store/actions/route-actions'
 import { getRouter } from '../../../router/routerParse';
 import { getCacheRouterConfig, getCacheUserInfo } from '../../../middleware/localStorage/login'
+import { parsePath } from '../../../router/routerParse';
 
 import store from '../../../store/store'
 const SubMenu = Menu.SubMenu;
@@ -43,9 +44,11 @@ class LeftBar extends Component {
   }
 
   // 点击菜单
-  handleClick = (path, title, parentTitle) => {
+  handleClick = (path) => {
 
-    this.props.changeRoute({ path, title, parentTitle });
+    let pathInfo = parsePath(path);
+    this.props.changeRoute({ path, ...pathInfo });
+  
     this.setState({
       current: path.toString()
     });

@@ -186,7 +186,7 @@ class Page extends Component {
     const { getFieldDecorator } = this.props.form;
 
     return (
-      <CommonPage title={_title} >
+      <CommonPage path='sysConfig.orderConfig.smartLexicon' title={_title} >
         <div className="flex-between align-center margin-bottom20">
           <NavLink to={LexiconConfigPath + "/0"}>
             <Button type='primary' onClick={() => this.goLexiconConfig('0')}>创建词库</Button>

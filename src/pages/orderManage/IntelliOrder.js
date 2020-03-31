@@ -6,10 +6,6 @@ import Toast from '../../utils/toast';
 import { SearchForm, SubmitForm } from '../../components/common-form';
 import dateUtil from '../../utils/dateUtil';
 import { searchUserList, exportUserList } from '../../api/user/user';
-import { NavLink, Link } from 'react-router-dom';
-import { baseRoute, routerConfig } from '../../config/router.config';
-import { connect } from 'react-redux';
-import { changeRoute } from '../../store/actions/route-actions';
 import { smartOrder, parseSmartOrderText } from '../../api/order/order';
 import NumberFilter from '../../utils/filter/number';
 import { getOrderSaveData, parseSmartOrderResult } from './orderUtils';
@@ -353,7 +349,7 @@ class Page extends Component {
     let selectSalerId = (selectSaler && selectSaler.id) ? selectSaler.id : null;
 
     return (
-      <CommonPage title={_title} description={_description} >
+      <CommonPage path='orderManage.order.intelliOrder' title={_title} description={_description} >
         <Spin spinning={this.state.showLoading}>
           <div>
             <div style={{ position: "fixed", bottom: "10%", right: "5%", zIndex: "999" }}>
@@ -612,13 +608,6 @@ class Page extends Component {
       skuModalIsVisible: false
     })
   }
-
-
 }
-const mapStateToProps = state => state;
-const mapDispatchToProps = (dispatch) => {
-  return {
-    changeRoute: data => dispatch(changeRoute(data))
-  }
-}
-export default connect(mapStateToProps, mapDispatchToProps)(Form.create()(Page));
+
+export default (Form.create()(Page));

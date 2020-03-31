@@ -64,7 +64,7 @@ const getRouter = (data, shouldValidateAuth) => {
       }
     }
   }
-  
+
   return sortRouter(router)
 }
 
@@ -83,5 +83,26 @@ const sortRouter = (data) => {
   return arr.sort((a, b) => parseInt(a.sort) - parseInt(b.sort))
 }
 
-export { getRouter };
+
+const parsePath = (path) => {
+  if (!path) {
+    return {
+      title: '', parentTitle: '', grandParentTitle: ""
+    }
+  }
+  let pathArr = path.split('.');
+  let parentPath = `${pathArr[0]}.${pathArr[1]}`;
+  let grandParentPath = `${pathArr[0]}`;
+  let title = routerConfig[path] && routerConfig[path]['title'] ? routerConfig[path]['title'] : "";
+  let parentTitle = routerConfig[parentPath] && routerConfig[parentPath]['title'] ? routerConfig[parentPath]['title'] : "";
+  let grandParentTitle = routerConfig[grandParentPath] && routerConfig[grandParentPath]['title'] ? routerConfig[grandParentPath]['title'] : "";
+
+  return {
+    title,
+    parentTitle,
+    grandParentTitle
+  }
+}
+
+export { getRouter, parsePath };
 

@@ -4,15 +4,12 @@ import { Table, Form, Input, Select, Col, Row, Icon, Button, Divider, Spin, Popc
 import { pagination } from '../../utils/pagination';
 import Toast from '../../utils/toast';
 import dateUtil from '../../utils/dateUtil';
-import { NavLink, Link } from 'react-router-dom';
-import { baseRoute, routerConfig } from '../../config/router.config';
-import { connect } from 'react-redux';
-import { changeRoute } from '../../store/actions/route-actions';
 import { getOrderDetail, addOrderLog, confirmOrder, reviewOrder, confirmDelivery, confirmReceipt } from '../../api/order/order';
 import NumberFilter from '../../utils/filter/number';
 import { OrderStatusEnum, OrderOperTypeEnum } from '../../enum/orderEnum';
 import OrderDeliveryModal from '../../components/order/OrderDeliveryModal';
 import OrderShipDataList from '../../components/order/OrderShipDataList';
+import { getSpecValue } from '../../utils/productUtils';
 
 const _title = "订单详情";
 const _description = '';
@@ -99,7 +96,7 @@ class Page extends Component {
     { title: "类型", align: "center", dataIndex: "productType", render: data => "商品" },
     { title: "商品编码", align: "center", dataIndex: "productNumber", render: data => data || "--" },
     { title: "商品名称", align: "center", dataIndex: "productName", render: data => data || "--" },
-    { title: "商品规格", align: "center", dataIndex: "specValue", render: data => data || "--" },
+    { title: "商品规格", align: "center", dataIndex: "specValue", render: data => getSpecValue(data) || "--" },
     { title: "单位", align: "center", dataIndex: "baseUnit", render: data => data || "--" },
     { title: "单价（元）", align: "center", dataIndex: "unitPrice", render: data => data ? NumberFilter(data) : "--" },
     { title: "数量", align: "center", dataIndex: "buyQty", render: data => data || "--" },
@@ -240,7 +237,7 @@ class Page extends Component {
     const { orderInfo, orderStatus, logisticsList, orderStatusStr, productTotalAmount, orderTotalAmount } = this.state;
 
     return (
-      <CommonPage title={_title} description={_description} >
+      <CommonPage path='orderManage.order.orderDetail' title={_title} description={_description} >
         <div className='flex' style={{ position: "fixed", bottom: "10%", right: "5%", zIndex: "999" }}>
           {
             orderStatus == 0 ?
@@ -485,13 +482,6 @@ class Page extends Component {
       skuModalIsVisible: false
     })
   }
-
-
 }
-const mapStateToProps = state => state;
-const mapDispatchToProps = (dispatch) => {
-  return {
-    changeRoute: data => dispatch(changeRoute(data))
-  }
-}
-export default connect(mapStateToProps, mapDispatchToProps)(Form.create()(Page));
+
+export default (Form.create()(Page));

@@ -6,10 +6,6 @@ import Toast from '../../utils/toast';
 import { SearchForm, SubmitForm } from '../../components/common-form';
 import dateUtil from '../../utils/dateUtil';
 import { searchUserList, exportUserList } from '../../api/user/user';
-import { NavLink, Link } from 'react-router-dom';
-import { baseRoute, routerConfig } from '../../config/router.config';
-import { connect } from 'react-redux';
-import { changeRoute } from '../../store/actions/route-actions';
 import { getUnitConfigList, saveUnitOrUpdate, deleteUnit } from '../../api/sysConfig/sysConfig';
 
 const _title = "计量单位配置";
@@ -115,7 +111,7 @@ class Page extends Component {
     const { getFieldDecorator } = this.props.form;
 
     return (
-      <CommonPage title={_title} description={_description} >
+      <CommonPage path='sysConfig.unitConfig.unitConfig' title={_title} description={_description} >
 
         <div>
           <Form layout='inline' style={{marginBottom:'20px'}}>
@@ -150,10 +146,5 @@ class Page extends Component {
     )
   }
 }
-const mapStateToProps = state => state;
-const mapDispatchToProps = (dispatch) => {
-  return {
-    changeRoute: data => dispatch(changeRoute(data))
-  }
-}
-export default connect(mapStateToProps, mapDispatchToProps)(Form.create()(Page));
+
+export default (Form.create()(Page));

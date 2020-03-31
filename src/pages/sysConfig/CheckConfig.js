@@ -34,8 +34,8 @@ class Page extends Component {
   onSyncStatusChange = (swichStatus) => {
     let { pageData } = this.state
     let title = swichStatus ? "开启" : "关闭";
-    let status=swichStatus?1:0
-    updateConfig({status,id:pageData.id})
+    let status = swichStatus ? 1 : 0
+    updateConfig({ status, id: pageData.id })
       .then(data => {
         Toast(`${title}审核配置成功！`);
         this.getPageData()
@@ -51,16 +51,13 @@ class Page extends Component {
     const { getFieldDecorator } = this.props.form;
 
     return (
-      <CommonPage title={_title} >
-        <>
-          <>
-            <div className='line-height40'>
-              <span className='margin-right20'>开启自动审单</span>
-              <Switch checked={this.state.swichStatus} onChange={this.onSyncStatusChange} />
-            </div>
-          </>
+      <CommonPage path='sysConfig.checkConfig.checkConfig' title={_title} >
 
-        </>
+        <div className='line-height40'>
+          <span className='margin-right20'>开启自动审单</span>
+          <Switch checked={this.state.swichStatus} onChange={this.onSyncStatusChange} />
+        </div>
+
       </CommonPage>
     )
   }

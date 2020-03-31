@@ -8,8 +8,6 @@ import { SearchForm, SubmitForm } from '../../components/common-form';
 import numberFilter from '../../utils/filter/number';
 import { NavLink, Link } from 'react-router-dom';
 import { routerConfig } from '../../config/router.config';
-import { connect } from 'react-redux';
-import { changeRoute } from '../../store/actions/route-actions';
 import dateUtil from '../../utils/dateUtil';
 import { OrderStatusEnum } from '../../enum/orderEnum';
 import moment from 'moment';
@@ -155,7 +153,7 @@ class Page extends Component {
     const { getFieldDecorator } = this.props.form;
     const { activeTabsKey } = this.state;
     return (
-      <CommonPage title={_title} >
+      <CommonPage path='orderManage.order.orderList' title={_title} >
         <div>
           <Tabs onChange={this.onTabsChange} activeKey={activeTabsKey} type="card">
             <Tabs.TabPane tab='全部' key='all' />
@@ -167,9 +165,9 @@ class Page extends Component {
           </Tabs>
         </div>
         <div>
-          <div className='flex-end margin-bottom20'>
+          <div className='flex-end margin-bottom20' style={{ minWidth: 975 }}>
             <SearchForm
-              width={1000}
+              width={975}
               searchText='筛选'
               towRow={false}
               searchClicked={this.searchClicked}
