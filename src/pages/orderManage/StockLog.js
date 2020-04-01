@@ -87,7 +87,7 @@ class Page extends Component {
         <div>
           <div>{record.productName}</div>
           <div>{record.barCode}</div>
-          <div style={{color:"#aaa"}}>{record.specValue ? getSpecValue(record.specValue) : ""}</div>
+          <div style={{ color: "#aaa" }}>{record.specValue ? getSpecValue(record.specValue) : ""}</div>
         </div>
       )
     },
@@ -111,18 +111,17 @@ class Page extends Component {
     })
   }
   //查询按钮点击事件
-  searchClicked = () => {
-    let params = this.props.form.getFieldsValue();
-    if (params) {
-      let { startCreateStamp, endCreateStamp, type, inputData } = params;
-      params.startCreateStamp = startCreateStamp ? Date.parse(startCreateStamp) : null;
-      params.endCreateStamp = endCreateStamp ? Date.parse(endCreateStamp) : null;
-      params.type = type != 'null' ? type : null;
-      params.inputData = inputData || null;
-    }
-    let _this = this;
+  searchClicked = (params) => {
+    let { time, type, inputData } = params;
+    let [startCreateStamp, endCreateStamp] = dateUtil.parseDateRange(time);
+    inputData = inputData || null;
+
     this.params = {
-      ...params
+      page: 1,
+      startCreateStamp,
+      endCreateStamp,
+      type,
+      inputData
     }
     this.getPageData();
   }
@@ -143,6 +142,27 @@ class Page extends Component {
         this.getPageData()
       })
   }
+
+  // 顶部查询表单
+  formItemList = [
+    {
+      type: "SELECT",
+      field: "type",
+      style: { width: 120 },
+      optionList: [{ id: null, name: '全部' }, { id: "0", name: '库存管理' }, { id: "1", name: '订货交易' }]
+    },
+    {
+      type: "DATE_RANGE",
+      field: "time",
+      label: "时间范围"
+    },
+    {
+      type: "INPUT",
+      field: "inputData",
+      style: { width: 300 },
+      placeholder: "订单编号/SKU编号"
+    }]
+
   /**渲染**********************************************************************************************************************************/
 
   render() {
@@ -156,63 +176,17 @@ class Page extends Component {
 
     return (
       <CommonPage path='orderManage.stockManage.stockLog' title={_title} description={_description} >
+
         <div className='margin10-0 flex-between align-center'>
           <Button onClick={this.batchDeleteStatus} type='primary'>批量删除</Button>
-          <div className='flex-end margin-left' style={{ flex: "1 0 auto" }} >
-            <Form layout='inline'>
-              <Form.Item>
-                {
-                  getFieldDecorator('type', {
-                    initialValue: "null"
-                  })(
-                    <Select style={{ width: 140 }}>
-                      <Select.Option value='null'>全部</Select.Option>
-                      <Select.Option value='1'>库存管理</Select.Option>
-                      <Select.Option value='0'>订货交易</Select.Option>
-                    </Select>
-                  )
-                }
-              </Form.Item>
-              <Form.Item label='时间范围'>
-                {
-                  getFieldDecorator('startCreateStamp')(
-                    <DatePicker
-                      showTime
-                      format="YYYY-MM-DD HH:mm:ss"
-                      placeholder="开始时间"
-                    />
-
-                  )
-                }
-              </Form.Item>
-              <Form.Item label='~' colon={false}>
-                {
-                  getFieldDecorator('endCreateStamp')(
-                    <DatePicker
-                      showTime
-                      format="YYYY-MM-DD HH:mm:ss"
-                      placeholder="结束时间"
-                    />
-
-                  )
-                }
-              </Form.Item>
-              <Form.Item>
-                {
-                  getFieldDecorator('inputData')(
-                    <Input placeholder='订单编号/SKU编号' />
-                  )
-                }
-              </Form.Item>
-              <Form.Item>
-                <Button type='primary' onClick={() => { this.searchClicked() }}>筛选</Button>
-              </Form.Item>
-              <Form.Item>
-                <Button onClick={this.resetSearch} type='primary'>重置</Button>
-              </Form.Item>
-            </Form>
-
-
+          <div style={{ minWidth: 1110 }} className='margin-left'>
+            <SearchForm
+              width={1110}
+              searchText='筛选'
+              towRow={false}
+              searchClicked={this.searchClicked}
+              formItemList={this.formItemList}
+            />
           </div>
         </div>
         <Table
