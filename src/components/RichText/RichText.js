@@ -43,13 +43,30 @@ export default class RichText extends Component {
     })
   }
 
-  onUploadModalOk = (pictureUrl) => {
+  onUploadModalOk = (pictureUrlArr) => {
 
+    this.insertImgs(pictureUrlArr);
     this.hideUploadModal()
+  }
+
+  insertImgs = (pictureUrlArr) => {
+    if (!pictureUrlArr || !pictureUrlArr.length) {
+      return;
+    }
+    pictureUrlArr.forEach(item => {
+      this.insertImg(item)
+    })
+  }
+
+  insertImg = (pictureUrl) => {
+    if (!pictureUrl || !pictureUrl.length) {
+      return;
+    }
     let quill = this.refs.reactQuillRef.getEditor();//获取到编辑器本身
     const cursorPosition = quill.selection.savedRange.index;//获取当前光标位置
     quill.insertEmbed(cursorPosition, "image", pictureUrl, Quill.sources.USER);//插入图片
-    quill.setSelection(cursorPosition + 1);//光标位置加1s
+    quill.insertText(cursorPosition + 1, "\n");//插入图片
+    quill.setSelection(cursorPosition + 2);//光标位置加1s
   }
 
   formats = [
@@ -91,7 +108,11 @@ export default class RichText extends Component {
             null
         }
         <div>{this.props.children}</div>
-        <PicturesWallModal visible={this.state.uploadModalVisible} onCancel={this.hideUploadModal} onOk={this.onUploadModalOk}></PicturesWallModal>
+        <PicturesWallModal
+          limitFileLength={20}
+          visible={this.state.uploadModalVisible}
+          onCancel={this.hideUploadModal} onOk={this.onUploadModalOk}
+        />
       </div>
     )
   }

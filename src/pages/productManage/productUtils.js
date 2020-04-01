@@ -313,7 +313,6 @@ const _getMultiSpecData = (multiSpecData, multiSpecClasses, isEdit) => {
     return result
   })
 
-
   return {
     paramGroupStrList,
     paramStrList
@@ -323,15 +322,11 @@ const _getMultiSpecData = (multiSpecData, multiSpecClasses, isEdit) => {
 const validateSingleSpecData = (singleSpecData) => {
   let { barCode, costPrice, marketPrice, number, imageUrl, specValue, weight } = singleSpecData;
   if (!imageUrl || !imageUrl.length) {
-    return '请上传至少1张商品图片！';
+    return '请上传至少1张商品规格图片！';
   }
 
   if (!number) {
     return '请设置商品编码！';
-  }
-
-  if (!barCode) {
-    return '请设置条形码！';
   }
 
   if (!barCode) {
@@ -345,7 +340,6 @@ const validateSingleSpecData = (singleSpecData) => {
   if ((!costPrice && costPrice != 0) || Number(costPrice) < 0) {
     return '请设置成本价！';
   }
-
 
   if ((!weight && weight != 0) || Number(weight) < 0) {
     return '请设置重量！';
@@ -392,11 +386,14 @@ const validateMultiSpecData = (multiSpecData, multiSpecClasses) => {
     }
   }
 
-
-
   for (let j = 0; j < multiSpecData.length; j++) {
 
     let specValue = multiSpecData[j].specValue;
+    
+    if (!multiSpecData[j].imageUrl || !multiSpecData[j].imageUrl.length) {
+      return `第${j + 1}个规格详情至少上传1张规格图片！`;
+    }
+
     if (!multiSpecData[j].number) {
       return `商品-${specValue}未设置商品编码！`;
     }

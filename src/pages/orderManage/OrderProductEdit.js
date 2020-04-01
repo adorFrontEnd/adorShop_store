@@ -10,7 +10,10 @@ import { getSellProductDetail, saveOrUpdateSellProduct } from '../../api/product
 import { getSaveData, parseSpecData } from '../productManage/productUtils';
 import ReactPlayer from 'react-player';
 import RichText from '../../components/RichText/RichText';
+import { NavLink, Link } from 'react-router-dom';
+import { routerConfig } from '../../config/router.config';
 
+const productEditPath = routerConfig["productManage.productInfo.productEdit"].path;
 const _description = "";
 
 class Page extends Component {
@@ -205,9 +208,12 @@ class Page extends Component {
 
     return (
       <CommonPage path='orderManage.orderProduct.orderProductEdit' pathTitle={this.state._title} title={this.state._title} description={_description} >
-        <div style={{ position: "fixed", bottom: "10%", right: "10%", zIndex: "999" }}>
+        <div className='flex-middle' style={{ position: "fixed", bottom: "10%", right: "5%", zIndex: "999" }}>
           <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} onClick={this.saveDataClicked}>保存</Button>
-          <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} className='yellow-btn margin-left20' onClick={this.goBack}>返回</Button>
+          <NavLink to={productEditPath + "/" + this.state.tplPrdId}>
+            <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} className='margin-left20'>编辑<br />商品</Button>
+          </NavLink>
+          <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} className='margin-left20' onClick={this.goBack}>返回</Button>
         </div>
         <Spin spinning={showLoading}>
 

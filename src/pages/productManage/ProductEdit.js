@@ -397,9 +397,9 @@ class Page extends Component {
 
 
             <div style={{ background: "#f2f2f2", borderLeft: "6px solid #ff8716" }} className='color333 padding border-radius font-16 margin-bottom'>商品图及详情</div>
-            <Row className='line-height40' style={{ width: 700 }}>
-              <Col span={6} className='label-required text-right'>商品图片：</Col>
-              <Col span={18}>
+            <Row className='line-height40' style={{ width: 800 }}>
+              <Col span={5} className='label-required text-right'>商品图片：</Col>
+              <Col span={19}>
                 <div className='color-red'>
                   第一个为主图，其余为商品的轮播图，最多上传15张<br />
                 当SKU不存在轮播图时展示商品默认轮播图
@@ -413,9 +413,9 @@ class Page extends Component {
                 />
               </Col>
             </Row>
-            <Row className='line-height40' style={{ width: 700 }}>
-              <Col span={6} className='text-right'>商品视频：</Col>
-              <Col span={18}>
+            <Row className='line-height40' style={{ width: 800 }}>
+              <Col span={5} className='text-right'>商品视频：</Col>
+              <Col span={19}>
                 <UploadVideo
                   folder='video'
                   videoFile={this.state.videoFile}
@@ -423,9 +423,9 @@ class Page extends Component {
                 />
               </Col>
             </Row>
-            <Row className='line-height40' style={{ width: 700 }}>
-              <Col span={6} className='label-required text-right'>商品详情：</Col>
-              <Col span={18}>
+            <Row className='line-height40' style={{ width: 800 }}>
+              <Col span={5} className='label-required text-right'>商品详情：</Col>
+              <Col span={19}>
                 <RichText
                   textValue={this.state.details}
                   onTextChange={this.onTextChange}
@@ -434,9 +434,9 @@ class Page extends Component {
             </Row>
 
             <div style={{ background: "#f2f2f2", borderLeft: "6px solid #ff8716" }} className='color333 padding border-radius font-16 margin-bottom'>其它信息</div>
-            <Row className='line-height30 margin-bottom20' style={{ width: 700 }}>
-              <Col span={6} className='label-required text-right'>快递运费：</Col>
-              <Col span={18}>
+            <Row className='line-height30 margin-bottom20' style={{ width: 800 }}>
+              <Col span={5} className='label-required text-right'>快递运费：</Col>
+              <Col span={19}>
                 <Radio.Group value={this.state.freightType} onChange={this.onFreightTypeChange}>
                   <Radio value={0} style={{ display: 'block', height: '40px', lineHeight: '30px' }}>
                     <span>统一运费</span>

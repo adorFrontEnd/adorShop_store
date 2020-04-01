@@ -6,27 +6,28 @@ import PictureWall from './PictureWall';
 export default class PicturesWallModal extends Component {
 
   state = {
-    pictureUrl: ''
+    pictureList: []
   }
 
 
   uploadCallback = (pictureList) => {
-    if (!pictureList || !pictureList.length) {
-      return
-    }
+
     this.setState({
-      pictureUrl: pictureList[0]
+      pictureList
     })
   }
+
   onOk = () => {
-    this.props.onOk(this.state.pictureUrl);
+    this.props.onOk(this.state.pictureList);
     this.setState({
-      pictureUrl: ''
+      pictureList: []
     })
   }
+
   render() {
     return (
       <Modal maskClosable={false}
+        width={650}
         title="上传图片"
         visible={this.props.visible}
         onCancel={this.props.onCancel}
@@ -36,8 +37,10 @@ export default class PicturesWallModal extends Component {
           {this.props.addbefore}
         </div>
         <PictureWall
-          folder = {this.props.folder}
-          pictureList={this.state.pictureUrl ? [this.state.pictureUrl] : null}
+       
+          limitFileLength={this.props.limitFileLength}
+          folder={this.props.folder}
+          pictureList={this.state.pictureList}
           uploadCallback={this.uploadCallback}
         />
         <div>

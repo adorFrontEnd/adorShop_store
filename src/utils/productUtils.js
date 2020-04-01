@@ -2,8 +2,13 @@ const getSpecValue = (specValue) => {
   if (!specValue) {
     return ""
   }
-  let specValueArr = JSON.parse(specValue);
-  return specValueArr.join(" ");
+  if (specValue.indexOf('[') != -1) {
+    let specValueArr = JSON.parse(specValue);
+    return specValueArr.join(" ");
+  } else {
+    return specValue
+  }
+
 }
 
 

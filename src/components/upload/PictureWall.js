@@ -303,7 +303,7 @@ export default class PicturesWall extends Component {
           {
             <div className='clearfix'>
               <span>
-                <div className='ant-upload-list ant-upload-list-picture-card flex'>
+                <div style={this.props.pictureListStyle} className='ant-upload-list ant-upload-list-picture-card flex flex-wrap'>
                   {
                     fileList && fileList.length ?
                       fileList.map((item, index) =>

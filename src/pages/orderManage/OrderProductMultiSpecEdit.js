@@ -845,7 +845,7 @@ class Page extends Component {
         <div style={{ minHeight: 300 }}>
           <div>
             <Table
-              rowClassName={(record) => record.status == 0 ? "bgcolorCCC" : ""}
+              rowClassName={(record) => record.status == 0 ? "bgcolorE8E8E8" : ""}
               indentSize={10}
               rowKey='_id'
               bordered={true}

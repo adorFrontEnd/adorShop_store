@@ -8,7 +8,7 @@ import dateUtil from '../../utils/dateUtil';
 import { searchUserList, exportUserList } from '../../api/user/user';
 import { smartOrder, parseSmartOrderText } from '../../api/order/order';
 import NumberFilter from '../../utils/filter/number';
-import { getOrderSaveData, parseSmartOrderResult } from './orderUtils';
+import { getOrderSaveData, parseSmartOrderResult, getTotalSkuListAmount } from './orderUtils';
 import { getSelectList } from '../../api/storeManage/storeManage';
 import { getSpecValue } from '../../utils/productUtils';
 import { getAreaCode } from '../../api/SYS/area';
@@ -42,7 +42,9 @@ class Page extends Component {
     storageId: null,
     selectIndex: null,
     intelliOrderText: null,
-    parseLoading: false
+    parseLoading: false,
+    totalProductAmount: 0,
+    totalAmount: 0
   }
 
   componentDidMount() {
@@ -70,6 +72,7 @@ class Page extends Component {
       })
   }
 
+
   resetPageData = () => {
 
     this.setState({
@@ -78,7 +81,9 @@ class Page extends Component {
       orderBaseInfo: {},
       selectAreaData: null,
       remark: null,
-      selectIndex: null
+      selectIndex: null,
+      totalProductAmount: 0,
+      totalAmount: 0
     })
   }
   /*基本信息****************************************************************************************************************/
@@ -99,11 +104,18 @@ class Page extends Component {
 
   onOrderInfoChange = (key, e) => {
 
-    let { orderBaseInfo } = this.state;
+    let { orderBaseInfo, totalProductAmount } = this.state;
     orderBaseInfo[key] = e;
     this.setState({
       orderBaseInfo
     })
+
+    if (key == 'fare') {
+      let totalAmount = Number(orderBaseInfo.fare) + totalProductAmount;
+      this.setState({
+        totalAmount
+      })
+    }
   }
 
   _showPageLoading = () => {
@@ -166,19 +178,22 @@ class Page extends Component {
   ]
 
   deleteTableItem = (index) => {
-    let { orderSKUList, orderSKUIds } = this.state;
+    let { orderSKUList, orderSKUIds, orderBaseInfo } = this.state;
     orderSKUList.splice(index, 1);
     orderSKUIds.splice(index, 1);
+    let totalProductAmount = getTotalSkuListAmount(orderSKUList);
+    let totalAmount = Number(orderBaseInfo.fare) + totalProductAmount;
     this.setState({
       orderSKUList,
-      orderSKUIds
+      orderSKUIds,
+      totalProductAmount
     })
   }
 
   // 修改商品表格
   onOrderProductChange = (action, index, e) => {
 
-    let { orderSKUList } = this.state;
+    let { orderSKUList, orderBaseInfo } = this.state;
     switch (action) {
       case "unitPrice":
       case "buyQty":
@@ -188,8 +203,13 @@ class Page extends Component {
         break;
     }
 
+    let totalProductAmount = getTotalSkuListAmount(orderSKUList);
+    let totalAmount = Number(orderBaseInfo.fare) + totalProductAmount;
+
     this.setState({
-      orderSKUList
+      orderSKUList,
+      totalProductAmount,
+      totalAmount
     })
   }
 
@@ -216,7 +236,7 @@ class Page extends Component {
     }
 
     let { skuData, id } = selectSKU;
-    let { orderSKUList, selectIndex } = this.state;
+    let { orderSKUList, selectIndex, orderBaseInfo } = this.state;
     let item = {
       sellPrdSkuId: id,
       unitPrice: 0,
@@ -236,13 +256,18 @@ class Page extends Component {
     }
 
     let orderSKUIds = orderSKUList.map(item => item.sellPrdSkuId);
-
+    let totalProductAmount = getTotalSkuListAmount(orderSKUList);
+    let totalAmount = Number(orderBaseInfo.fare) + totalProductAmount;
     this.setState({
       orderSKUList,
-      orderSKUIds
+      orderSKUIds,
+      totalProductAmount,
+      totalAmount
     })
     this._hideSKUModal();
   }
+
+
   /*备注*********************************************************************************************************************************/
   // 表格相关列
   remarkColumns = [
@@ -303,6 +328,7 @@ class Page extends Component {
     this.setState({
       parseLoading: true
     })
+
     parseSmartOrderText({ text: intelliOrderText })
       .then((data) => {
         this.setState({
@@ -362,15 +388,38 @@ class Page extends Component {
 
     let reqs = sellProductsData.map(item => {
       let { specName, produceId } = item;
-      let req = getGoodsDetail({ specName, produceId });
+      let req = getGoodsDetail({ specName: specName || "", produceId });
       return req
     })
 
     Promise.all(reqs)
       .then(data => {
-        console.log(data);
+        if (!data || !data.length) {
+          return;
+        }
+
+        let orderSKUList = data.map((item, i) => {
+          if (item && item.sellPrdSkuId) {
+            let buyQty = sellProductsData[i] && sellProductsData[i].qty ? sellProductsData[i].qty : 0;
+            return {
+              ...item,
+              specValue: item.specName,
+              buyQty,
+              unitPrice: 0
+            }
+          } else {
+            return false
+          }
+        })
+        orderSKUList = orderSKUList.filter(item => Boolean(item));
+        let orderSKUIds = orderSKUList.map(item => item.sellPrdSkuId);
+        this.setState({
+          orderSKUList, orderSKUIds
+        })
       })
   }
+
+
 
   showDemoModal = () => {
     this.setState({
@@ -390,7 +439,8 @@ class Page extends Component {
 
   render() {
     const { getFieldDecorator } = this.props.form;
-    const { selectUser, selectSaler, selectSKU, selectAreaData, orderBaseInfo, storageList } = this.state;
+    const { selectUser, selectSaler, selectSKU, selectAreaData, orderBaseInfo, storageList, totalAmount } = this.state;
+    let showAmountPop = Number(totalAmount) <= 0;
     let selectUserId = (selectUser && selectUser.id) ? selectUser.id : null;
     let selectSalerId = (selectSaler && selectSaler.id) ? selectSaler.id : null;
 
@@ -399,10 +449,23 @@ class Page extends Component {
         <Spin spinning={this.state.showLoading}>
           <div>
             <div style={{ position: "fixed", bottom: "10%", right: "5%", zIndex: "999" }}>
-              <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} onClick={this.saveDataClicked}>
-                确认<br />
-              收款
-            </Button>
+              {
+                showAmountPop ?
+                  <Popconfirm
+                    title='该订单金额为0，是否确认?'
+                    onConfirm={this.saveDataClicked}
+                  >
+                    <Button type='primary' shape="circle" style={{ width: 80, height: 80 }}>
+                      确认<br />
+                    收款
+                    </Button>
+                  </Popconfirm>
+                  :
+                  <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} onClick={this.saveDataClicked}>
+                  确认<br />
+                收款
+                </Button>
+              }
             </div>
             <Spin spinning={this.state.parseLoading}>
               <div>
@@ -458,7 +521,7 @@ class Page extends Component {
               </Row>
               <Row style={{ borderTop: '1px solid #f2f2f2' }}>
                 <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>下单时间</Col>
-                <Col span={8} className='padding-left'></Col>
+                <Col span={8} className='padding-left'>{dateUtil.getNowDateTime()}</Col>
                 <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>联系电话</Col>
                 <Col span={8} className='padding-left'>
                   <Input value={orderBaseInfo.contactPhone} onChange={(e) => this.onOrderInfoChange("contactPhone", e.target.value)} style={{ width: 200 }} />
@@ -466,7 +529,7 @@ class Page extends Component {
               </Row>
               <Row style={{ borderTop: '1px solid #f2f2f2' }}>
                 <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>订单状态</Col>
-                <Col span={8} className='padding-left' ></Col>
+                <Col span={8} className='padding-left' >未支付</Col>
                 <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>省市区</Col>
                 <Col span={8} className='padding-left'>
                   {
@@ -482,14 +545,16 @@ class Page extends Component {
               </Row>
               <Row style={{ borderTop: '1px solid #f2f2f2' }}>
                 <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>支付状态</Col>
-                <Col span={8} className='padding-left' ></Col>
+                <Col span={8} className='padding-left' >未支付</Col>
                 <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>详细地址</Col>
                 <Col span={8} className='padding-left'>
                   <Input value={orderBaseInfo.contactAddress} onChange={(e) => this.onOrderInfoChange("contactAddress", e.target.value)} style={{ width: "95%" }} /></Col>
               </Row>
               <Row style={{ borderTop: '1px solid #f2f2f2' }}>
                 <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>订单总金额</Col>
-                <Col span={8} className='padding-left'></Col>
+                <Col span={8} className='padding-left'>
+                  {this.state.totalAmount || this.state.totalAmount == 0 ? NumberFilter(this.state.totalAmount) : "0.00"}
+                </Col>
                 <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>运费</Col>
                 <Col span={8} className='padding-left'>
                   <InputNumber value={orderBaseInfo.fare} precision={2} onChange={(e) => this.onOrderInfoChange("fare", e)} min={0} style={{ width: 140 }} />
@@ -497,15 +562,17 @@ class Page extends Component {
               </Row>
               <Row style={{ borderTop: '1px solid #f2f2f2' }}>
                 <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>商品总金额</Col>
-                <Col span={8} className='padding-left'></Col>
+                <Col span={8} className='padding-left'>
+                  {this.state.totalProductAmount || this.state.totalProductAmount == 0 ? NumberFilter(this.state.totalProductAmount) : "0.00"}
+                </Col>
                 <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>累计优惠</Col>
-                <Col span={8} className='padding-left'></Col>
+                <Col span={8} className='padding-left'>--</Col>
               </Row>
               <Row style={{ borderTop: '1px solid #f2f2f2' }}>
                 <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>支付方式</Col>
-                <Col span={8} className='padding-left'></Col>
+                <Col span={8} className='padding-left'>手工收单</Col>
                 <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>买家备注</Col>
-                <Col span={8} className='padding-left'></Col>
+                <Col span={8} className='padding-left'>--</Col>
               </Row>
               <Row style={{ borderTop: '1px solid #f2f2f2', borderBottom: '1px solid #f2f2f2' }}>
                 <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>发货仓库</Col>
@@ -613,6 +680,8 @@ class Page extends Component {
             大鱼海棠纸尿裤 s码 4包<br />
           </div>
         </Modal>
+
+
       </CommonPage >
     )
   }

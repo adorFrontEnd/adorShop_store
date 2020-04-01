@@ -88,7 +88,6 @@ const validateSKU = (orderSKUList) => {
   }
   let data = [];
   let skuIds = [];
-
   for (let i = 0; i < orderSKUList.length; i++) {
     let { unitPrice, buyQty, sellPrdSkuId, baseUnit } = orderSKUList[i];
     if (!unitPrice && unitPrice != 0) {
@@ -109,9 +108,20 @@ const validateSKU = (orderSKUList) => {
 
   return {
     data: JSON.stringify(data),
-    skuIds: skuIds.join()
+    skuIds: skuIds.join()    
   }
+}
 
+const getTotalSkuListAmount = (orderSKUList) => {
+  let totalAmount = 0;
+  if (!orderSKUList || !orderSKUList.length) {
+    return 0;
+  }
+  for (let i = 0; i < orderSKUList.length; i++) {
+    let { unitPrice, buyQty } = orderSKUList[i];
+    totalAmount += parseInt(unitPrice * 100 * buyQty) * 0.01;
+  }
+  return totalAmount;
 }
 
 const parseSmartOrderResult = (data) => {
@@ -146,5 +156,6 @@ const parseSellProductResult = ({ productIds, quantity, specNames }) => {
 
 export {
   getOrderSaveData,
-  parseSmartOrderResult
+  parseSmartOrderResult,
+  getTotalSkuListAmount
 }

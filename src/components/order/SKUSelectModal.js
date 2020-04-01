@@ -93,10 +93,13 @@ class SKUModal extends Component {
     )
   }
 
-   // 表格相关列
+  // 表格相关列
   columns = [
     { title: "商品编号", align: "center", dataIndex: "number", render: data => data || "--" },
-    { title: "商品主图", align: "center", dataIndex: "imageUrl", render: data => data ? <img src={data} style={{ height: 40, width: 40 }} /> : '--' },
+    {
+      title: "商品主图", align: "center", dataIndex: "imageUrl", render: data => data ?
+        <img src={data} style={{ height: 40, width: 40 }} /> : <div style={{ textAlign: "center", height: 40, width: 40 }}>--</div>
+    },
     { title: "商品名称", align: "center", dataIndex: "name", render: data => data || "--" },
     { title: "商品分类", align: "center", dataIndex: "prdCategory", render: data => data || "--" },
     { title: "商品规格", align: "center", dataIndex: "specValue", render: data => data ? getSpecValue(data) : "--" },
