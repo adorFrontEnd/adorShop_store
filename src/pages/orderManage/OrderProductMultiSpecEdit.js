@@ -683,12 +683,27 @@ class Page extends Component {
     }
 
     let { userId } = userPriceList[0];
-    let firstUserPriceList = userPriceList.map(item => item.userId && item.userId == userId);
-    
+    let firstUserPriceList = userPriceList.filter(item => item.userId && item.userId == userId);
+
+    let firstUserPriceMap = {};
+    firstUserPriceList.forEach(element => {
+      let { specValue } = element;
+      firstUserPriceMap[specValue] = element.price;
+    })
+
+    userPriceList = userPriceList.map(item => {
+      let { specValue, price } = item;
+      if (firstUserPriceMap[specValue]) {
+        price = firstUserPriceMap[specValue];
+      }
+      return {
+        ...item,
+        price
+      }
+    })
     this.setState({
       userPriceList
     })
-
   }
 
   onUserDataChange = (record, action, e) => {
@@ -866,7 +881,7 @@ class Page extends Component {
               />
               <div className='margin-left20'>
                 {
-                  userPriceListSource && userPriceListSource.length > 1 ?
+                  userPriceListSource && userPriceListSource.length > multiDataSource.length ?
                     <Button type='primary' onClick={this.setAllToFirstUser}>
                       批量设为第一个会员的价格
                       </Button> : null
