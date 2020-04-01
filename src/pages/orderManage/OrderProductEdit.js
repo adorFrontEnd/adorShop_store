@@ -177,6 +177,11 @@ class Page extends Component {
       productId: this.state.tplPrdId,
       onsaleStatus: 0
     }
+
+    if (this.state.sellPrdId) {
+      params.onsaleStatus = null
+    }
+
     this._showDetailLoading();
     saveOrUpdateSellProduct(params)
       .then(() => {

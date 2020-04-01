@@ -11,6 +11,7 @@ import NumberFilter from '../../utils/filter/number';
 import { getOrderSaveData, parseSmartOrderResult } from './orderUtils';
 import { getSelectList } from '../../api/storeManage/storeManage';
 import { getSpecValue } from '../../utils/productUtils';
+import { getAreaCode } from '../../api/SYS/area';
 
 import UserSelectModal from '../../components/order/UserSelectModal';
 import SalerSelectModal from '../../components/order/SalerSelectModal';
@@ -77,7 +78,6 @@ class Page extends Component {
       orderBaseInfo: {},
       selectAreaData: null,
       remark: null,
-      storageId: 1,
       selectIndex: null
     })
   }
@@ -309,24 +309,51 @@ class Page extends Component {
           parseLoading: false
         })
         let result = parseSmartOrderResult(data);
-        let { contactAddress, contactCity, contactPerson, contactPhone, contactProvince, productIds, quantity, specNames } = result;
+        let { contactAddress, contactCity, contactArea, contactPerson, contactPhone, contactProvince, productIds, quantity, specNames } = result;
         let { orderBaseInfo } = this.state;
+
         orderBaseInfo = {
           ...orderBaseInfo,
           contactAddress,
           contactPerson,
           contactPhone
         }
+        this.parseAreaData(contactCity, contactArea, contactProvince);
         this.setState({
           orderBaseInfo
         })
       })
-      .catch(()=>{
+      .catch(() => {
         this.setState({
           parseLoading: false
         })
       })
   }
+
+  parseAreaData = (cityName, areaName, proviceName) => {
+    if (!cityName || !areaName) {
+      return
+    }
+    getAreaCode({ cityName, areaName })
+      .then((data) => {
+        let { area, city, province } = data;
+        if (area) {
+          let selectAreaData = {
+            cityId: city,
+            cityName: cityName,
+            districtId: area,
+            districtName: areaName,
+            proviceId: province,
+            proviceName: proviceName
+          }
+          this.setState({
+            selectAreaData
+          })
+        }
+      })
+
+  }
+
 
   showDemoModal = () => {
     this.setState({
@@ -339,6 +366,8 @@ class Page extends Component {
       demoModalIsVisible: false
     })
   }
+
+
 
   /**渲染**********************************************************************************************************************************/
 
@@ -374,7 +403,7 @@ class Page extends Component {
 
             <div className='margin-top20'>
               <div className='line-height40 font-18 color333 font-bold'>基本信息</div>
-              <div className='line-height40'>
+              <div className='line-height40 margin10-0'>
                 {
                   selectUser ?
                     <span>
@@ -385,7 +414,7 @@ class Page extends Component {
                     </span>
                     : null
                 }
-                <a onClick={this._showUserModal}>选择会员</a>
+                <Button type='primary' onClick={this._showUserModal}>选择会员</Button>
                 <span className='margin0-10'>--</span>
                 {
                   selectSaler ?
@@ -397,7 +426,8 @@ class Page extends Component {
                     </span>
                     : null
                 }
-                <a onClick={this._showSalerModal}>选择业务员（可为空）</a></div>
+                <Button type='primary' onClick={this._showSalerModal}>选择业务员</Button>（可为空）
+              </div>
             </div>
             <div className='line-height40' style={{ minWidth: 940 }}>
               <Row style={{ borderTop: '1px solid #f2f2f2' }}>

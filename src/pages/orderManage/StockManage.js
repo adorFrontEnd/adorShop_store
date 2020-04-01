@@ -15,6 +15,7 @@ const _storeStatus = {
   "2": "部分缺货",
   "0": "全部缺货"
 }
+
 const _storeStatusArr = Object.keys(_storeStatus).map(item => { return { id: item, name: _storeStatus[item] } });
 
 const LexiconConfigPath = routerConfig["sysConfig.orderConfig.lexiconConfig"].path;
@@ -24,18 +25,17 @@ class Page extends Component {
     status: false,
     pageData: null,
     changedstockWarning: {},
-    changedstock: {},
+    changedstock: {}
   }
 
   componentDidMount() {
     this.getPageData()
   }
 
-
-
   params = {
     page: 1
   }
+
 
   getPageData = () => {
     let _this = this;
@@ -178,7 +178,12 @@ class Page extends Component {
     let stockData = this.state.stockData;
     for (var i = 0; i < stockData.length; i++) {
       if (stockData[i]['changeAfter'] < 0) {
-        Toast('库存不能小于0');
+        Toast('库存不能小于0！');
+        return;
+      }
+
+      if ((!stockData[i]['changeQty'] && stockData[i]['changeQty'] != 0) || stockData[i]['changeQty'] < 0) {
+        Toast('修改库存值必须大于等于0！');
         return;
       }
     }
@@ -202,7 +207,7 @@ class Page extends Component {
     }
     let result = stockData.map(item => {
       let { id, alarmQty, changeQty, increaseType } = item;
-      changeQty = `${increaseType == 1 ? '+' : '-'}${changeQty}`;
+      changeQty = `${increaseType == 0 ? '-' : '+'}${changeQty}`;
       return {
         id, alarmQty, changeQty
       }
@@ -233,7 +238,7 @@ class Page extends Component {
     }
     let changeQty = e;
     stockData[index]['changeQty'] = e;
-    let plusminus = stockData[index]['increaseType'] == 1 ? 1 : -1;
+    let plusminus = stockData[index]['increaseType'] == 0 ? -1 : 1;
     let changeAfter = plusminus * changeQty + parseInt(stockData[index]['qty']);
     stockData[index]['changeAfter'] = changeAfter;
     this.setState({
@@ -256,7 +261,7 @@ class Page extends Component {
     let { stockData } = this.state;
     stockData[index]["increaseType"] = increaseType;
     let changeQty = stockData[index]['changeQty'];
-    let plusminus = increaseType == 1 ? 1 : -1;
+    let plusminus = increaseType == 0 ? -1 : 1;
     let changeAfter = plusminus * changeQty + parseInt(stockData[index]['qty']);
     stockData[index]['changeAfter'] = changeAfter;
     this.setState({
@@ -278,18 +283,18 @@ class Page extends Component {
           onChange={(e) => this.stockWarning(e, record.id)} disabled={record.skuStatus == 0}
         />
     },
-    { title: "当前库存", align: "center", dataIndex: "qty", render: data => data || "--" },
+    { title: "当前库存", align: "center", dataIndex: "qty", render: data => data || data == 0 ? data : "--" },
     {
       title: <span>改变库存<br /> (格式：+/-数字)</span>, align: "center", render: (data, record, index) => (
         <div className='flex-middle'>
           <div style={{ width: 60 }}>
-            <Radio.Group value={record.increaseType == '1' ? 1 : 0} onChange={(e) => this.changeIncreaseType(e, index)}>
+            <Radio.Group value={record.increaseType == '0' ? 0 : 1} onChange={(e) => this.changeIncreaseType(e, index)}>
               <Radio style={{ width: 50 }} value={0}><span style={{ display: "inline-block", width: 20 }} className='font-18'>-</span></Radio>
               <Radio style={{ width: 50 }} value={1}><span style={{ display: "inline-block", width: 20 }} className='font-18'>+</span></Radio>
             </Radio.Group>
           </div>
           <InputNumber
-            style={{ width: 120 }} min={1} precision={0}
+            style={{ width: 120 }} min={0} precision={0}
             onChange={(e) => this.changeStock(e, index)}
             disabled={record.skuStatus == 0} value={record.changeQty}
           />
