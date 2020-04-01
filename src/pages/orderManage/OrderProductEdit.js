@@ -308,11 +308,11 @@ class Page extends Component {
               {
                 productDetail.freightType == 0 ?
                   <div>
-                    <span>统一运费：</span><span>{productDetail.freightPrice}元</span>
+                    <span>{productDetail.freightPrice}元</span><span>（统一运费）</span>
                   </div>
                   :
                   <div>
-                    <span>运费模板：</span><span>{freightMap[productDetail.freightTemplateId]}</span>
+                    <span>{freightMap[productDetail.freightTemplateId]}</span><span>（运费模板）</span>
                   </div>
               }
             </Col>

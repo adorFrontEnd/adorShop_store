@@ -49,6 +49,11 @@ const getSellProductByIds = (params) => {
   return baseHttpProvider.getApi('api/prd/sellProduct/selectByIds', params);
 }
 
+
+const getGoodsDetail = (params) => {
+  return baseHttpProvider.getApi('api/prd/product/getGoodsDetail', params);
+}
+
 export {
   searchSellProductList,
   getSellProductDetail,
@@ -60,6 +65,7 @@ export {
   batchOnsaleStatus,
   batchDelete,
   getSellProductByIds,
-  exportOrderProduct
+  exportOrderProduct,
+  getGoodsDetail
 }
 

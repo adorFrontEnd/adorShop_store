@@ -12,7 +12,7 @@ import { getOrderSaveData, parseSmartOrderResult } from './orderUtils';
 import { getSelectList } from '../../api/storeManage/storeManage';
 import { getSpecValue } from '../../utils/productUtils';
 import { getAreaCode } from '../../api/SYS/area';
-
+import { getGoodsDetail } from '../../api/product/orderProduct';
 import UserSelectModal from '../../components/order/UserSelectModal';
 import SalerSelectModal from '../../components/order/SalerSelectModal';
 import SKUSelectModal from '../../components/order/SKUSelectModal';
@@ -309,7 +309,7 @@ class Page extends Component {
           parseLoading: false
         })
         let result = parseSmartOrderResult(data);
-        let { contactAddress, contactCity, contactArea, contactPerson, contactPhone, contactProvince, productIds, quantity, specNames } = result;
+        let { contactAddress, contactCity, contactArea, contactPerson, contactPhone, contactProvince, sellProductsData } = result;
         let { orderBaseInfo } = this.state;
 
         orderBaseInfo = {
@@ -319,6 +319,7 @@ class Page extends Component {
           contactPhone
         }
         this.parseAreaData(contactCity, contactArea, contactProvince);
+        this.parseProductData(sellProductsData);
         this.setState({
           orderBaseInfo
         })
@@ -346,6 +347,7 @@ class Page extends Component {
             proviceId: province,
             proviceName: proviceName
           }
+
           this.setState({
             selectAreaData
           })
@@ -353,7 +355,22 @@ class Page extends Component {
       })
 
   }
+  parseProductData = (sellProductsData) => {
+    if (!sellProductsData || !sellProductsData.length) {
+      return;
+    }
 
+    let reqs = sellProductsData.map(item => {
+      let { specName, produceId } = item;
+      let req = getGoodsDetail({ specName, produceId });
+      return req
+    })
+
+    Promise.all(reqs)
+      .then(data => {
+        console.log(data);
+      })
+  }
 
   showDemoModal = () => {
     this.setState({

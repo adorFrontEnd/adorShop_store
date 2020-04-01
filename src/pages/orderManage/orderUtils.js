@@ -116,11 +116,33 @@ const validateSKU = (orderSKUList) => {
 
 const parseSmartOrderResult = (data) => {
 
-  let { contactAddress, contactCity, contactPerson, contactPhone, contactArea, contactProvince, productIds, quantity, specNames } = data;
+  let { productIds, quantity, specNames } = data;
+  let sellProductsData = parseSellProductResult({ productIds, quantity, specNames });
   return {
-    ...data
+    ...data,
+    sellProductsData
   }
 }
+
+
+const parseSellProductResult = ({ productIds, quantity, specNames }) => {
+  if (!productIds || !productIds.length) {
+    return
+  }
+  let sellProductsData = productIds.map((item, index) => {
+    let idArr = item.split(":");
+    let produceId = idArr && idArr[0] ? idArr[0] : null;
+    let qty = quantity && quantity[index] ? parseInt(quantity[index]) : 0;
+    let specName = specNames && specNames[index] ? specNames[index] : null;
+    return {
+      produceId,
+      qty,
+      specName
+    }
+  })
+  return sellProductsData
+}
+
 
 export {
   getOrderSaveData,
