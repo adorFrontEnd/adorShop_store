@@ -8,6 +8,7 @@ import dateUtil from '../../utils/dateUtil';
 import { searchUserList, exportUserList } from '../../api/user/user';
 import { changeRoute } from '../../store/actions/route-actions';
 import { getStockLogList, batchDeleteStatus } from '../../api/order/StockManage';
+import { getSpecValue } from '../../utils/productUtils';
 
 const _title = "库存日志";
 const _description = "";
@@ -86,7 +87,7 @@ class Page extends Component {
         <div>
           <div>{record.productName}</div>
           <div>{record.barCode}</div>
-          <div>{record.specValue}</div>
+          <div style={{color:"#aaa"}}>{record.specValue ? getSpecValue(record.specValue) : ""}</div>
         </div>
       )
     },
@@ -132,7 +133,7 @@ class Page extends Component {
   batchDeleteStatus = () => {
     let { selectedRowKeys } = this.state;
     if (!selectedRowKeys) {
-      Toast('请选择要删除的')
+      Toast('请选择要删除的日志！')
       return;
     }
     let ids = selectedRowKeys.join();
