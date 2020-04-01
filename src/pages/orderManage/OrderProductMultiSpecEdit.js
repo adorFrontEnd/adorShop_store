@@ -678,13 +678,13 @@ class Page extends Component {
 
   setAllToFirstUser = () => {
     let { userPriceList } = this.state;
-    let { price } = userPriceList[0];
-    userPriceList = userPriceList.map(item => {
-      return {
-        ...item,
-        price
-      }
-    })
+    if (!userPriceList || !userPriceList.length) {
+      return;
+    }
+
+    let { userId } = userPriceList[0];
+    let firstUserPriceList = userPriceList.map(item => item.userId && item.userId == userId);
+    
     this.setState({
       userPriceList
     })

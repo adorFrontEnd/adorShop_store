@@ -182,12 +182,21 @@ class Page extends Component {
         return;
       }
 
-      if ((!stockData[i]['changeQty'] && stockData[i]['changeQty'] != 0) || stockData[i]['changeQty'] < 0) {
+      if (stockData[i]['changeQty'] && stockData[i]['changeQty'] < 0) {
         Toast('修改库存值必须大于等于0！');
         return;
       }
     }
-    let stockStrList = this.formatParams(this.state.stockData);
+    
+    stockData = stockData.filter(item => item.changeQty);
+
+    if (!stockData || !stockData.length) {
+      this.setState({
+        newItemModalVisible: false
+      })
+      return;
+    }
+    let stockStrList = this.formatParams(stockData);
     stockStrList = JSON.stringify(stockStrList);
     updateStock({ stockStrList })
       .then(data => {
