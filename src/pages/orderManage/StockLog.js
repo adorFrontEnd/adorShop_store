@@ -90,9 +90,9 @@ class Page extends Component {
         </div>
       )
     },
-    { title: "变更前", dataIndex: "changesAfter", render: data => data || "--" },
-    { title: "变更后", dataIndex: "changesBefore", render: data => data || "--" },
-    { title: "变更数", dataIndex: "changesNumber", render: data => data || "--" },
+    { title: "变更前", dataIndex: "changesBefore", render: data => data || data == 0 ? data : "--" },
+    { title: "变更后", dataIndex: "changesAfter", render: data => data || data == 0 ? data : "--" },
+    { title: "变更数", dataIndex: "changesNumber", render: data => data || data == 0 ? data : "--" },
     { title: "变更时间", dataIndex: "gmtModified", render: data => data ? dateUtil.getDateTime(data) : "--" },
 
   ]
@@ -164,7 +164,7 @@ class Page extends Component {
                   getFieldDecorator('type', {
                     initialValue: "null"
                   })(
-                    <Select style={{width:140}}>
+                    <Select style={{ width: 140 }}>
                       <Select.Option value='null'>全部</Select.Option>
                       <Select.Option value='1'>库存管理</Select.Option>
                       <Select.Option value='0'>订货交易</Select.Option>

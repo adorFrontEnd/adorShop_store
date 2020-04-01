@@ -187,13 +187,14 @@ class Page extends Component {
         return;
       }
     }
-    
+
     stockData = stockData.filter(item => item.changeQty);
 
     if (!stockData || !stockData.length) {
       this.setState({
         newItemModalVisible: false
       })
+      this.getPageData();
       return;
     }
     let stockStrList = this.formatParams(stockData);
