@@ -80,11 +80,11 @@ class Page extends Component {
       })
   }
 
-  comfirmAmountModal = ()=>{
+  comfirmAmountModal = () => {
 
     this.saveDataClicked();
     this.setState({
-      amountModalIsVisible:false
+      amountModalIsVisible: false
     })
   }
 
@@ -251,12 +251,16 @@ class Page extends Component {
     }
 
     let { skuData, id } = selectSKU;
+    let { costPrice } = skuData;
     let { orderSKUList, selectIndex, orderBaseInfo } = this.state;
+    let unitPrice = costPrice || 0;
+    let buyQty = 1;
+    let total = unitPrice * buyQty;
     let item = {
       sellPrdSkuId: id,
-      unitPrice: 0,
-      buyQty: 1,
-      total: 0,
+      unitPrice,
+      buyQty,
+      total,
       _id: Date.now(),
       ...skuData
     }
@@ -403,7 +407,7 @@ class Page extends Component {
 
     let reqs = sellProductsData.map(item => {
       let { specName, productId } = item;
-      let req = getGoodsDetail({ specName: specName || "[]", produceId:productId });
+      let req = getGoodsDetail({ specName: specName || "[]", produceId: productId });
       return req
     })
 
