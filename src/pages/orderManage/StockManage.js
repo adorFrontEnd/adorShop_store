@@ -188,7 +188,7 @@ class Page extends Component {
       }
     }
 
-    stockData = stockData.filter(item => item.changeQty);
+
 
     if (!stockData || !stockData.length) {
       this.setState({
@@ -217,6 +217,10 @@ class Page extends Component {
     }
     let result = stockData.map(item => {
       let { id, alarmQty, changeQty, increaseType } = item;
+      
+      changeQty = changeQty || 0;
+      alarmQty = alarmQty || 0;
+
       changeQty = `${increaseType == 0 ? '-' : '+'}${changeQty}`;
       return {
         id, alarmQty, changeQty

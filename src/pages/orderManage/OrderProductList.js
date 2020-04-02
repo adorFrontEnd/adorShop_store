@@ -175,6 +175,7 @@ class Page extends Component {
 
         Toast("删除成功！");
         this.getPageData();
+     
       })
   }
 

@@ -86,7 +86,7 @@ class Page extends Component {
       render: (text, record, index) => (
         <div>
           <div>{record.productName}</div>
-          <div>{record.barCode}</div>
+          <div>{record.productNumber}</div>
           <div style={{ color: "#aaa" }}>{record.specValue ? getSpecValue(record.specValue) : ""}</div>
         </div>
       )
@@ -111,20 +111,24 @@ class Page extends Component {
     })
   }
   //查询按钮点击事件
-  searchClicked = (params) => {
-    let { time, type, inputData } = params;
-    let [startCreateStamp, endCreateStamp] = dateUtil.parseDateRange(time);
-    inputData = inputData || null;
+  searchClicked = () => {
+    let params = this.props.form.getFieldsValue();
+    let { time, type, orderNo, productName, productNumber } = params;
+    let [startCreateTimeStamp, endCreateTimeStamp] = dateUtil.parseDateRange(time);
 
     this.params = {
       page: 1,
-      startCreateStamp,
-      endCreateStamp,
-      type,
-      inputData
+      startCreateTimeStamp,
+      endCreateTimeStamp,
+      type, orderNo, productName, productNumber
     }
     this.getPageData();
   }
+
+  resetClicked = () => {
+    this.props.form.resetFields();
+  }
+
   onSelectChange = selectedRowKeys => {
     this.setState({ selectedRowKeys });
   };
@@ -177,16 +181,96 @@ class Page extends Component {
     return (
       <CommonPage path='orderManage.stockManage.stockLog' title={_title} description={_description} >
 
-        <div className='margin10-0 flex-between align-center'>
-          <Button onClick={this.batchDeleteStatus} type='primary'>批量删除</Button>
-          <div style={{ minWidth: 1110 }} className='margin-left'>
-            <SearchForm
-              width={1110}
-              searchText='筛选'
-              towRow={false}
-              searchClicked={this.searchClicked}
-              formItemList={this.formItemList}
-            />
+        <div>
+
+          <div className='margin10-0'>
+            <Form layout='inline'>
+              <div>
+                <Form.Item
+                  field="type"
+                  labelCol={{ span: 6 }}
+                  wrapperCol={{ span: 18 }}
+                  style={{ width: 200 }}
+                  label='类型：'
+                >
+                  {
+                    getFieldDecorator('type', {
+                      initialValue: null
+                    })(
+                      <Select>
+                        <Select.Option value={null}>全部</Select.Option>
+                        <Select.Option value='0'>库存管理</Select.Option>
+                        <Select.Option value='1'>订货交易</Select.Option>
+                      </Select>
+                    )
+                  }
+                </Form.Item>
+                <Form.Item
+                  field="time"
+                  labelCol={{ span: 6 }}
+                  wrapperCol={{ span: 18 }}
+                  style={{ width: 400 }}
+                  label='选择时间:'
+                >
+                  {
+                    getFieldDecorator('time', {
+                      initialValue: null
+                    })(
+                      <DatePicker.RangePicker
+                        showTime={{ format: 'HH:mm:ss' }}
+                        format="YYYY-MM-DD HH:mm:ss"
+                      />
+                    )
+                  }
+                </Form.Item>
+              </div>
+
+              <div>
+                <Form.Item
+                  field="orderNo"
+                  labelCol={{ span: 6 }}
+                  wrapperCol={{ span: 18 }}
+                >
+                  {
+                    getFieldDecorator('orderNo', {
+                    })(
+                      <Input allowClear style={{ width: "300px" }} placeholder='订单编号' />
+                    )
+                  }
+                </Form.Item>
+                <Form.Item
+                  field="productName"
+                  labelCol={{ span: 6 }}
+                  wrapperCol={{ span: 18 }}
+                >
+                  {
+                    getFieldDecorator('productName', {
+                    })(
+                      <Input allowClear style={{ width: "240px" }} placeholder='商品名称' />
+                    )
+                  }
+                </Form.Item>
+                <Form.Item
+                  field="productNumber"
+                  labelCol={{ span: 6 }}
+                  wrapperCol={{ span: 18 }}
+                >
+                  {
+                    getFieldDecorator('productNumber', {
+                    })(
+                      <Input allowClear style={{ width: "240px" }} placeholder='商品编号' />
+                    )
+                  }
+                </Form.Item>
+
+              </div>
+
+            </Form>
+          </div>
+          <div className='margin10-0'>
+            <Button type='primary' className='normal' onClick={this.searchClicked}>筛选</Button>
+            <Button className='margin0-20' onClick={this.resetClicked}>清除所有筛选</Button>
+            <Button onClick={this.batchDeleteStatus} className='normal' type='primary'>批量删除</Button>
           </div>
         </div>
         <Table

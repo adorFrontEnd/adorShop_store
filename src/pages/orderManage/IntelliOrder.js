@@ -402,8 +402,8 @@ class Page extends Component {
     }
 
     let reqs = sellProductsData.map(item => {
-      let { specName, produceId } = item;
-      let req = getGoodsDetail({ specName: specName || "", produceId });
+      let { specName, productId } = item;
+      let req = getGoodsDetail({ specName: specName || "[]", produceId:productId });
       return req
     })
 

@@ -53,7 +53,7 @@ const validateOrderBaseInfo = (orderBaseInfo) => {
 
   let { mark, contactPerson, contactPhone, contactAddress, fare } = orderBaseInfo;
 
-  if (mark && mark.length>6) {
+  if (mark && mark.length > 6) {
     Toast("订单标志最多为6位！");
     return;
   }
@@ -108,7 +108,7 @@ const validateSKU = (orderSKUList) => {
 
   return {
     data: JSON.stringify(data),
-    skuIds: skuIds.join()    
+    skuIds: skuIds.join()
   }
 }
 
@@ -126,30 +126,49 @@ const getTotalSkuListAmount = (orderSKUList) => {
 
 const parseSmartOrderResult = (data) => {
 
-  let { productIds, quantity, specNames } = data;
-  let sellProductsData = parseSellProductResult({ productIds, quantity, specNames });
+  let { products } = data;
+  let sellProductsData = parseSellProductResult(products);
   return {
     ...data,
     sellProductsData
   }
 }
 
+const parseSellProductResult = (products) => {
 
-const parseSellProductResult = ({ productIds, quantity, specNames }) => {
-  if (!productIds || !productIds.length) {
+  if (!products || !products.length) {
     return
   }
-  let sellProductsData = productIds.map((item, index) => {
-    let idArr = item.split(":");
-    let produceId = idArr && idArr[0] ? idArr[0] : null;
-    let qty = quantity && quantity[index] ? parseInt(quantity[index]) : 0;
-    let specName = specNames && specNames[index] ? specNames[index] : null;
-    return {
-      produceId,
-      qty,
-      specName
+
+  let sellProductsData = products.reduce((pre, cur) => {
+
+    let arr = [];
+    let { productId, specs } = cur;
+    if (productId) {
+      if (specs && specs.length) {
+        arr = specs.map(item => {
+          let { specName, quantity } = item;
+          specName = specName ? specName.split(":") : [];
+          specName = JSON.stringify(specName);
+          let qty = parseInt(quantity) || 1;
+          return {
+            productId,
+            specName,
+            qty
+          }
+        })
+      } else {
+        arr = [{
+          productId,
+          specName: '[]',
+          qty: 1
+        }]
+      }
+      pre = pre.concat(arr);
     }
-  })
+    return pre;
+  }, [])
+
   return sellProductsData
 }
 
