@@ -118,6 +118,48 @@ class Page extends Component {
     this.getDetail();
   }
 
+  resetPageData = () => {
+    this.setState({
+      productDetail: {},
+      showLoading: false,
+
+      baseUnit: "",
+      baseUnitQty: null,
+      containerUnitName: "",
+      isContainerUnit: false,
+
+      areaModalIsVisible: false,
+      selectAreaData: null,
+
+      cModalIsVisible: false,
+      categoryNames: null,
+      categoryIds: [],
+
+      specData: null,
+
+      imageUrl: [],
+      videoFile: null,
+      details: null,
+
+      freightList: [],
+      unitList: [],
+      freightType: 0,
+      freightPrice: null,
+      freightTemplateId: null,
+      isSpecChange: false,
+      isEdit: false
+    })
+    this.props.form.resetFields();
+    this.setState({
+      specData:null,
+      isSpecChange: true
+    }, () => {
+      this.setState({
+        isSpecChange: false
+      })
+    })
+  }
+
   saveDataClicked = () => {
     let specData = this.refs.specEditInstance.getSpecData();
     console.log(specData);
@@ -260,7 +302,7 @@ class Page extends Component {
       <CommonPage path='productManage.productInfo.productEdit' title={this.state._title} pathTitle={this.state._title} description={_description} >
         <div style={{ position: "fixed", bottom: "10%", right: "10%", zIndex: "999" }}>
           <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} onClick={this.saveDataClicked}>保存</Button>
-          <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} className='yellow-btn margin-left20' onClick={this.goBack}>返回</Button>
+          <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} className='yellow-btn margin-left20' onClick={this.resetPageData}>清空</Button>
         </div>
         <Spin spinning={showLoading}>
           <Form className='common-form'>
@@ -369,8 +411,8 @@ class Page extends Component {
               label='可购渠道：'
               field='channel'>
               {
-                getFieldDecorator('channel', {    
-                  initialValue:[2],                    
+                getFieldDecorator('channel', {
+                  initialValue: [2],
                   rules: [
                     { required: true, message: '可购渠道至少选择一项!' }
                   ]

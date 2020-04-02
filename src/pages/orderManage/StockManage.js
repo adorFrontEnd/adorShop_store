@@ -103,7 +103,7 @@ class Page extends Component {
       type: "INPUT",
       field: "inputData",
       style: { width: 300 },
-      placeholder: "商品名称/商品编号"
+      placeholder: "商品名称"
     }]
 
   //查询按钮点击事件
@@ -217,7 +217,7 @@ class Page extends Component {
     }
     let result = stockData.map(item => {
       let { id, alarmQty, changeQty, increaseType } = item;
-      
+
       changeQty = changeQty || 0;
       alarmQty = alarmQty || 0;
 

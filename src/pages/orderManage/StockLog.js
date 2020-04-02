@@ -19,7 +19,8 @@ class Page extends Component {
 
   state = {
     tableDataList: null,
-    showTableLoading: false
+    showTableLoading: false,
+    inputType: null
   }
 
   componentDidMount() {
@@ -113,20 +114,24 @@ class Page extends Component {
   //查询按钮点击事件
   searchClicked = () => {
     let params = this.props.form.getFieldsValue();
-    let { time, type, orderNo, productName, productNumber } = params;
+    let { time, type, inputType, inputData } = params;
     let [startCreateTimeStamp, endCreateTimeStamp] = dateUtil.parseDateRange(time);
-
+    let data = { startCreateTimeStamp, endCreateTimeStamp, type };
+    if (inputType && inputData) {
+      data[inputType] = inputData;
+    }
     this.params = {
       page: 1,
-      startCreateTimeStamp,
-      endCreateTimeStamp,
-      type, orderNo, productName, productNumber
+      ...data
     }
     this.getPageData();
   }
 
   resetClicked = () => {
     this.props.form.resetFields();
+    this.setState({
+      inputType:null
+    })
   }
 
   onSelectChange = selectedRowKeys => {
@@ -146,26 +151,12 @@ class Page extends Component {
         this.getPageData()
       })
   }
+  onInputTypeChange = (inputType) => {
 
-  // 顶部查询表单
-  formItemList = [
-    {
-      type: "SELECT",
-      field: "type",
-      style: { width: 120 },
-      optionList: [{ id: null, name: '全部' }, { id: "0", name: '库存管理' }, { id: "1", name: '订货交易' }]
-    },
-    {
-      type: "DATE_RANGE",
-      field: "time",
-      label: "时间范围"
-    },
-    {
-      type: "INPUT",
-      field: "inputData",
-      style: { width: 300 },
-      placeholder: "订单编号/SKU编号"
-    }]
+    this.setState({
+      inputType
+    })
+  }
 
   /**渲染**********************************************************************************************************************************/
 
@@ -188,10 +179,10 @@ class Page extends Component {
               <div>
                 <Form.Item
                   field="type"
-                  labelCol={{ span: 6 }}
-                  wrapperCol={{ span: 18 }}
-                  style={{ width: 200 }}
-                  label='类型：'
+                  labelCol={{ span: 8 }}
+                  wrapperCol={{ span: 16 }}
+                  style={{ width: 220 }}
+                  label='操作类型：'
                 >
                   {
                     getFieldDecorator('type', {
@@ -206,8 +197,46 @@ class Page extends Component {
                   }
                 </Form.Item>
                 <Form.Item
+                  field="inputType"
+                  labelCol={{ span: 8 }}
+                  wrapperCol={{ span: 16 }}
+                  style={{ width: 220 }}
+                  label='筛选类型：'
+                >
+                  {
+                    getFieldDecorator('inputType', {
+                      initialValue: null
+                    })(
+                      <Select onChange={this.onInputTypeChange}>
+                        <Select.Option value={null}>全部</Select.Option>
+                        <Select.Option value='orderNo'>订单编号</Select.Option>
+                        <Select.Option value='productName'>商品名称</Select.Option>
+                        <Select.Option value='productNumber'>商品编号</Select.Option>
+                      </Select>
+                    )
+                  }
+                </Form.Item>
+                {
+                  this.state.inputType ?
+                    <Form.Item
+                      field="inputData"
+                      labelCol={{ span: 6 }}
+                      wrapperCol={{ span: 18 }}
+                    >
+                      {
+                        getFieldDecorator('inputData', {
+                        })(
+                          <Input allowClear style={{ width: "240px" }} />
+                        )
+                      }
+                    </Form.Item>
+                    :
+                    null
+                }
+
+                <Form.Item
                   field="time"
-                  labelCol={{ span: 6 }}
+                  labelCol={{ span: 5 }}
                   wrapperCol={{ span: 18 }}
                   style={{ width: 400 }}
                   label='选择时间:'
@@ -223,46 +252,6 @@ class Page extends Component {
                     )
                   }
                 </Form.Item>
-              </div>
-
-              <div>
-                <Form.Item
-                  field="orderNo"
-                  labelCol={{ span: 6 }}
-                  wrapperCol={{ span: 18 }}
-                >
-                  {
-                    getFieldDecorator('orderNo', {
-                    })(
-                      <Input allowClear style={{ width: "300px" }} placeholder='订单编号' />
-                    )
-                  }
-                </Form.Item>
-                <Form.Item
-                  field="productName"
-                  labelCol={{ span: 6 }}
-                  wrapperCol={{ span: 18 }}
-                >
-                  {
-                    getFieldDecorator('productName', {
-                    })(
-                      <Input allowClear style={{ width: "240px" }} placeholder='商品名称' />
-                    )
-                  }
-                </Form.Item>
-                <Form.Item
-                  field="productNumber"
-                  labelCol={{ span: 6 }}
-                  wrapperCol={{ span: 18 }}
-                >
-                  {
-                    getFieldDecorator('productNumber', {
-                    })(
-                      <Input allowClear style={{ width: "240px" }} placeholder='商品编号' />
-                    )
-                  }
-                </Form.Item>
-
               </div>
 
             </Form>
