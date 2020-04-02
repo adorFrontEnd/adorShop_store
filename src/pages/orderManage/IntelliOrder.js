@@ -44,7 +44,8 @@ class Page extends Component {
     intelliOrderText: null,
     parseLoading: false,
     totalProductAmount: 0,
-    totalAmount: 0
+    totalAmount: 0,
+    amountModalIsVisible: false
   }
 
   componentDidMount() {
@@ -53,11 +54,18 @@ class Page extends Component {
 
   /**x下单 */
   saveDataClicked = () => {
-    let { orderBaseInfo, orderSKUList, storageId, selectAreaData, remark, selectUser, selectSaler, intelliOrderText } = this.state;
+    let { orderBaseInfo, orderSKUList, storageId, selectAreaData, remark, selectUser, selectSaler, intelliOrderText, totalAmount } = this.state;
     let params = getOrderSaveData({ orderBaseInfo, storageId, orderSKUList, selectAreaData, remark, selectSaler, selectUser });
 
     if (!params) {
       return;
+    }
+    let showAmountPop = Number(totalAmount) <= 0;
+    if (showAmountPop && !this.state.amountModalIsVisible) {
+      this.setState({
+        amountModalIsVisible: true
+      })
+      return
     }
 
     this._showPageLoading();
@@ -72,6 +80,13 @@ class Page extends Component {
       })
   }
 
+  comfirmAmountModal = ()=>{
+
+    this.saveDataClicked();
+    this.setState({
+      amountModalIsVisible:false
+    })
+  }
 
   resetPageData = () => {
 
@@ -440,7 +455,7 @@ class Page extends Component {
   render() {
     const { getFieldDecorator } = this.props.form;
     const { selectUser, selectSaler, selectSKU, selectAreaData, orderBaseInfo, storageList, totalAmount } = this.state;
-    let showAmountPop = Number(totalAmount) <= 0;
+
     let selectUserId = (selectUser && selectUser.id) ? selectUser.id : null;
     let selectSalerId = (selectSaler && selectSaler.id) ? selectSaler.id : null;
 
@@ -449,23 +464,11 @@ class Page extends Component {
         <Spin spinning={this.state.showLoading}>
           <div>
             <div style={{ position: "fixed", bottom: "10%", right: "5%", zIndex: "999" }}>
-              {
-                showAmountPop ?
-                  <Popconfirm
-                    title='该订单金额为0，是否确认?'
-                    onConfirm={this.saveDataClicked}
-                  >
-                    <Button type='primary' shape="circle" style={{ width: 80, height: 80 }}>
-                      确认<br />
-                    收款
-                    </Button>
-                  </Popconfirm>
-                  :
-                  <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} onClick={this.saveDataClicked}>
-                  确认<br />
+
+              <Button type='primary' shape="circle" style={{ width: 80, height: 80 }} onClick={this.saveDataClicked}>
+                确认<br />
                 收款
                 </Button>
-              }
             </div>
             <Spin spinning={this.state.parseLoading}>
               <div>
@@ -513,7 +516,7 @@ class Page extends Component {
               <Row style={{ borderTop: '1px solid #f2f2f2' }}>
                 <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>订单号</Col>
                 <Col span={8} className='padding-left'>
-                  <Input value={orderBaseInfo.mark} onChange={(e) => this.onOrderInfoChange("mark", e.target.value)} style={{ width: 140, marginRight: 10 }} placeholder='填写订单标志' />此部分订单号自动生成</Col>
+                  <Input value={orderBaseInfo.mark} maxLength={6} onChange={(e) => this.onOrderInfoChange("mark", e.target.value)} style={{ width: 140, marginRight: 10 }} placeholder='填写订单标志' />此部分订单号自动生成</Col>
                 <Col span={4} style={{ backgroundColor: "#f2f2f2", textAlign: "center" }}>收货人</Col>
                 <Col span={8} className='padding-left'>
                   <Input value={orderBaseInfo.contactPerson} onChange={(e) => this.onOrderInfoChange("contactPerson", e.target.value)} style={{ width: 200 }} placeholder='收货人' />
@@ -681,7 +684,14 @@ class Page extends Component {
           </div>
         </Modal>
 
-
+        <Modal
+          visible={this.state.amountModalIsVisible}
+          title='提示'
+          onOk={this.comfirmAmountModal}
+          onCancel={() => this.setState({ amountModalIsVisible: false })}
+        >
+          <div>订单总金额为0，确认该订单吗？</div>
+        </Modal>
       </CommonPage >
     )
   }

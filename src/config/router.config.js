@@ -53,6 +53,14 @@ const routerConfigArr = [
     icon: "profile"
   },
   {
+    route_name: "productManage.productInfo.newProduct",
+    path: baseRoute + "/productManage/productEdit/0",
+    loginRequired: true,
+    moduleAuth: true,
+    title: "新建商品",
+    icon: "profile"
+  },
+  {
     route_name: "productManage.other",
     loginRequired: true,
     moduleAuth: true,
@@ -313,6 +321,7 @@ const routerConfigArr = [
     title: "编辑商品",
     icon: "profile"
   },
+
   {
     route_name: "orderManage.orderProduct.commentManage",
     path: baseRoute + "/orderManage/commentManage",

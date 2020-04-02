@@ -53,8 +53,8 @@ const validateOrderBaseInfo = (orderBaseInfo) => {
 
   let { mark, contactPerson, contactPhone, contactAddress, fare } = orderBaseInfo;
 
-  if (!mark) {
-    Toast("请填写订单标志！");
+  if (mark && mark.length>6) {
+    Toast("订单标志最多为6位！");
     return;
   }
 
